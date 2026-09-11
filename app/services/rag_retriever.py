@@ -7,17 +7,19 @@ Uses sentence-transformers ('all-MiniLM-L6-v2') to compute embeddings and rank t
 
 import logging
 import re
-from sentence_transformers import SentenceTransformer
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
 _MODEL_NAME = "all-MiniLM-L6-v2"
-_embedding_model: SentenceTransformer | None = None
+_embedding_model: Any | None = None
 
 
-def _get_embedding_model() -> SentenceTransformer:
+def _get_embedding_model() -> Any:
     global _embedding_model
     if _embedding_model is None:
+        from sentence_transformers import SentenceTransformer
+
         logger.info("Loading sentence-transformer model '%s' for RAG...", _MODEL_NAME)
         _embedding_model = SentenceTransformer(_MODEL_NAME)
     return _embedding_model

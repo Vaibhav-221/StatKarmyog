@@ -2,7 +2,7 @@
 LLM provider abstraction for MCQ generation.
 
 Wraps the LLM call behind a single function so the underlying model
-(currently Google Gemini via LangChain) can be swapped for Azure OpenAI,
+(currently Google Gemini via REST API) can be swapped for Azure OpenAI,
 a self-hosted model, or any other provider without touching the router
 or any other code.
 
@@ -15,9 +15,8 @@ import logging
 import os
 import re
 
+import requests
 from dotenv import load_dotenv
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langchain_core.prompts import PromptTemplate
 
 load_dotenv()
 
@@ -158,7 +157,7 @@ def generate_mcqs(
     target_competency: str | None = None,
 ) -> list[dict]:
     """
-    Generate MCQs from *text* using Google Gemini via LangChain.
+    Generate MCQs from *text* using Google Gemini.
     """
     api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key:
@@ -196,37 +195,43 @@ def generate_mcqs(
     else:
         target_competency_instruction = ""
 
-    prompt = PromptTemplate(
-        input_variables=[
-            "text", "num_questions", "difficulty_description", "language_instruction",
-            "competency_list", "target_competency_instruction"
-        ],
-        template=_SYSTEM_PROMPT,
+    prompt = _SYSTEM_PROMPT.format(
+        text=text,
+        num_questions=num_questions,
+        difficulty_description=difficulty_description,
+        language_instruction=language_instruction,
+        competency_list=competency_list,
+        target_competency_instruction=target_competency_instruction,
     )
-
-    llm = ChatGoogleGenerativeAI(
-        model="gemini-2.0-flash",
-        google_api_key=api_key,
-        temperature=0.3,
-    )
-
-    chain = prompt | llm
 
     logger.info(
         "Calling Gemini: target_competency=%s, difficulty=%s, language=%s, num_questions=%d, text_len=%d",
         target_competency, difficulty, language, num_questions, len(text),
     )
 
-    response = chain.invoke({
-        "text": text,
-        "num_questions": num_questions,
-        "difficulty_description": difficulty_description,
-        "language_instruction": language_instruction,
-        "competency_list": competency_list,
-        "target_competency_instruction": target_competency_instruction,
-    })
-
-    raw_content = response.content if hasattr(response, "content") else str(response)
+    response = requests.post(
+        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+        params={"key": api_key},
+        json={
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": prompt}],
+                }
+            ],
+            "generationConfig": {
+                "temperature": 0.3,
+                "responseMimeType": "application/json",
+            },
+        },
+        timeout=90,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    try:
+        raw_content = payload["candidates"][0]["content"]["parts"][0]["text"]
+    except (KeyError, IndexError, TypeError) as exc:
+        raise ValueError(f"Gemini returned an unexpected response shape: {payload}") from exc
     questions = _parse_llm_response(raw_content)
     valid_questions = _validate_questions(questions, valid_cids=valid_cids)
 

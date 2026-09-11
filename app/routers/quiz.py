@@ -37,7 +37,6 @@ from app.schemas.schemas import (
     ScoreSummaryItem,
 )
 from app.services.document_extractor import extract_text, SUPPORTED_EXTENSIONS
-from app.services.llm_provider import generate_mcqs
 from app.services.quiz_cache import get_cached, set_cached
 
 logger = logging.getLogger(__name__)
@@ -50,8 +49,6 @@ MAX_FILE_SIZE = 5 * 1024 * 1024
 VALID_DIFFICULTIES = {"easy", "medium", "hard"}
 VALID_LANGUAGES = {"en", "hi"}
 
-
-from app.services.rag_retriever import retrieve_relevant_context
 
 # ── POST /api/quiz/generate ─────────────────────────────────────────────────
 
@@ -124,6 +121,8 @@ async def generate_quiz(
 
         # Mode 2: RAG Grounded Document Extraction + Context Retrieval
         try:
+            from app.services.rag_retriever import retrieve_relevant_context
+
             raw_text = await extract_text(file)
             text = retrieve_relevant_context(raw_text, target_competency=target_competency, top_k=5)
         except ValueError as exc:
@@ -159,6 +158,8 @@ async def generate_quiz(
         logger.info("Returning cached quiz (%d questions)", len(cached))
         questions = cached
     else:
+        from app.services.llm_provider import generate_mcqs
+
         # ── Generate MCQs via LLM ────────────────────────────────────────
         try:
             questions = generate_mcqs(

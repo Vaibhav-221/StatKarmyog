@@ -19,7 +19,7 @@ Settings:
 ```txt
 Root Directory: .
 Runtime: Python
-Build Command: pip install -r requirements.txt
+Build Command: pip install -r requirements-render.txt
 Start Command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
 ```
 
@@ -48,6 +48,11 @@ Keep `ENABLE_SEMANTIC_SEARCH=false` on Render free instances. The semantic
 index uses `sentence-transformers`/ChromaDB and can exceed the 512 MB memory
 limit. With it disabled, the semantic recommendations endpoint falls back to
 lightweight tag-based recommendations in the same response shape.
+
+Use `requirements-render.txt` for Render free deployments. It excludes heavy
+ML/document dependencies so the backend can fit within the free 512 MB memory
+limit. Quiz generation from Gemini and semantic/RAG features need a larger
+instance or the full `requirements.txt`.
 
 ## 3. Deploy Frontend On Vercel
 
