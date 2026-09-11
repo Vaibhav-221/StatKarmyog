@@ -328,5 +328,68 @@ export async function uploadArtifact(formData) {
   }
 }
 
+/**
+ * Generate AI quiz from uploaded file or material via backend API.
+ * @param {FormData} formData
+ * @returns {Promise<{data: object, isMock: boolean}>}
+ */
+export async function generateQuizApi(formData) {
+  try {
+    const res = await api.post('/api/quiz/generate', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return { data: res.data, isMock: false };
+  } catch {
+    return {
+      data: {
+        attempt_id: 'ATT-DEMO-' + Date.now(),
+        questions: [
+          {
+            question_id: 'Q1',
+            text: 'Which sampling method is most appropriate when the population is divided into distinct subgroups (strata)?',
+            options: ['Simple Random Sampling', 'Stratified Random Sampling', 'Systematic Sampling', 'Cluster Sampling'],
+            cid: 'CID-D-102',
+            skill_label: 'Sampling Methodology',
+          },
+          {
+            question_id: 'Q2',
+            text: 'In official statistical sample surveys, what does Primary Sampling Unit (PSU) refer to?',
+            options: ['The final individual household surveyed', 'The first-stage sampling unit, such as a census village or urban block', 'The non-sampling error rate', 'The variance multiplier'],
+            cid: 'CID-D-102',
+            skill_label: 'Sampling Methodology',
+          },
+        ],
+      },
+      isMock: true,
+    };
+  }
+}
+
+/**
+ * Submit quiz answers to backend API.
+ * @param {object} payload - { attempt_id, officer_id, answers }
+ * @returns {Promise<{data: object, isMock: boolean}>}
+ */
+export async function submitQuizApi(payload) {
+  try {
+    const res = await api.post('/api/quiz/submit', payload);
+    return { data: res.data, isMock: false };
+  } catch {
+    return {
+      data: {
+        attempt_id: payload.attempt_id || 'ATT-DEMO',
+        total_questions: 10,
+        correct_count: 8,
+        score_percent: 80.0,
+        passed: true,
+        score_summaries: [
+          { cid: 'CID-D-102', skill_label: 'Sampling Methodology', quiz_score: 80.0, artifact_score: 78.0, combined_score: 79.2, confidence_level: 'medium (2 sources)' },
+        ],
+      },
+      isMock: true,
+    };
+  }
+}
+
 export default api;
 

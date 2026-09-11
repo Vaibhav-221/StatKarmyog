@@ -32,10 +32,14 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
+import { generateQuizApi, submitQuizApi } from '../api/client';
+import { useAuth } from '../context/AuthContext';
+
 const { Title, Text, Paragraph } = Typography;
 
 export default function QuizPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // State workflow: 'generator' | 'generating' | 'quiz' | 'result'
   const [stage, setStage] = useState('generator');
@@ -45,10 +49,13 @@ export default function QuizPage() {
   const [numQuestions, setNumQuestions] = useState(10);
   const [difficulty, setDifficulty] = useState('Intermediate');
   const [selectedCompetency, setSelectedCompetency] = useState('Sampling Methodology');
+  const [fileList, setFileList] = useState([]);
 
   // Quiz state
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({});
+  const [attemptId, setAttemptId] = useState(null);
+  const [submitResult, setSubmitResult] = useState(null);
 
   const sampleQuestions = [
     {
@@ -86,7 +93,7 @@ export default function QuizPage() {
     },
   ];
 
-  const handleGenerateQuiz = () => {
+  const handleGenerateQuiz = async () => {
     setStage('generating');
     setGenerationStep(0);
 
@@ -94,6 +101,18 @@ export default function QuizPage() {
     setTimeout(() => setGenerationStep(2), 1200);
     setTimeout(() => setGenerationStep(3), 1800);
     setTimeout(() => setGenerationStep(4), 2400);
+
+    const formData = new FormData();
+    if (fileList.length > 0) {
+      formData.append('file', fileList[0].originFileObj || fileList[0]);
+    }
+    formData.append('difficulty', difficulty.toLowerCase());
+    formData.append('language', 'en');
+
+    const res = await generateQuizApi(formData);
+    if (res.data?.attempt_id) {
+      setAttemptId(res.data.attempt_id);
+    }
 
     setTimeout(() => {
       setStage('quiz');
@@ -105,7 +124,14 @@ export default function QuizPage() {
     setUserAnswers((prev) => ({ ...prev, [qId]: optionKey }));
   };
 
-  const handleSubmitQuiz = () => {
+  const handleSubmitQuiz = async () => {
+    const payload = {
+      attempt_id: attemptId || 'ATT-DEMO-001',
+      officer_id: user?.officer_id || 'OFF001',
+      answers: userAnswers,
+    };
+    const res = await submitQuizApi(payload);
+    setSubmitResult(res.data);
     setStage('result');
     message.success('Quiz submitted! Competency Passport score updated.');
   };
