@@ -1,40 +1,41 @@
 /**
- * Login page — officer selector with a polished, themed card.
+ * Login Page — STATKARMAYOG Professional Government-Tech Portal.
  *
- * No real auth — picks an officer from the mock list,
- * sets the AuthContext, and navigates to the dashboard.
+ * Implements Section 5 of requirements:
+ * STATKARMAYOG branding, Officer ID, Password, Login button, and Prototype Quick Select.
  */
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Select, Button, Typography, Space, message } from 'antd';
+import { Card, Input, Button, Typography, Space, Select, Divider, message } from 'antd';
 import {
   LoginOutlined,
   UserOutlined,
+  LockOutlined,
   SafetyCertificateOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { MOCK_OFFICERS } from '../api/client';
 import AppHeader from '../components/AppHeader';
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 export default function LoginPage() {
   const { setUser } = useAuth();
   const navigate = useNavigate();
-  const [selectedId, setSelectedId] = useState(null);
+
+  const [officerId, setOfficerId] = useState('OFF001');
+  const [password, setPassword] = useState('••••••••');
+  const [selectedProfileId, setSelectedProfileId] = useState('OFF001');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (!selectedId) {
-      message.warning('Please select an officer to continue');
-      return;
-    }
+  const performLogin = (targetId) => {
     setLoading(true);
-    const officer = MOCK_OFFICERS.find((o) => o.officer_id === selectedId);
+    const idToUse = targetId || officerId || 'OFF001';
+    const officer = MOCK_OFFICERS.find((o) => o.officer_id === idToUse) || MOCK_OFFICERS[0];
     const userRole = officer.role || 'officer';
 
-    // Simulate a brief login delay for UX polish
     setTimeout(() => {
       setUser({
         officer_id: officer.officer_id,
@@ -48,65 +49,71 @@ export default function LoginPage() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#F8FAFC' }}>
       <AppHeader showUser={false} />
-      <div className="login-page" style={{ flex: 1, minHeight: 'calc(100vh - 64px)' }}>
-        <Card className="login-card" bordered={false}>
-          <div className="login-header">
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 24,
+        }}
+      >
+        <Card
+          bordered={false}
+          style={{
+            width: '100%',
+            maxWidth: 440,
+            borderRadius: 12,
+            boxShadow: '0 8px 30px rgba(12,68,124,0.08)',
+            padding: '12px 10px',
+          }}
+        >
+          {/* Header Branding */}
+          <div style={{ textAlign: 'center', marginBottom: 24 }}>
             <SafetyCertificateOutlined
               style={{
-                fontSize: 40,
+                fontSize: 44,
                 color: '#0C447C',
-                marginBottom: 10,
-                display: 'block',
+                marginBottom: 8,
               }}
             />
             <Title level={2} style={{ marginBottom: 2, color: '#0C447C', fontWeight: 700 }}>
-              StatKarmyog
+              STATKARMAYOG
             </Title>
-            <Text strong style={{ fontSize: 13, color: '#5A6B7D', display: 'block', marginBottom: 4 }}>
-              Skill Intelligence &amp; Learning Platform
+            <Text strong style={{ fontSize: 13, color: '#0C447C', display: 'block', marginBottom: 4 }}>
+              AI-Powered Competency Development
             </Text>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              Competency &amp; Gap Analysis for MoSPI/NSSTA Officials
+              For India's Official Statistical System (MoSPI / NSSTA)
             </Text>
           </div>
 
-          <Space direction="vertical" size={20} style={{ width: '100%' }}>
+          <Space direction="vertical" size={16} style={{ width: '100%' }}>
             <div>
-              <Text
-                strong
-                style={{
-                  fontSize: 12,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  color: '#5A6B7D',
-                  display: 'block',
-                  marginBottom: 8,
-                }}
-              >
-                Select Officer
+              <Text strong style={{ fontSize: 12, color: '#475569', display: 'block', marginBottom: 6 }}>
+                Officer ID
               </Text>
-              <Select
-                placeholder="Choose your profile…"
-                style={{ width: '100%' }}
+              <Input
                 size="large"
-                suffixIcon={<UserOutlined />}
-                value={selectedId}
-                onChange={setSelectedId}
-                options={MOCK_OFFICERS.map((o) => ({
-                  value: o.officer_id,
-                  label: (
-                    <span>
-                      <strong>{o.name}</strong>
-                      <span style={{ color: '#8C99A9', marginLeft: 8, fontSize: 12 }}>
-                        {o.designation}
-                      </span>
-                    </span>
-                  ),
-                }))}
-                optionFilterProp="label"
-                showSearch
+                prefix={<UserOutlined style={{ color: '#94A3B8' }} />}
+                placeholder="Enter Officer ID (e.g. OFF001)"
+                value={officerId}
+                onChange={(e) => setOfficerId(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <Text strong style={{ fontSize: 12, color: '#475569', display: 'block', marginBottom: 6 }}>
+                Password
+              </Text>
+              <Input.Password
+                size="large"
+                prefix={<LockOutlined style={{ color: '#94A3B8' }} />}
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
             </div>
 
@@ -115,22 +122,54 @@ export default function LoginPage() {
               size="large"
               block
               icon={<LoginOutlined />}
-              onClick={handleLogin}
+              onClick={() => performLogin(officerId)}
               loading={loading}
               style={{
-                height: 46,
+                height: 44,
                 fontWeight: 600,
                 fontSize: 15,
-                borderRadius: 10,
+                borderRadius: 8,
+                background: '#0C447C',
               }}
             >
-              Sign In
+              Login
             </Button>
+
+            <Divider style={{ margin: '12px 0', fontSize: 12, color: '#94A3B8' }}>
+              PROTOTYPE DEMO ACCESS
+            </Divider>
+
+            <div>
+              <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 6 }}>
+                Quick Login Profile Selector (Demo Credentials):
+              </Text>
+              <Select
+                value={selectedProfileId}
+                onChange={(val) => {
+                  setSelectedProfileId(val);
+                  setOfficerId(val);
+                }}
+                style={{ width: '100%', marginBottom: 10 }}
+                options={MOCK_OFFICERS.map((o) => ({
+                  value: o.officer_id,
+                  label: `${o.name} (${o.designation})`,
+                }))}
+              />
+              <Button
+                type="default"
+                block
+                icon={<ThunderboltOutlined />}
+                onClick={() => performLogin(selectedProfileId)}
+                style={{ borderColor: '#0C447C', color: '#0C447C', fontWeight: 600 }}
+              >
+                Prototype Quick Login
+              </Button>
+            </div>
           </Space>
 
           <div style={{ textAlign: 'center', marginTop: 24 }}>
             <Text type="secondary" style={{ fontSize: 11 }}>
-              Prototype — Smart India Hackathon PS 26101
+              Smart India Hackathon 2026 • Problem Statement SIH26101
             </Text>
           </div>
         </Card>

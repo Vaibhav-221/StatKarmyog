@@ -300,5 +300,33 @@ export async function getDepartmentSummary() {
   }
 }
 
+/**
+ * Upload work artifact for evidence analysis.
+ * @param {FormData} formData
+ * @returns {Promise<{data: object, isMock: boolean}>}
+ */
+export async function uploadArtifact(formData) {
+  try {
+    const res = await api.post('/api/artifacts/analyze', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return { data: res.data, isMock: false };
+  } catch {
+    return {
+      data: {
+        document_name: formData.get('file')?.name || 'Sampling_Plan.pdf',
+        detected_competencies: [
+          { name: 'Sampling Methodology', score: 78 },
+          { name: 'Survey Design', score: 72 },
+          { name: 'Data Quality', score: 64 },
+        ],
+        confidence: 'High',
+        summary: 'AI-assisted competency evidence detected related to sampling strategy, sample selection, and survey design.',
+      },
+      isMock: true,
+    };
+  }
+}
+
 export default api;
 

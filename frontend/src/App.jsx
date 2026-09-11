@@ -1,16 +1,8 @@
 /**
- * App — root component with react-router-dom routing.
- *
- * Routes:
- *   /login   — LoginPage (public)
- *   /        — Dashboard (protected, officer role)
- *   /quiz    — QuizPage  (protected, officer role)
- *   /admin   — AdminDashboard (protected, admin role only)
- *
- * Protected routes redirect to /login when no auth context.
- * AppShell wraps protected routes with sidebar + header.
+ * App — Root router component for STATKARMAYOG.
  */
 
+import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConfigProvider } from 'antd';
 
@@ -20,12 +12,18 @@ import { useAuth } from './context/AuthContext';
 import AppShell from './components/AppShell';
 import LoginPage from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import MyProfile from './pages/MyProfile';
+import MyCompetencies from './pages/MyCompetencies';
+import GapAnalysis from './pages/GapAnalysis';
+import WorkEvidenceUpload from './pages/WorkEvidenceUpload';
+import EvidenceHistory from './pages/EvidenceHistory';
+import LearningPage from './pages/LearningPage';
+import IgotPage from './pages/IgotPage';
 import QuizPage from './pages/QuizPage';
+import CompetencyPassportPage from './pages/CompetencyPassportPage';
+import ProgressPage from './pages/ProgressPage';
 import AdminDashboard from './pages/AdminDashboard';
 
-/**
- * ProtectedRoute — redirects to /login if not authenticated.
- */
 function ProtectedRoute({ children }) {
   const { user } = useAuth();
   if (!user) {
@@ -34,9 +32,6 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-/**
- * AdminRoute — only allows admin-role users. Officers are redirected to /.
- */
 function AdminRoute({ children }) {
   const { user } = useAuth();
   if (!user) {
@@ -53,10 +48,10 @@ export default function App() {
     <ConfigProvider theme={antdTheme}>
       <BrowserRouter>
         <Routes>
-          {/* Public */}
+          {/* Public Login Route */}
           <Route path="/login" element={<LoginPage />} />
 
-          {/* Protected — wrapped in AppShell */}
+          {/* Protected Routes — Wrapped in AppShell layout */}
           <Route
             element={
               <ProtectedRoute>
@@ -65,7 +60,17 @@ export default function App() {
             }
           >
             <Route path="/" element={<Dashboard />} />
+            <Route path="/profile" element={<MyProfile />} />
+            <Route path="/competencies" element={<MyCompetencies />} />
+            <Route path="/gaps" element={<GapAnalysis />} />
+            <Route path="/upload-artifact" element={<WorkEvidenceUpload />} />
+            <Route path="/evidence-history" element={<EvidenceHistory />} />
+            <Route path="/learning" element={<LearningPage />} />
+            <Route path="/igot" element={<IgotPage />} />
             <Route path="/quiz" element={<QuizPage />} />
+            <Route path="/my-quizzes" element={<QuizPage />} />
+            <Route path="/passport" element={<CompetencyPassportPage />} />
+            <Route path="/progress" element={<ProgressPage />} />
             <Route
               path="/admin"
               element={
@@ -76,7 +81,7 @@ export default function App() {
             />
           </Route>
 
-          {/* Catch-all → Dashboard or Login */}
+          {/* Fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
