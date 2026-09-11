@@ -1,5 +1,11 @@
 /**
  * App — Root router component for STATKARMAYOG.
+ *
+ * Routes:
+ *   /           — LandingPage (public landing view)
+ *   /login      — LoginPage   (public authentication)
+ *   /dashboard  — Dashboard   (protected officer dashboard)
+ *   ...         — Protected feature pages wrapped in AppShell layout
  */
 
 import React from 'react';
@@ -10,6 +16,7 @@ import antdTheme from './theme/antdTheme';
 import { useAuth } from './context/AuthContext';
 
 import AppShell from './components/AppShell';
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import MyProfile from './pages/MyProfile';
@@ -38,7 +45,7 @@ function AdminRoute({ children }) {
     return <Navigate to="/login" replace />;
   }
   if (user.role !== 'admin') {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
   return children;
 }
@@ -48,6 +55,9 @@ export default function App() {
     <ConfigProvider theme={antdTheme}>
       <BrowserRouter>
         <Routes>
+          {/* Public Landing Page */}
+          <Route path="/" element={<LandingPage />} />
+
           {/* Public Login Route */}
           <Route path="/login" element={<LoginPage />} />
 
@@ -59,7 +69,7 @@ export default function App() {
               </ProtectedRoute>
             }
           >
-            <Route path="/" element={<Dashboard />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/profile" element={<MyProfile />} />
             <Route path="/competencies" element={<MyCompetencies />} />
             <Route path="/gaps" element={<GapAnalysis />} />
@@ -81,7 +91,7 @@ export default function App() {
             />
           </Route>
 
-          {/* Fallback */}
+          {/* Fallback -> Landing Page */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>

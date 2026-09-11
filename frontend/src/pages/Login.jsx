@@ -44,7 +44,8 @@ export default function LoginPage() {
         department: officer.department,
         role: userRole,
       });
-      navigate(userRole === 'admin' ? '/admin' : '/');
+      message.success(`Logged in as ${officer.name} (${officer.designation})`);
+      navigate(userRole === 'admin' ? '/admin' : '/dashboard');
     }, 400);
   };
 
@@ -64,7 +65,7 @@ export default function LoginPage() {
           bordered={false}
           style={{
             width: '100%',
-            maxWidth: 440,
+            maxWidth: 460,
             borderRadius: 12,
             boxShadow: '0 8px 30px rgba(12,68,124,0.08)',
             padding: '12px 10px',
@@ -168,9 +169,19 @@ export default function LoginPage() {
           </Space>
 
           <div style={{ textAlign: 'center', marginTop: 24 }}>
-            <Text type="secondary" style={{ fontSize: 11 }}>
-              Smart India Hackathon 2026 • Problem Statement SIH26101
-            </Text>
+            <Button
+              type="link"
+              size="small"
+              onClick={() => navigate('/')}
+              style={{ color: '#0C447C', fontSize: 12 }}
+            >
+              ← Back to Landing Page
+            </Button>
+            <div style={{ marginTop: 4 }}>
+              <Text type="secondary" style={{ fontSize: 11 }}>
+                Smart India Hackathon 2026 • Problem Statement SIH26101
+              </Text>
+            </div>
           </div>
         </Card>
       </div>

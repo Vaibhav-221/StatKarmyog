@@ -17,6 +17,7 @@ import {
   RiseOutlined,
   BarChartOutlined,
   CheckCircleOutlined,
+  HomeOutlined,
   GlobalOutlined,
   AuditOutlined,
   SettingOutlined,
@@ -36,6 +37,11 @@ export default function AppShell() {
   const menuItems = [
     {
       key: '/',
+      icon: <HomeOutlined />,
+      label: 'Portal Overview',
+    },
+    {
+      key: '/dashboard',
       icon: <DashboardOutlined />,
       label: 'Dashboard',
     },
@@ -78,7 +84,7 @@ export default function AppShell() {
       label: 'AI Quiz',
       children: [
         { key: '/quiz', label: 'Generate Quiz' },
-        { key: '/quiz', label: 'My Quizzes' },
+        { key: '/my-quizzes', label: 'My Quizzes' },
       ],
     },
     {
@@ -138,7 +144,7 @@ export default function AppShell() {
             borderBottom: '1px solid rgba(255,255,255,0.08)',
             cursor: 'pointer',
           }}
-          onClick={() => navigate('/')}
+          onClick={() => navigate('/dashboard')}
         >
           <SafetyCertificateOutlined style={{ color: '#60A5FA', fontSize: 22 }} />
           {!collapsed && (
