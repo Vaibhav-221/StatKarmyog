@@ -1,13 +1,13 @@
 # Vercel deploys only the React frontend. Keep Python backend, model/cache data,
 # tests, and local artifacts out of the Vercel build upload.
 
-app/
-mock_igot/
-tests/
-data/
-seed_data/
-__pycache__/
-.pytest_cache/
+/app/
+/mock_igot/
+/tests/
+/data/
+/seed_data/
+/__pycache__/
+/.pytest_cache/
 
 *.py
 *.db
