@@ -29,6 +29,7 @@ Environment variables:
 GOOGLE_API_KEY=your_gemini_api_key
 CORS_ALLOWED_ORIGINS=https://your-vercel-app.vercel.app
 DATA_DIR=/opt/render/project/src/data
+ENABLE_SEMANTIC_SEARCH=false
 ```
 
 Health check URL:
@@ -42,6 +43,11 @@ For a hackathon demo, SQLite is fine. For data that must survive redeploys/resta
 ```txt
 /opt/render/project/src/data
 ```
+
+Keep `ENABLE_SEMANTIC_SEARCH=false` on Render free instances. The semantic
+index uses `sentence-transformers`/ChromaDB and can exceed the 512 MB memory
+limit. With it disabled, the semantic recommendations endpoint falls back to
+lightweight tag-based recommendations in the same response shape.
 
 ## 3. Deploy Frontend On Vercel
 

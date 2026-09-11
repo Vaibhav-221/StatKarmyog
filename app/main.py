@@ -23,7 +23,6 @@ from app.routers.webhooks import router as webhook_router
 from app.routers.quiz import router as quiz_router
 from app.schemas.schemas import CompetencyScoreItem, PassportResponse
 from app.seed import seed_database
-from app.services.semantic_search import build_course_index
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -40,6 +39,12 @@ def _get_allowed_origins() -> list[str]:
     return origins
 
 
+def _semantic_search_enabled() -> bool:
+    """Return whether memory-heavy semantic indexing should run."""
+    value = os.environ.get("ENABLE_SEMANTIC_SEARCH", "true").strip().lower()
+    return value in {"1", "true", "yes", "on"}
+
+
 # ── Lifespan — seed DB + build semantic index on startup ─────────────────────
 
 @asynccontextmanager
@@ -48,12 +53,17 @@ async def lifespan(app: FastAPI):
     Base.metadata.create_all(bind=engine)
     seed_database()
 
-    # Build ChromaDB course embeddings (idempotent)
-    db = SessionLocal()
-    try:
-        build_course_index(db)
-    finally:
-        db.close()
+    # Build ChromaDB course embeddings (idempotent). Disable on low-memory hosts.
+    if _semantic_search_enabled():
+        from app.services.semantic_search import build_course_index
+
+        db = SessionLocal()
+        try:
+            build_course_index(db)
+        finally:
+            db.close()
+    else:
+        logger.info("Semantic search disabled; skipping ChromaDB index build.")
 
     yield
 

@@ -7,12 +7,48 @@ unit-tested and reused by later phases (dashboards, admin analytics).
 
 from __future__ import annotations
 
+import logging
+import os
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
 from app.models.models import Officer, Role, CourseCatalogue, CompetencyScore
+
+logger = logging.getLogger(__name__)
+
+
+def _semantic_search_enabled() -> bool:
+    """Return whether memory-heavy semantic recommendation should run."""
+    value = os.environ.get("ENABLE_SEMANTIC_SEARCH", "true").strip().lower()
+    return value in {"1", "true", "yes", "on"}
+
+
+def _tag_recommendations_as_hybrid(
+    db: "Session",
+    officer_id: str,
+    top_n: int,
+) -> list[dict] | None:
+    """Shape lightweight tag recommendations like the hybrid endpoint response."""
+    tag_recs = recommend_courses(db, officer_id, top_n=top_n)
+    if tag_recs is None:
+        return None
+
+    max_score = max((rec["score"] for rec in tag_recs), default=1)
+    max_score = max_score or 1
+
+    return [
+        {
+            "course_id": rec["course_id"],
+            "course_title": rec["course_title"],
+            "semantic_score": 0.0,
+            "tag_overlap_score": round(rec["score"] / max_score, 4),
+            "final_score": round(rec["score"] / max_score, 4),
+            "matched_skills": rec["matched_skills"],
+        }
+        for rec in tag_recs
+    ]
 
 
 # ── Gap Analysis ─────────────────────────────────────────────────────────────
@@ -166,7 +202,8 @@ def recommend_courses_hybrid(
     Returns None if the officer is not found.
     Returns an empty list if there are no gaps.
     """
-    from app.services.semantic_search import query_similar_courses
+    if not _semantic_search_enabled():
+        return _tag_recommendations_as_hybrid(db, officer_id, top_n)
 
     gap_result = compute_skill_gaps(db, officer_id)
     if gap_result is None:
@@ -181,7 +218,13 @@ def recommend_courses_hybrid(
 
     # Retrieve a larger pool to re-rank
     pool_size = max(top_n * 2, 10)
-    candidates = query_similar_courses(query_text, n_results=pool_size)
+    try:
+        from app.services.semantic_search import query_similar_courses
+
+        candidates = query_similar_courses(query_text, n_results=pool_size)
+    except Exception as exc:
+        logger.warning("Semantic recommendations unavailable; falling back to tag matching: %s", exc)
+        return _tag_recommendations_as_hybrid(db, officer_id, top_n)
 
     if not candidates:
         return []
