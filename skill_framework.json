@@ -1,0 +1,61 @@
+{
+  "_note": "MOCK DATA - Simulated competency framework based on domains described in PS 26101. Real framework would come from MoSPI/NSSTA official competency mapping (not publicly available as structured data).",
+  "domains": {
+    "statistical": ["Survey Design", "Sampling", "National Accounts", "Price Statistics", "Labour Statistics", "Agricultural Statistics", "Industrial Statistics", "SDG Indicators", "Metadata Standards", "Data Quality Frameworks"],
+    "technical": ["Python", "R", "SQL", "Stata", "SPSS", "SAS", "GIS", "Data Visualization", "AI/ML", "Cloud Computing", "APIs", "Open Data"],
+    "digital_governance": ["Cybersecurity", "Data Privacy", "Digital Signatures", "Government Cloud", "Digital Public Infrastructure"],
+    "behavioural": ["Leadership", "Communication", "Project Management", "Ethics", "Decision Making", "Change Management"]
+  },
+  "roles": [
+    {
+      "role_id": "R01",
+      "role_title": "Junior Statistical Officer (JSO) - Industrial Statistics",
+      "expected_skills": {
+        "Survey Design": 3, "Sampling": 2, "Industrial Statistics": 4, "Data Quality Frameworks": 2,
+        "Python": 2, "SQL": 2, "Data Visualization": 3,
+        "Data Privacy": 2,
+        "Communication": 3, "Ethics": 3
+      }
+    },
+    {
+      "role_id": "R02",
+      "role_title": "Senior Statistical Officer (SSO) - Price Statistics",
+      "expected_skills": {
+        "Price Statistics": 4, "Sampling": 3, "National Accounts": 2, "Metadata Standards": 3,
+        "SQL": 3, "R": 2, "Data Visualization": 3, "Stata": 2,
+        "Data Privacy": 2,
+        "Project Management": 3, "Communication": 3
+      }
+    },
+    {
+      "role_id": "R03",
+      "role_title": "Indian Statistical Service (ISS) Officer - Labour Statistics",
+      "expected_skills": {
+        "Labour Statistics": 4, "Survey Design": 4, "SDG Indicators": 3, "Data Quality Frameworks": 3,
+        "Python": 3, "SQL": 3, "AI/ML": 2, "GIS": 2,
+        "Government Cloud": 2, "Cybersecurity": 2,
+        "Leadership": 3, "Decision Making": 3, "Change Management": 2
+      }
+    },
+    {
+      "role_id": "R04",
+      "role_title": "Statistical Officer - GIS & Spatial Data",
+      "expected_skills": {
+        "Survey Design": 3, "Agricultural Statistics": 3, "Metadata Standards": 2,
+        "GIS": 4, "Python": 3, "Data Visualization": 4, "APIs": 2, "Open Data": 3,
+        "Digital Public Infrastructure": 2,
+        "Communication": 2, "Project Management": 2
+      }
+    },
+    {
+      "role_id": "R05",
+      "role_title": "Deputy Director - Data Informatics & Innovation Division (DIID)",
+      "expected_skills": {
+        "SDG Indicators": 3, "Data Quality Frameworks": 3, "National Accounts": 2,
+        "AI/ML": 3, "Cloud Computing": 3, "SQL": 3, "APIs": 3, "Open Data": 3,
+        "Cybersecurity": 3, "Data Privacy": 3, "Government Cloud": 3, "Digital Public Infrastructure": 3,
+        "Leadership": 4, "Project Management": 4, "Change Management": 3, "Decision Making": 4
+      }
+    }
+  ]
+}

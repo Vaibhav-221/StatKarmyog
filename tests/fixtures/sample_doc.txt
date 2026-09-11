@@ -1,0 +1,28 @@
+Survey Sampling Methods in Official Statistics
+
+In official statistics, it is rarely feasible to survey every unit in a population.
+A census of every household, farm, or industrial establishment is expensive, slow,
+and often unnecessary. Sampling allows statisticians to draw reliable conclusions
+about a population by examining only a carefully selected subset of it.
+
+Probability sampling methods give every unit in the population a known, non-zero
+chance of selection. Because selection probabilities are known, these methods allow
+statisticians to calculate margins of error and confidence intervals.
+
+Non-probability sampling methods (such as convenience sampling or quota sampling)
+do not guarantee every unit a calculable chance of selection. They are faster and
+cheaper but do not support formal statistical inference about the wider population.
+
+Common probability sampling designs include Simple Random Sampling (SRS), Stratified
+Sampling, Systematic Sampling, Cluster Sampling, and Multi-Stage Sampling. SRS gives
+every unit an equal chance of selection. Stratified sampling divides the population
+into homogeneous subgroups (strata) and samples independently within each stratum.
+
+The sampling frame is the complete list of all units from which the sample is drawn.
+An outdated or incomplete frame introduces coverage error, which is distinct from
+sampling error. Sampling error decreases as sample size increases but can never be
+reduced to zero unless a full census is conducted.
+
+Sample size decisions balance three factors: the desired precision (margin of error),
+the required confidence level (commonly 95 percent), and the variability of the
+characteristic being measured.

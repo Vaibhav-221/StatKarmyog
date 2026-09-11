@@ -1,0 +1,100 @@
+{
+  "_note": "MOCK DATA - Seeded quiz-attempt history so the demo has non-empty competency_scores data even before a live quiz is submitted during judging. competency_tag values reference cid in frac_competency_dictionary.json. Question phrasing modeled on the level of NSSTA-style refresher/induction training content (e.g. Survey Design, Sampling, Data Quality) referenced in NSSTA's official training calendars.",
+  "schema": {
+    "attempt_id": "unique ID",
+    "officer_id": "matches officer_profiles.json",
+    "course_id": "matches course_catalogue.csv where applicable, null if baseline/unlinked",
+    "quiz_source_material": "title of learning material the quiz was generated from",
+    "attempted_on": "ISO date",
+    "questions": [
+      { "competency_tag": "CID from frac_competency_dictionary.json", "skill_label": "human-readable", "is_correct": "bool" }
+    ],
+    "raw_score_percent": "computed: correct/total * 100"
+  },
+  "attempts": [
+    {
+      "attempt_id": "QA-OFF001-01",
+      "officer_id": "OFF001",
+      "course_id": null,
+      "quiz_source_material": "Baseline Assessment - Survey Sampling Methods",
+      "attempted_on": "2026-08-20",
+      "questions": [
+        { "competency_tag": "CID-D-101", "skill_label": "Survey Design", "is_correct": true },
+        { "competency_tag": "CID-D-101", "skill_label": "Survey Design", "is_correct": false },
+        { "competency_tag": "CID-D-102", "skill_label": "Sampling", "is_correct": true },
+        { "competency_tag": "CID-D-102", "skill_label": "Sampling", "is_correct": false },
+        { "competency_tag": "CID-F-201", "skill_label": "Python", "is_correct": false }
+      ],
+      "raw_score_percent": 40
+    },
+    {
+      "attempt_id": "QA-OFF001-02",
+      "officer_id": "OFF001",
+      "course_id": "C078",
+      "quiz_source_material": "R and Python through ISI Delhi - Module 1",
+      "attempted_on": "2026-09-02",
+      "questions": [
+        { "competency_tag": "CID-F-201", "skill_label": "Python", "is_correct": true },
+        { "competency_tag": "CID-F-201", "skill_label": "Python", "is_correct": true },
+        { "competency_tag": "CID-F-201", "skill_label": "Python", "is_correct": false },
+        { "competency_tag": "CID-D-110", "skill_label": "Data Quality Frameworks", "is_correct": true }
+      ],
+      "raw_score_percent": 75
+    },
+    {
+      "attempt_id": "QA-OFF002-01",
+      "officer_id": "OFF002",
+      "course_id": null,
+      "quiz_source_material": "Baseline Assessment - National Accounts Fundamentals",
+      "attempted_on": "2026-08-21",
+      "questions": [
+        { "competency_tag": "CID-D-103", "skill_label": "National Accounts", "is_correct": false },
+        { "competency_tag": "CID-D-103", "skill_label": "National Accounts", "is_correct": false },
+        { "competency_tag": "CID-D-104", "skill_label": "Price Statistics", "is_correct": true },
+        { "competency_tag": "CID-F-203", "skill_label": "SQL", "is_correct": false }
+      ],
+      "raw_score_percent": 25
+    },
+    {
+      "attempt_id": "QA-OFF002-02",
+      "officer_id": "OFF002",
+      "course_id": "C082",
+      "quiz_source_material": "Big Data, AI with Python, ML, AI-ready Data (ISS Probationary) - Refresher",
+      "attempted_on": "2026-09-04",
+      "questions": [
+        { "competency_tag": "CID-D-103", "skill_label": "National Accounts", "is_correct": true },
+        { "competency_tag": "CID-D-103", "skill_label": "National Accounts", "is_correct": true },
+        { "competency_tag": "CID-F-203", "skill_label": "SQL", "is_correct": true }
+      ],
+      "raw_score_percent": 100
+    },
+    {
+      "attempt_id": "QA-OFF003-01",
+      "officer_id": "OFF003",
+      "course_id": null,
+      "quiz_source_material": "Baseline Assessment - AI/ML for Official Statistics",
+      "attempted_on": "2026-08-19",
+      "questions": [
+        { "competency_tag": "CID-D-209", "skill_label": "AI/ML", "is_correct": false },
+        { "competency_tag": "CID-D-209", "skill_label": "AI/ML", "is_correct": false },
+        { "competency_tag": "CID-D-207", "skill_label": "GIS", "is_correct": false },
+        { "competency_tag": "CID-B-301", "skill_label": "Cybersecurity", "is_correct": true }
+      ],
+      "raw_score_percent": 25
+    },
+    {
+      "attempt_id": "QA-OFF005-01",
+      "officer_id": "OFF005",
+      "course_id": null,
+      "quiz_source_material": "Baseline Assessment - Cloud & Government Digital Infrastructure",
+      "attempted_on": "2026-08-22",
+      "questions": [
+        { "competency_tag": "CID-F-210", "skill_label": "Cloud Computing", "is_correct": true },
+        { "competency_tag": "CID-F-304", "skill_label": "Government Cloud", "is_correct": true },
+        { "competency_tag": "CID-B-301", "skill_label": "Cybersecurity", "is_correct": true },
+        { "competency_tag": "CID-B-302", "skill_label": "Data Privacy", "is_correct": true }
+      ],
+      "raw_score_percent": 100
+    }
+  ]
+}

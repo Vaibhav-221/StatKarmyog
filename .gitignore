@@ -1,0 +1,34 @@
+# ── Environment & Secrets ──────────────────────────────────
+.env
+*.env
+*.pem
+*.key
+
+# ── Python ───────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+venv/
+.venv/
+env/
+
+# ── Data & Vector DB (auto-generated) ───────────────────────
+*.db
+*.sqlite
+*.sqlite3
+data/app.db
+data/chroma/
+chroma_db/
+mock_igot/data/mock_igot.db
+
+# ── Node / Frontend ─────────────────────────────
+frontend/node_modules/
+frontend/dist/
+node_modules/
+
+# ── IDE & System ──────────────────────────────────
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

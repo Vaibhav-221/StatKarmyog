@@ -1,0 +1,71 @@
+{
+  "_note": "MOCK DATA - Pre-computed competency_scores history so Passport (Phase 5B) and Admin outcome-analytics (Phase 6) have a working 'before -> after' story to demo without depending on a live quiz-submit during judging. combined_score = 0.6*quiz_score + 0.4*artifact_score where artifact_score exists, else combined_score = quiz_score. Values derived from quiz_attempts_seed.json raw scores (scaled to 1-5 skill-level range) and the sample work_artifacts/ documents. This seed should be loaded into the competency_scores table as historical rows, not treated as live/real assessment data.",
+  "history": [
+    {
+      "officer_id": "OFF001",
+      "skill_label": "Python",
+      "cid": "CID-F-201",
+      "records": [
+        { "recorded_on": "2026-08-20", "source": "baseline_quiz", "quiz_score": 1.5, "artifact_score": null, "combined_score": 1.5, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-09-02", "source": "quiz_after_course_C078", "quiz_score": 3.5, "artifact_score": null, "combined_score": 3.5, "confidence_level": "low (1 source)" }
+      ]
+    },
+    {
+      "officer_id": "OFF001",
+      "skill_label": "Survey Design",
+      "cid": "CID-D-101",
+      "records": [
+        { "recorded_on": "2026-08-20", "source": "baseline_quiz", "quiz_score": 2.0, "artifact_score": null, "combined_score": 2.0, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-09-05", "source": "quiz_plus_artifact", "quiz_score": 2.0, "artifact_score": 3.5, "combined_score": 2.6, "confidence_level": "medium (2 sources)",
+          "artifact_reference": "work_artifacts/artifact_survey_plan_industrial.md" }
+      ]
+    },
+    {
+      "officer_id": "OFF002",
+      "skill_label": "National Accounts",
+      "cid": "CID-D-103",
+      "records": [
+        { "recorded_on": "2026-08-21", "source": "baseline_quiz", "quiz_score": 1.0, "artifact_score": null, "combined_score": 1.0, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-09-04", "source": "quiz_after_course_C082", "quiz_score": 5.0, "artifact_score": null, "combined_score": 5.0, "confidence_level": "low (1 source)" }
+      ]
+    },
+    {
+      "officer_id": "OFF003",
+      "skill_label": "AI/ML",
+      "cid": "CID-D-209",
+      "records": [
+        { "recorded_on": "2026-08-19", "source": "baseline_quiz", "quiz_score": 1.0, "artifact_score": null, "combined_score": 1.0, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-09-06", "source": "quiz_plus_artifact", "quiz_score": 2.5, "artifact_score": 3.0, "combined_score": 2.7, "confidence_level": "medium (2 sources)",
+          "artifact_reference": "work_artifacts/artifact_aiml_pipeline_note.md" }
+      ]
+    },
+    {
+      "officer_id": "OFF004",
+      "skill_label": "GIS",
+      "cid": "CID-D-207",
+      "records": [
+        { "recorded_on": "2026-08-18", "source": "baseline_quiz", "quiz_score": 2.0, "artifact_score": null, "combined_score": 2.0, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-09-05", "source": "quiz_plus_artifact", "quiz_score": 2.5, "artifact_score": 4.0, "combined_score": 3.1, "confidence_level": "medium (2 sources)",
+          "artifact_reference": "work_artifacts/artifact_gis_spatial_report.md" }
+      ]
+    },
+    {
+      "officer_id": "OFF005",
+      "skill_label": "Cloud Computing",
+      "cid": "CID-F-210",
+      "records": [
+        { "recorded_on": "2026-08-22", "source": "baseline_quiz", "quiz_score": 4.0, "artifact_score": null, "combined_score": 4.0, "confidence_level": "low (1 source)" }
+      ]
+    }
+  ],
+  "admin_outcome_summary": {
+    "_note": "Pre-aggregated for Phase 6 (Admin outcome-analytics) so the dashboard has a demo-ready 'training outcome delta' view without waiting for a live aggregation query.",
+    "avg_score_delta_by_skill": [
+      { "skill_label": "Python", "avg_before": 1.5, "avg_after": 3.5, "delta": 2.0, "officer_count": 1 },
+      { "skill_label": "National Accounts", "avg_before": 1.0, "avg_after": 5.0, "delta": 4.0, "officer_count": 1 },
+      { "skill_label": "AI/ML", "avg_before": 1.0, "avg_after": 2.7, "delta": 1.7, "officer_count": 1 },
+      { "skill_label": "GIS", "avg_before": 2.0, "avg_after": 3.1, "delta": 1.1, "officer_count": 1 },
+      { "skill_label": "Survey Design", "avg_before": 2.0, "avg_after": 2.6, "delta": 0.6, "officer_count": 1 }
+    ]
+  }
+}

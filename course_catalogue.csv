@@ -1,0 +1,84 @@
+course_id,course_title,category,skill_tags,duration_hours,level,source
+C001,Database Management and Data Visualization,Technical,"SQL,Data Visualization",40,intermediate,real_nssta
+C002,Refresher Course on Price Indices,Statistical,"Price Statistics,Sampling",20,intermediate,real_nssta
+C003,SSS Induction Training - Core Statistics,Statistical,"Survey Design,Sampling,Ethics",80,beginner,real_nssta
+C004,ISS Probationary Training Programme,Statistical,"Survey Design,National Accounts,Leadership",200,advanced,real_nssta
+C005,Awareness Programme on Official Statistics,Statistical,"Survey Design,Metadata Standards",16,beginner,real_nssta
+C006,International Training Programme on Official Statistics,Statistical,"SDG Indicators,National Accounts",60,advanced,real_nssta
+C007,Pay Fixation Income Tax and Office Procedure,Behavioural,"Communication,Ethics",16,beginner,real_nssta
+C008,Introduction to Python for Statistical Analysis,Technical,"Python,SQL",24,beginner,mock
+C009,Advanced Python for Data Science,Technical,"Python,AI/ML,Data Visualization",32,advanced,mock
+C010,SQL Fundamentals for Government Data Systems,Technical,"SQL,Data Quality Frameworks",16,beginner,mock
+C011,GIS Applications in Official Statistics,Technical,"GIS,Agricultural Statistics",24,intermediate,mock
+C012,Advanced GIS and Spatial Data Analysis,Technical,"GIS,APIs,Open Data",32,advanced,mock
+C013,Data Visualization with R and Tableau,Technical,"R,Data Visualization",20,intermediate,mock
+C014,Machine Learning Foundations for Statisticians,Technical,"AI/ML,Python",40,intermediate,mock
+C015,Cloud Computing for Government Data Infrastructure,Technical,"Cloud Computing,Government Cloud",24,intermediate,mock
+C016,APIs and Open Data Standards,Technical,"APIs,Open Data,Digital Public Infrastructure",16,intermediate,mock
+C017,Cybersecurity Essentials for Public Officials,Digital Governance,"Cybersecurity,Data Privacy",16,beginner,mock
+C018,Data Privacy and Digital Signatures in Governance,Digital Governance,"Data Privacy,Digital Signatures",12,beginner,mock
+C019,Digital Public Infrastructure Overview,Digital Governance,"Digital Public Infrastructure,Government Cloud",16,intermediate,mock
+C020,Survey Design and Sampling Techniques,Statistical,"Survey Design,Sampling",32,intermediate,mock
+C021,National Accounts Statistics Fundamentals,Statistical,"National Accounts,Data Quality Frameworks",24,intermediate,mock
+C022,Industrial Statistics Deep Dive,Statistical,"Industrial Statistics,Data Quality Frameworks",24,advanced,mock
+C023,Labour Statistics and SDG Indicators,Statistical,"Labour Statistics,SDG Indicators",24,intermediate,mock
+C024,Agricultural Statistics Data Collection Methods,Statistical,"Agricultural Statistics,Survey Design",24,intermediate,mock
+C025,Metadata Standards and Data Quality Frameworks,Statistical,"Metadata Standards,Data Quality Frameworks",16,intermediate,mock
+C026,Stata for Applied Statistical Research,Technical,"Stata,Sampling",20,intermediate,mock
+C027,SPSS for Survey Data Analysis,Technical,"SPSS,Data Quality Frameworks",20,beginner,mock
+C028,SAS Programming for Government Analysts,Technical,"SAS,SQL",24,intermediate,mock
+C029,Leadership Skills for Statistical Officers,Behavioural,"Leadership,Decision Making",16,intermediate,mock
+C030,Project Management for Public Sector Projects,Behavioural,"Project Management,Change Management",20,intermediate,mock
+C031,Effective Communication in Government Roles,Behavioural,"Communication,Ethics",12,beginner,mock
+C032,Change Management in Digital Transformation,Behavioural,"Change Management,Decision Making",16,advanced,mock
+C033,Ethics and Decision Making in Public Service,Behavioural,"Ethics,Decision Making",12,beginner,mock
+C034,Introduction to AI for Government Officials,Technical,"AI/ML,Digital Public Infrastructure",16,beginner,mock
+C035,SDG Indicator Framework and Reporting,Statistical,"SDG Indicators,Metadata Standards",16,intermediate,mock
+C036,Price Statistics and Index Construction,Statistical,"Price Statistics,National Accounts",24,intermediate,mock
+C037,Data Quality Assurance in Official Statistics,Statistical,"Data Quality Frameworks,Metadata Standards",16,intermediate,mock
+C038,Cloud Security for Government Cloud Platforms,Digital Governance,"Cybersecurity,Government Cloud",16,advanced,mock
+C039,R Programming for Statistical Officers,Technical,"R,Data Visualization",24,beginner,mock
+C040,Advanced Sampling Methodologies,Statistical,"Sampling,Survey Design",24,advanced,mock
+C041,Introduction to National Accounts,Statistical,National Accounts,16,beginner,igot_mock
+C042,Office Procedure,Functional,Office Procedure,12,beginner,igot_mock
+C043,Data-Driven Decision Making for Government,Technical,"Data Visualization,Decision Making",24,intermediate,igot_mock
+C044,Code of Conduct for Government Employees,Behavioural,Ethics,8,beginner,igot_mock
+C045,Sampling Techniques & Survey Design (iGOT),Statistical,"Sampling,Survey Design",24,intermediate,igot_mock
+C046,Public Procurement and GeM,Functional,Procurement,16,beginner,igot_mock
+C047,Digital Governance and GovTech,Digital Governance,Digital Public Infrastructure,20,intermediate,igot_mock
+C048,Effective Communication in Government (iGOT),Behavioural,Communication,12,beginner,igot_mock
+C049,Official Statistics and Indicators,Statistical,SDG Indicators,20,intermediate,igot_mock
+C050,R Programming for Data Analytics,Technical,R,24,beginner,igot_mock
+C051,Citizen-Centric Governance,Behavioural,Public Service,16,beginner,igot_mock
+C052,RTI Act 2005 Orientation,Functional,RTI Compliance,8,beginner,igot_mock
+C053,Cyber Security for Public Officials (iGOT),Digital Governance,Cybersecurity,16,beginner,igot_mock
+C054,Project Management Frameworks (iGOT),Behavioural,Project Management,20,intermediate,igot_mock
+C055,Financial Rules & Budgeting,Functional,Financial Rules,16,beginner,igot_mock
+C056,Time Management and Productivity,Behavioural,Time Management,8,beginner,igot_mock
+C057,Leadership and Strategic Thinking,Behavioural,Leadership,24,advanced,igot_mock
+C058,Introduction to Python for Statistics (iGOT),Technical,Python,24,beginner,igot_mock
+C059,Index Numbers & Inflation Metrics,Statistical,Price Statistics,16,intermediate,igot_mock
+C060,Gender Sensitization in Public Policy,Behavioural,Gender Sensitization,8,beginner,igot_mock
+C061,Advanced Office Tools (Excel & Word),Technical,Data Visualization,16,beginner,igot_mock
+C062,Sustainable Development Goals (SDGs),Statistical,SDG Indicators,16,intermediate,igot_mock
+C063,Establishment Rules & Service Matters,Functional,Establishment Rules,12,beginner,igot_mock
+C064,Stress Management at Workplace,Behavioural,Stress Management,8,beginner,igot_mock
+C065,Design Thinking for Innovation,Behavioural,Decision Making,16,intermediate,igot_mock
+C066,E-Office Usage and Workflows,Technical,Digital Public Infrastructure,8,beginner,igot_mock
+C067,Introduction to Econometrics,Statistical,National Accounts,24,intermediate,igot_mock
+C068,Vigilance Awareness & Procedures,Functional,Vigilance,8,beginner,igot_mock
+C069,Crisis and Disaster Management,Statistical,Disaster Management,16,intermediate,igot_mock
+C070,Basic Accounting Principles,Functional,Government Accounts,16,beginner,igot_mock
+C071,Data Visualization Tools (iGOT),Technical,Data Visualization,20,intermediate,igot_mock
+C072,Emotional Intelligence in Public Service,Behavioural,Leadership,12,intermediate,igot_mock
+C073,Government Schemes Implementation,Statistical,Scheme Implementation,16,intermediate,igot_mock
+C074,Prevention of Sexual Harassment (POSH),Functional,POSH Compliance,4,beginner,igot_mock
+C075,Artificial Intelligence in Governance,Technical,AI/ML,20,intermediate,igot_mock
+C076,Handling of unit-level data of NSS and its analysis,Statistical,"Data Quality Frameworks,Sampling",40,intermediate,real_nssta
+C077,"Course on AI, AI-ready Data, Machine-readable Data",Technical,"AI/ML,Data Quality Frameworks",40,intermediate,real_nssta
+C078,R and Python through ISI Delhi,Technical,"R,Python",480,advanced,real_nssta
+C079,Handling Large Scale Data & Data Analytics using R,Technical,"R,Data Visualization",40,intermediate,real_nssta
+C080,Application of Remote Sensing and Disaster Management,Technical,GIS,40,intermediate,real_nssta
+C081,"Specialized Training in SDG, Data Analytics",Statistical,"SDG Indicators,Data Visualization",40,intermediate,real_nssta
+C082,"Big Data, AI with Python, ML, AI-ready Data (ISS Probationary)",Technical,"AI/ML,Python,Data Quality Frameworks",120,advanced,real_nssta
+C083,Essentials of Survey Design,Statistical,"Survey Design,Sampling",120,advanced,real_nssta

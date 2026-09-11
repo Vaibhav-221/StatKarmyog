@@ -1,0 +1,101 @@
+{
+  "_note": "MOCK DATA - Fictional officer profiles for demo purposes only. No real personnel data used. Current skill levels assigned manually to demonstrate gap-analysis logic (1=none/basic, 5=expert).",
+  "officers": [
+    {
+      "officer_id": "OFF001",
+      "name": "Rakesh Kumar",
+      "designation": "Junior Statistical Officer (JSO) - Industrial Statistics",
+      "role_id": "R01",
+      "department": "Industrial Statistics Division",
+      "experience_years": 3,
+      "qualification": "M.Sc. Statistics",
+      "past_trainings": ["SSS Induction Training 2023"],
+      "current_skills": {
+        "Survey Design": 2, "Sampling": 2, "Industrial Statistics": 3, "Data Quality Frameworks": 1,
+        "Python": 1, "SQL": 2, "Data Visualization": 1,
+        "Data Privacy": 1,
+        "Communication": 3, "Ethics": 3
+      }
+    },
+    {
+      "officer_id": "OFF002",
+      "name": "Sunita Verma",
+      "designation": "Senior Statistical Officer (SSO) - Price Statistics",
+      "role_id": "R02",
+      "department": "Price Statistics Division",
+      "experience_years": 8,
+      "qualification": "M.A. Economics",
+      "past_trainings": ["Refresher Course on Price Indices 2021", "Pay Fixation & Office Procedure 2025"],
+      "current_skills": {
+        "Price Statistics": 4, "Sampling": 3, "National Accounts": 1, "Metadata Standards": 2,
+        "SQL": 1, "R": 1, "Data Visualization": 2, "Stata": 2,
+        "Data Privacy": 1,
+        "Project Management": 2, "Communication": 4
+      }
+    },
+    {
+      "officer_id": "OFF003",
+      "name": "Arjun Nair",
+      "designation": "Indian Statistical Service (ISS) Officer - Labour Statistics",
+      "role_id": "R03",
+      "department": "Labour Statistics Division",
+      "experience_years": 12,
+      "qualification": "M.Stat, ISI Kolkata",
+      "past_trainings": ["ISS Probationary Training", "Data Base Management and Data Visualization 2025"],
+      "current_skills": {
+        "Labour Statistics": 4, "Survey Design": 3, "SDG Indicators": 2, "Data Quality Frameworks": 2,
+        "Python": 2, "SQL": 3, "AI/ML": 1, "GIS": 1,
+        "Government Cloud": 1, "Cybersecurity": 1,
+        "Leadership": 3, "Decision Making": 3, "Change Management": 2
+      }
+    },
+    {
+      "officer_id": "OFF004",
+      "name": "Priya Deshmukh",
+      "designation": "Statistical Officer - GIS & Spatial Data",
+      "role_id": "R04",
+      "department": "Agricultural Statistics Division",
+      "experience_years": 5,
+      "qualification": "M.Sc. Geoinformatics",
+      "past_trainings": ["Awareness Programme on Official Statistics 2022"],
+      "current_skills": {
+        "Survey Design": 2, "Agricultural Statistics": 2, "Metadata Standards": 1,
+        "GIS": 3, "Python": 2, "Data Visualization": 3, "APIs": 1, "Open Data": 1,
+        "Digital Public Infrastructure": 1,
+        "Communication": 2, "Project Management": 1
+      }
+    },
+    {
+      "officer_id": "OFF005",
+      "name": "Vikram Singh Rathore",
+      "designation": "Deputy Director - Data Informatics & Innovation Division (DIID)",
+      "role_id": "R05",
+      "department": "DIID",
+      "experience_years": 15,
+      "qualification": "M.Tech Computer Science",
+      "past_trainings": ["International Training Programme 2018", "AI & Emerging Tech Workshop 2024"],
+      "current_skills": {
+        "SDG Indicators": 2, "Data Quality Frameworks": 2, "National Accounts": 1,
+        "AI/ML": 2, "Cloud Computing": 2, "SQL": 3, "APIs": 2, "Open Data": 2,
+        "Cybersecurity": 2, "Data Privacy": 2, "Government Cloud": 1, "Digital Public Infrastructure": 2,
+        "Leadership": 3, "Project Management": 3, "Change Management": 2, "Decision Making": 3
+      }
+    },
+    {
+      "officer_id": "OFF006",
+      "name": "Ananya Iyer",
+      "designation": "Junior Statistical Officer (JSO) - Industrial Statistics",
+      "role_id": "R01",
+      "department": "Industrial Statistics Division",
+      "experience_years": 1,
+      "qualification": "M.Sc. Statistics",
+      "past_trainings": ["SSS Induction Training 2025"],
+      "current_skills": {
+        "Survey Design": 1, "Sampling": 1, "Industrial Statistics": 1, "Data Quality Frameworks": 1,
+        "Python": 1, "SQL": 1, "Data Visualization": 1,
+        "Data Privacy": 1,
+        "Communication": 2, "Ethics": 2
+      }
+    }
+  ]
+}

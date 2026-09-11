@@ -1,0 +1,119 @@
+{
+  "_note": "MOCK DATA. Schema modeled on the publicly-documented iGOT Karmayogi FRAC (Framework of Roles, Activities and Competencies) competency dictionary structure: Competency ID (CID), Competency Label, Competency Type (B=Behavioural, D=Domain, F=Functional), and Level 1-5 descriptions. Real FRAC competency dictionaries are department-specific and not publicly published as structured data (source: FRAC Framework Overview, istm.gov.in / scribd 5144_12292020_iGOT). Skill labels below match skill_framework.json / officer_profiles.json used elsewhere in this prototype so all files stay linkable by name.",
+  "source_reference": "Modeled on FRAC dictionary fields (Competency ID, Label, Type BDF, Level Description) as described in official Mission Karmayogi FRAC documentation. Real CIDs, level-wording and department-specific competencies are not public.",
+  "competencies": [
+    { "cid": "CID-D-101", "label": "Survey Design", "type": "Domain", "level_descriptions": {
+        "1": "Aware of basic survey design terminology", "2": "Assists in designing simple single-stage surveys under supervision",
+        "3": "Independently designs standard NSS-type survey instruments", "4": "Designs complex multi-stage/stratified surveys and reviews others' designs",
+        "5": "Sets survey design methodology/standards at division level" } },
+    { "cid": "CID-D-102", "label": "Sampling", "type": "Domain", "level_descriptions": {
+        "1": "Understands basic sampling concepts (random, systematic)", "2": "Applies standard sampling frames under guidance",
+        "3": "Independently applies stratified/multi-stage sampling", "4": "Designs sampling schemes for new survey types",
+        "5": "Advises on national-level sampling frame standards" } },
+    { "cid": "CID-D-103", "label": "National Accounts", "type": "Domain", "level_descriptions": {
+        "1": "Aware of GDP/GVA basic concepts", "2": "Compiles basic national accounts aggregates under supervision",
+        "3": "Independently compiles sectoral accounts", "4": "Reconciles cross-sectoral national accounts data",
+        "5": "Leads national accounts methodology revisions" } },
+    { "cid": "CID-D-104", "label": "Price Statistics", "type": "Domain", "level_descriptions": {
+        "1": "Understands CPI/WPI basic concepts", "2": "Collects/validates price data under supervision",
+        "3": "Independently compiles price indices", "4": "Reviews index methodology and base-year revisions",
+        "5": "Sets price-index compilation standards" } },
+    { "cid": "CID-D-105", "label": "Labour Statistics", "type": "Domain", "level_descriptions": {
+        "1": "Aware of employment/unemployment indicator definitions", "2": "Processes labour force survey data under supervision",
+        "3": "Independently analyses PLFS-type datasets", "4": "Designs labour statistics survey modules",
+        "5": "Leads labour statistics policy-linked analysis" } },
+    { "cid": "CID-D-106", "label": "Agricultural Statistics", "type": "Domain", "level_descriptions": {
+        "1": "Aware of crop estimation basics", "2": "Assists in agricultural survey data collection",
+        "3": "Independently compiles crop/yield estimates", "4": "Validates area-frame and remote-sensing based estimates",
+        "5": "Leads agricultural statistics methodology" } },
+    { "cid": "CID-D-107", "label": "Industrial Statistics", "type": "Domain", "level_descriptions": {
+        "1": "Aware of ASI/IIP basic concepts", "2": "Processes industrial survey returns under supervision",
+        "3": "Independently compiles industrial statistics", "4": "Reviews IIP/ASI methodology applications",
+        "5": "Leads industrial statistics division output" } },
+    { "cid": "CID-D-108", "label": "SDG Indicators", "type": "Domain", "level_descriptions": {
+        "1": "Aware of SDG indicator framework", "2": "Compiles basic SDG indicator values under supervision",
+        "3": "Independently maps departmental data to SDG indicators", "4": "Validates/reconciles SDG reporting across sources",
+        "5": "Leads national SDG progress reporting" } },
+    { "cid": "CID-D-109", "label": "Metadata Standards", "type": "Domain", "level_descriptions": {
+        "1": "Aware of metadata concepts (SDMX etc.)", "2": "Tags datasets with standard metadata under guidance",
+        "3": "Independently applies metadata standards to survey outputs", "4": "Reviews metadata quality across datasets",
+        "5": "Sets metadata standards at division/ministry level" } },
+    { "cid": "CID-D-110", "label": "Data Quality Frameworks", "type": "Domain", "level_descriptions": {
+        "1": "Aware of data quality dimensions", "2": "Applies basic quality checks under supervision",
+        "3": "Independently runs data quality validation", "4": "Designs quality-assurance protocols",
+        "5": "Sets data quality standards at organisational level" } },
+    { "cid": "CID-F-201", "label": "Python", "type": "Functional", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Writes basic scripts for data cleaning", "3": "Builds analysis pipelines independently",
+        "4": "Develops reusable modules/automation", "5": "Architects production-grade data systems" } },
+    { "cid": "CID-F-202", "label": "R", "type": "Functional", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Runs pre-built R scripts", "3": "Writes independent statistical analysis scripts",
+        "4": "Builds R packages/dashboards", "5": "Leads R-based methodology development" } },
+    { "cid": "CID-F-203", "label": "SQL", "type": "Functional", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Writes basic SELECT queries", "3": "Writes joins/aggregations independently",
+        "4": "Optimises complex queries and designs schemas", "5": "Architects database systems" } },
+    { "cid": "CID-F-204", "label": "Stata", "type": "Functional", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Runs basic do-files", "3": "Writes independent analysis scripts",
+        "4": "Builds custom estimation routines", "5": "Leads Stata-based methodology" } },
+    { "cid": "CID-F-205", "label": "SPSS", "type": "Functional", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Runs basic procedures", "3": "Independent statistical analysis",
+        "4": "Builds custom syntax/macros", "5": "Leads SPSS-based analysis standards" } },
+    { "cid": "CID-F-206", "label": "SAS", "type": "Functional", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Runs basic procedures", "3": "Independent analysis scripting",
+        "4": "Builds custom macros", "5": "Leads SAS-based systems" } },
+    { "cid": "CID-D-207", "label": "GIS", "type": "Domain", "level_descriptions": {
+        "1": "No/basic exposure to GIS tools", "2": "Views/queries existing spatial layers",
+        "3": "Creates basic spatial analysis independently", "4": "Integrates survey data with GIS layers",
+        "5": "Leads geo-spatial statistics initiatives" } },
+    { "cid": "CID-F-208", "label": "Data Visualization", "type": "Functional", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Creates basic charts from templates", "3": "Builds independent dashboards",
+        "4": "Designs data-storytelling for policy audiences", "5": "Sets visualization standards for the division" } },
+    { "cid": "CID-D-209", "label": "AI/ML", "type": "Domain", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Aware of ML concepts, uses pre-built tools",
+        "3": "Applies standard ML models to statistical data under guidance", "4": "Independently builds/evaluates ML pipelines",
+        "5": "Leads AI/ML adoption for official statistics" } },
+    { "cid": "CID-F-210", "label": "Cloud Computing", "type": "Functional", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Uses provisioned cloud resources", "3": "Independently deploys workloads on cloud",
+        "4": "Designs cloud architecture for data systems", "5": "Sets cloud strategy for the division" } },
+    { "cid": "CID-F-211", "label": "APIs", "type": "Functional", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Consumes existing APIs with guidance", "3": "Independently integrates APIs",
+        "4": "Designs/documents APIs for data sharing", "5": "Sets API standards for the division" } },
+    { "cid": "CID-D-212", "label": "Open Data", "type": "Domain", "level_descriptions": {
+        "1": "Aware of Open Data policy", "2": "Publishes datasets under supervision", "3": "Independently manages open-data publication",
+        "4": "Designs open-data governance processes", "5": "Leads open-data policy for the division" } },
+    { "cid": "CID-B-301", "label": "Cybersecurity", "type": "Behavioural", "level_descriptions": {
+        "1": "Aware of basic cyber-hygiene", "2": "Follows security protocols under guidance",
+        "3": "Independently applies security best practices", "4": "Reviews security compliance for systems",
+        "5": "Sets cybersecurity standards for the division" } },
+    { "cid": "CID-B-302", "label": "Data Privacy", "type": "Behavioural", "level_descriptions": {
+        "1": "Aware of data privacy basics", "2": "Follows privacy protocols under guidance",
+        "3": "Independently ensures privacy compliance in survey data", "4": "Designs privacy-preserving data processes",
+        "5": "Sets data privacy policy for the division" } },
+    { "cid": "CID-F-303", "label": "Digital Signatures", "type": "Functional", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Uses digital signatures for routine tasks", "3": "Independently manages digital-signature workflows",
+        "4": "Administers digital-signature infrastructure", "5": "Sets digital-signature policy" } },
+    { "cid": "CID-F-304", "label": "Government Cloud", "type": "Functional", "level_descriptions": {
+        "1": "No/basic exposure", "2": "Uses provisioned GCC resources", "3": "Independently deploys workloads on GCC",
+        "4": "Designs GCC architecture for data systems", "5": "Sets GCC strategy for the division" } },
+    { "cid": "CID-F-305", "label": "Digital Public Infrastructure", "type": "Functional", "level_descriptions": {
+        "1": "Aware of DPI concepts", "2": "Uses DPI-linked systems under guidance", "3": "Independently integrates with DPI systems",
+        "4": "Designs DPI-aligned data workflows", "5": "Leads DPI strategy for the division" } },
+    { "cid": "CID-B-401", "label": "Leadership", "type": "Behavioural", "level_descriptions": {
+        "1": "Aware of leadership principles", "2": "Leads small tasks under guidance", "3": "Independently leads a team/unit",
+        "4": "Leads cross-functional initiatives", "5": "Sets organisational direction" } },
+    { "cid": "CID-B-402", "label": "Communication", "type": "Behavioural", "level_descriptions": {
+        "1": "Basic written/verbal communication", "2": "Communicates routine reports clearly", "3": "Communicates complex findings to stakeholders",
+        "4": "Communicates policy-level insights to leadership", "5": "Represents the division in national/international forums" } },
+    { "cid": "CID-B-403", "label": "Project Management", "type": "Behavioural", "level_descriptions": {
+        "1": "Aware of project management basics", "2": "Executes assigned project tasks", "3": "Independently manages small projects",
+        "4": "Manages multi-stakeholder projects", "5": "Sets project governance standards" } },
+    { "cid": "CID-B-404", "label": "Ethics", "type": "Behavioural", "level_descriptions": {
+        "1": "Aware of code of conduct", "2": "Applies ethical guidelines under guidance", "3": "Independently upholds ethical standards",
+        "4": "Mentors others on ethical practice", "5": "Shapes ethical standards for the division" } },
+    { "cid": "CID-B-405", "label": "Decision Making", "type": "Behavioural", "level_descriptions": {
+        "1": "Follows instructions for routine decisions", "2": "Makes routine decisions independently", "3": "Makes complex decisions with incomplete data",
+        "4": "Makes decisions with organisation-wide impact", "5": "Sets decision-making frameworks" } },
+    { "cid": "CID-B-406", "label": "Change Management", "type": "Behavioural", "level_descriptions": {
+        "1": "Aware of change management basics", "2": "Adapts to change under guidance", "3": "Independently manages small-scale change",
+        "4": "Leads organisational change initiatives", "5": "Sets change-management strategy" } }
+  ]
+}

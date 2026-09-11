@@ -1,0 +1,27 @@
+enrollment_id,officer_id,course_id,course_title,status,enrolled_date,progress_percent,completion_date
+E0001,OFF001,C009,Advanced Python for Data Science,Completed,2026-04-10,100,2026-09-01
+E0002,OFF001,C022,Industrial Statistics Deep Dive,In-Progress,2026-05-15,30,
+E0003,OFF001,C082,"Big Data, AI with Python, ML, AI-ready Data (ISS Probationary)",Enrolled,2026-06-20,0,
+E0004,OFF001,C001,Database Management and Data Visualization,Completed,2026-07-25,100,2026-09-01
+E0005,OFF001,C003,SSS Induction Training - Core Statistics,In-Progress,2026-08-05,30,
+E0006,OFF002,C001,Database Management and Data Visualization,Completed,2026-04-10,100,2026-09-01
+E0007,OFF002,C013,Data Visualization with R and Tableau,In-Progress,2026-05-15,60,
+E0008,OFF002,C039,R Programming for Statistical Officers,Enrolled,2026-06-20,0,
+E0009,OFF002,C079,Handling Large Scale Data & Data Analytics using R,Completed,2026-07-25,100,2026-09-01
+E0010,OFF002,C004,ISS Probationary Training Programme,In-Progress,2026-08-05,45,
+E0011,OFF003,C082,"Big Data, AI with Python, ML, AI-ready Data (ISS Probationary)",Completed,2026-04-10,100,2026-09-01
+E0012,OFF003,C009,Advanced Python for Data Science,In-Progress,2026-05-15,45,
+E0013,OFF003,C014,Machine Learning Foundations for Statisticians,Enrolled,2026-06-20,0,
+E0014,OFF004,C012,Advanced GIS and Spatial Data Analysis,Completed,2026-04-10,100,2026-09-01
+E0015,OFF004,C016,APIs and Open Data Standards,In-Progress,2026-05-15,30,
+E0016,OFF004,C005,Awareness Programme on Official Statistics,Enrolled,2026-06-20,0,
+E0017,OFF004,C009,Advanced Python for Data Science,Completed,2026-07-25,100,2026-09-01
+E0018,OFF004,C011,GIS Applications in Official Statistics,In-Progress,2026-08-05,30,
+E0019,OFF005,C016,APIs and Open Data Standards,Completed,2026-04-10,100,2026-09-01
+E0020,OFF005,C004,ISS Probationary Training Programme,In-Progress,2026-05-15,75,
+E0021,OFF005,C006,International Training Programme on Official Statistics,Enrolled,2026-06-20,0,
+E0022,OFF005,C012,Advanced GIS and Spatial Data Analysis,Completed,2026-07-25,100,2026-09-01
+E0023,OFF005,C015,Cloud Computing for Government Data Infrastructure,In-Progress,2026-08-05,30,
+E0024,OFF006,C003,SSS Induction Training - Core Statistics,Completed,2026-04-10,100,2026-09-01
+E0025,OFF006,C001,Database Management and Data Visualization,In-Progress,2026-05-15,30,
+E0026,OFF006,C007,Pay Fixation Income Tax and Office Procedure,Enrolled,2026-06-20,0,
