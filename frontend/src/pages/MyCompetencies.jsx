@@ -2,20 +2,69 @@
  * My Competencies page — Detailed breakdown of officer competencies with scoring modal.
  */
 
-import React, { useState } from 'react';
-import { Row, Col, Card, Typography, Progress, Tag, Button, Modal, Table, Space, Alert } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Row, Col, Card, Typography, Progress, Tag, Button, Modal, Table, Space, Alert, Empty, Skeleton } from 'antd';
 import {
   InfoCircleOutlined,
   CheckCircleOutlined,
   ExclamationCircleOutlined,
   CalculatorOutlined,
 } from '@ant-design/icons';
-import { MOCK_GAP_TABLE } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { getGapAnalysis, getCompetencyScores } from '../api/client';
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function MyCompetencies() {
+  const { user } = useAuth();
+  const officerId = user?.officer_id || 'OFF001';
   const [modalVisible, setModalVisible] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [gaps, setGaps] = useState([]);
+  const [scores, setScores] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const [gapRes, scoreRes] = await Promise.all([
+        getGapAnalysis(officerId),
+        getCompetencyScores(officerId),
+      ]);
+      setGaps(gapRes.data?.gaps || []);
+      setScores(scoreRes.data || []);
+      setLoading(false);
+    }
+    load();
+  }, [officerId]);
+
+  const rows = useMemo(() => {
+    const latestBySkill = {};
+    scores.forEach((score) => {
+      const existing = latestBySkill[score.skill_label];
+      if (!existing || `${score.recorded_on}-${score.id}` > `${existing.recorded_on}-${existing.id}`) {
+        latestBySkill[score.skill_label] = score;
+      }
+    });
+
+    return gaps.map((gap, index) => {
+      const score = latestBySkill[gap.skill];
+      const required = Math.round(gap.expected_level * 20);
+      const current = Math.round(gap.current_level * 20);
+      const gapPercent = Math.max(0, Math.round(gap.gap_size * 20));
+      return {
+        key: gap.skill || index,
+        cid: score?.cid || '',
+        competency: gap.skill,
+        required,
+        current,
+        gap: gapPercent,
+        status: gapPercent > 20 ? 'High Gap' : gapPercent > 5 ? 'Moderate Gap' : 'Near Target',
+        confidence: gap.confidence_level,
+        knowledge: score?.quiz_score !== null && score?.quiz_score !== undefined ? Math.round(score.quiz_score * 20) : null,
+        artifact: score?.artifact_score !== null && score?.artifact_score !== undefined ? Math.round(score.artifact_score * 20) : null,
+      };
+    });
+  }, [gaps, scores]);
 
   const columns = [
     {
@@ -45,7 +94,7 @@ export default function MyCompetencies() {
       render: (val, record) => (
         <div style={{ minWidth: 140 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-            <span>{val}%</span>
+          <span>{val}%</span>
             <span style={{ color: '#64748B' }}>Target: {record.required}%</span>
           </div>
           <Progress
@@ -111,7 +160,13 @@ export default function MyCompetencies() {
 
       {/* Competencies Table */}
       <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-        <Table dataSource={MOCK_GAP_TABLE} columns={columns} pagination={false} rowKey="key" />
+        {loading ? (
+          <Skeleton active paragraph={{ rows: 6 }} />
+        ) : rows.length > 0 ? (
+          <Table dataSource={rows} columns={columns} pagination={false} rowKey="key" />
+        ) : (
+          <Empty description="No competency gaps found for this officer" />
+        )}
       </Card>
 
       {/* Score Calculation Modal */}

@@ -2,7 +2,7 @@
  * QuizPage — AI Quiz Generator, MCQ Interface & Before/After Re-Assessment Result.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Row,
   Col,
@@ -32,7 +32,7 @@ import {
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 
-import { generateQuizApi, submitQuizApi } from '../api/client';
+import { generateQuizApi, submitQuizApi, getGapAnalysis } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 const { Title, Text, Paragraph } = Typography;
@@ -40,6 +40,7 @@ const { Title, Text, Paragraph } = Typography;
 export default function QuizPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const officerId = user?.officer_id || 'OFF001';
 
   // State workflow: 'generator' | 'generating' | 'quiz' | 'result'
   const [stage, setStage] = useState('generator');
@@ -48,76 +49,99 @@ export default function QuizPage() {
   // Form selections
   const [numQuestions, setNumQuestions] = useState(10);
   const [difficulty, setDifficulty] = useState('Intermediate');
-  const [selectedCompetency, setSelectedCompetency] = useState('Sampling Methodology');
+  const [selectedCompetency, setSelectedCompetency] = useState('');
+  const [competencyOptions, setCompetencyOptions] = useState([]);
+  const [loadingGaps, setLoadingGaps] = useState(true);
   const [fileList, setFileList] = useState([]);
 
   // Quiz state
   const [currentQIndex, setCurrentQIndex] = useState(0);
   const [userAnswers, setUserAnswers] = useState({});
   const [attemptId, setAttemptId] = useState(null);
+  const [questions, setQuestions] = useState([]);
   const [submitResult, setSubmitResult] = useState(null);
 
-  const sampleQuestions = [
-    {
-      id: 1,
-      question: 'Which sampling method is most appropriate when the population is divided into distinct subgroups (strata)?',
-      options: [
-        { key: 'A', text: 'Simple Random Sampling' },
-        { key: 'B', text: 'Stratified Random Sampling' },
-        { key: 'C', text: 'Systematic Sampling' },
-        { key: 'D', text: 'Cluster Sampling' },
-      ],
-      correctKey: 'B',
-    },
-    {
-      id: 2,
-      question: 'In official statistical sample surveys, what does Primary Sampling Unit (PSU) refer to?',
-      options: [
-        { key: 'A', text: 'The final individual household surveyed' },
-        { key: 'B', text: 'The first-stage sampling unit, such as a census village or urban block' },
-        { key: 'C', text: 'The non-sampling error rate' },
-        { key: 'D', text: 'The variance multiplier' },
-      ],
-      correctKey: 'B',
-    },
-    {
-      id: 3,
-      question: 'What is the principal advantage of using proportional allocation in stratified sampling?',
-      options: [
-        { key: 'A', text: 'Minimizes variance for a given sample size across heterogeneous strata' },
-        { key: 'B', text: 'Eliminates non-response bias' },
-        { key: 'C', text: 'Ensures equal sample sizes regardless of stratum population' },
-        { key: 'D', text: 'Replaces census data completely' },
-      ],
-      correctKey: 'A',
-    },
-  ];
+  // Fetch officer-specific competency gaps for target competency selection
+  useEffect(() => {
+    async function fetchOfficerGaps() {
+      setLoadingGaps(true);
+      try {
+        const res = await getGapAnalysis(officerId);
+        const gaps = res.data?.gaps || [];
+        if (gaps.length > 0) {
+          const opts = gaps.map((g) => ({
+            value: g.skill,
+            label: `${g.skill} (Gap: ${g.gap_size} pts)`,
+          }));
+          setCompetencyOptions(opts);
+          setSelectedCompetency(opts[0].value);
+        } else {
+          const fallbackOpts = [
+            { value: 'Survey Design', label: 'Survey Design' },
+            { value: 'Sampling', label: 'Sampling' },
+            { value: 'Data Quality Frameworks', label: 'Data Quality Frameworks' },
+            { value: 'Industrial Statistics', label: 'Industrial Statistics' },
+          ];
+          setCompetencyOptions(fallbackOpts);
+          setSelectedCompetency(fallbackOpts[0].value);
+        }
+      } catch (err) {
+        console.error('[QuizPage] Failed to fetch officer gaps:', err);
+      } finally {
+        setLoadingGaps(false);
+      }
+    }
+    fetchOfficerGaps();
+  }, [officerId]);
 
   const handleGenerateQuiz = async () => {
     setStage('generating');
     setGenerationStep(0);
 
-    setTimeout(() => setGenerationStep(1), 600);
-    setTimeout(() => setGenerationStep(2), 1200);
-    setTimeout(() => setGenerationStep(3), 1800);
-    setTimeout(() => setGenerationStep(4), 2400);
+    const stepTimer1 = setTimeout(() => setGenerationStep(1), 600);
+    const stepTimer2 = setTimeout(() => setGenerationStep(2), 1200);
+    const stepTimer3 = setTimeout(() => setGenerationStep(3), 1800);
+    const stepTimer4 = setTimeout(() => setGenerationStep(4), 2400);
 
-    const formData = new FormData();
-    if (fileList.length > 0) {
-      formData.append('file', fileList[0].originFileObj || fileList[0]);
-    }
-    formData.append('difficulty', difficulty.toLowerCase());
-    formData.append('language', 'en');
+    try {
+      const formData = new FormData();
+      if (fileList.length > 0) {
+        formData.append('file', fileList[0].originFileObj || fileList[0]);
+      }
+      const difficultyMap = { Basic: 'easy', Intermediate: 'medium', Advanced: 'hard' };
+      formData.append('difficulty', difficultyMap[difficulty] || 'medium');
+      formData.append('language', 'en');
+      formData.append('num_questions', String(numQuestions));
+      formData.append('officer_id', officerId);
+      if (selectedCompetency) {
+        formData.append('target_competency', selectedCompetency);
+      }
 
-    const res = await generateQuizApi(formData);
-    if (res.data?.attempt_id) {
+      const res = await generateQuizApi(formData);
+
+      if (res.error || !res.data?.attempt_id || !Array.isArray(res.data?.questions)) {
+        const errorMsg = res.message || 'Backend quiz generation is unavailable. No assessment was created.';
+        message.error(`Quiz generation failed: ${errorMsg}`, 6);
+        setStage('generator');
+        return;
+      }
+
       setAttemptId(res.data.attempt_id);
-    }
-
-    setTimeout(() => {
+      setQuestions(res.data.questions);
+      setUserAnswers({});
+      setCurrentQIndex(0);
       setStage('quiz');
       message.success('AI Quiz generated successfully!');
-    }, 3000);
+    } catch (err) {
+      console.error('[QuizPage] Error in quiz generation:', err);
+      message.error(`An unexpected error occurred: ${err.message || err}`, 6);
+      setStage('generator');
+    } finally {
+      clearTimeout(stepTimer1);
+      clearTimeout(stepTimer2);
+      clearTimeout(stepTimer3);
+      clearTimeout(stepTimer4);
+    }
   };
 
   const handleOptionSelect = (qId, optionKey) => {
@@ -126,14 +150,28 @@ export default function QuizPage() {
 
   const handleSubmitQuiz = async () => {
     const payload = {
-      attempt_id: attemptId || 'ATT-DEMO-001',
-      officer_id: user?.officer_id || 'OFF001',
-      answers: userAnswers,
+      attempt_id: attemptId,
+      officer_id: officerId,
+      answers: questions.map((_, index) => userAnswers[index]),
     };
-    const res = await submitQuizApi(payload);
-    setSubmitResult(res.data);
-    setStage('result');
-    message.success('Quiz submitted! Competency Passport score updated.');
+    if (!attemptId || payload.answers.some((answer) => answer === undefined)) {
+      message.warning('Please answer every question before submitting.');
+      return;
+    }
+    try {
+      const res = await submitQuizApi(payload);
+      if (res.error || !res.data) {
+        const errorMsg = res.message || 'Quiz submission failed. No competency score was recorded.';
+        message.error(errorMsg, 6);
+        return;
+      }
+      setSubmitResult(res.data);
+      setStage('result');
+      message.success('Quiz submitted! Competency Passport score updated.');
+    } catch (err) {
+      console.error('[QuizPage] Submission error:', err);
+      message.error(`Submission error: ${err.message || err}`, 6);
+    }
   };
 
   return (
@@ -146,24 +184,20 @@ export default function QuizPage() {
               AI QUIZ GENERATOR
             </Title>
             <Text type="secondary">
-              Generate validated MCQs from uploaded course materials or statistical guidelines.
+              Generate validated MCQs from uploaded course materials or officer competency gaps.
             </Text>
           </div>
 
           <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
             <Space direction="vertical" style={{ width: '100%' }} size={20}>
               <div>
-                <Text strong style={{ color: '#0C447C', fontSize: 14 }}>1. Target Competency:</Text>
+                <Text strong style={{ color: '#0C447C', fontSize: 14 }}>1. Target Competency ({user?.name || officerId}):</Text>
                 <Select
                   value={selectedCompetency}
                   onChange={setSelectedCompetency}
+                  loading={loadingGaps}
                   style={{ width: '100%', marginTop: 8 }}
-                  options={[
-                    { value: 'Sampling Methodology', label: 'Sampling Methodology (High Gap - 31 pts)' },
-                    { value: 'Survey Design', label: 'Survey Design (Near Target - 7 pts)' },
-                    { value: 'Data Quality', label: 'Data Quality (Near Target - 8 pts)' },
-                    { value: 'Statistical Analysis', label: 'Statistical Analysis (Moderate Gap - 17 pts)' },
-                  ]}
+                  options={competencyOptions}
                 />
               </div>
 
@@ -191,7 +225,14 @@ export default function QuizPage() {
 
               <div>
                 <Text strong style={{ color: '#0C447C', fontSize: 14 }}>4. Learning Material Source (Optional):</Text>
-                <Upload.Dragger accept=".pdf,.docx" maxCount={1} beforeUpload={() => false} style={{ marginTop: 8, padding: 16 }}>
+                <Upload.Dragger
+                  accept=".pdf,.docx,.txt,.md"
+                  maxCount={1}
+                  beforeUpload={() => false}
+                  fileList={fileList}
+                  onChange={({ fileList: nextFileList }) => setFileList(nextFileList.slice(-1))}
+                  style={{ marginTop: 8, padding: 16 }}
+                >
                   <p className="ant-upload-drag-icon">
                     <FilePdfOutlined style={{ fontSize: 32, color: '#0C447C' }} />
                   </p>
@@ -243,23 +284,23 @@ export default function QuizPage() {
             <Title level={4} style={{ margin: 0, color: '#0C447C' }}>
               Competency Assessment: {selectedCompetency}
             </Title>
-            <Tag color="blue">Question {currentQIndex + 1} of {sampleQuestions.length}</Tag>
+            <Tag color="blue">Question {currentQIndex + 1} of {questions.length}</Tag>
           </div>
 
-          <Progress percent={((currentQIndex + 1) / sampleQuestions.length) * 100} strokeColor="#0C447C" showInfo={false} style={{ marginBottom: 20 }} />
+          <Progress percent={((currentQIndex + 1) / questions.length) * 100} strokeColor="#0C447C" showInfo={false} style={{ marginBottom: 20 }} />
 
           <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', marginBottom: 20 }}>
             <Title level={5} style={{ color: '#334155', marginBottom: 20 }}>
-              Q{currentQIndex + 1}. {sampleQuestions[currentQIndex].question}
+              Q{currentQIndex + 1}. {questions[currentQIndex].question}
             </Title>
 
             <Space direction="vertical" style={{ width: '100%' }} size={12}>
-              {sampleQuestions[currentQIndex].options.map((opt) => {
-                const isSelected = userAnswers[sampleQuestions[currentQIndex].id] === opt.key;
+              {questions[currentQIndex].options.map((opt, optionIndex) => {
+                const isSelected = userAnswers[currentQIndex] === optionIndex;
                 return (
                   <div
-                    key={opt.key}
-                    onClick={() => handleOptionSelect(sampleQuestions[currentQIndex].id, opt.key)}
+                    key={optionIndex}
+                    onClick={() => handleOptionSelect(currentQIndex, optionIndex)}
                     style={{
                       padding: '12px 16px',
                       borderRadius: 8,
@@ -271,7 +312,7 @@ export default function QuizPage() {
                       fontWeight: isSelected ? 600 : 400,
                     }}
                   >
-                    <strong>{opt.key}.</strong> {opt.text}
+                    <strong>{String.fromCharCode(65 + optionIndex)}.</strong> {opt}
                   </div>
                 );
               })}
@@ -286,7 +327,7 @@ export default function QuizPage() {
               Previous
             </Button>
 
-            {currentQIndex < sampleQuestions.length - 1 ? (
+            {currentQIndex < questions.length - 1 ? (
               <Button type="primary" onClick={() => setCurrentQIndex((i) => i + 1)} style={{ background: '#0C447C' }}>
                 Next
               </Button>
@@ -313,16 +354,22 @@ export default function QuizPage() {
               <div style={{ background: '#F8FAFC', padding: 24, borderRadius: 10, border: '1px solid #E2E8F0' }}>
                 <Row gutter={16} align="middle">
                   <Col span={8}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>BEFORE LEARNING</Text>
-                    <div style={{ fontSize: 24, fontWeight: 700, color: '#64748B' }}>54%</div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>QUIZ SCORE</Text>
+                    <div style={{ fontSize: 24, fontWeight: 700, color: '#64748B' }}>
+                      {submitResult?.score_summary?.[0]?.quiz_score ? `${Math.round(submitResult.score_summary[0].quiz_score * 20)}%` : 'Recorded'}
+                    </div>
                   </Col>
                   <Col span={8}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>AFTER QUIZ</Text>
-                    <div style={{ fontSize: 24, fontWeight: 700, color: '#0C447C' }}>82%</div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>COMBINED SCORE</Text>
+                    <div style={{ fontSize: 24, fontWeight: 700, color: '#0C447C' }}>
+                      {submitResult?.score_summary?.[0]?.combined_score ? `${Math.round(submitResult.score_summary[0].combined_score * 20)}%` : 'Recorded'}
+                    </div>
                   </Col>
                   <Col span={8}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>IMPROVEMENT</Text>
-                    <div style={{ fontSize: 24, fontWeight: 700, color: '#389E0D' }}>+28 pts</div>
+                    <Text type="secondary" style={{ fontSize: 12 }}>RECORDED</Text>
+                    <div style={{ fontSize: 24, fontWeight: 700, color: '#389E0D' }}>
+                      {submitResult?.score_summary?.length || 0} competency score(s)
+                    </div>
                   </Col>
                 </Row>
               </div>

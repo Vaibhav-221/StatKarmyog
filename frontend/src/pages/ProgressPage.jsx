@@ -2,16 +2,57 @@
  * Progress Page — Gap Reduction & Overall Learning Activity Analytics.
  */
 
-import React from 'react';
-import { Row, Col, Card, Typography, Statistic, Progress } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Row, Col, Card, Typography, Statistic, Skeleton, Empty } from 'antd';
 import { RiseOutlined, ArrowDownOutlined, TrophyOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { MOCK_PROGRESS_DATA } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { getGapAnalysis, getPassportSummary } from '../api/client';
 
 const { Title, Text } = Typography;
 
 export default function ProgressPage() {
-  const data = MOCK_PROGRESS_DATA;
+  const { user } = useAuth();
+  const officerId = user?.officer_id || 'OFF001';
+  const [loading, setLoading] = useState(true);
+  const [gaps, setGaps] = useState([]);
+  const [passport, setPassport] = useState(null);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const [gapRes, passportRes] = await Promise.all([
+        getGapAnalysis(officerId),
+        getPassportSummary(officerId),
+      ]);
+      setGaps(gapRes.data?.gaps || []);
+      setPassport(passportRes.data);
+      setLoading(false);
+    }
+    load();
+  }, [officerId]);
+
+  const data = useMemo(() => {
+    const competencies = passport?.competencies || [];
+    const currentGap = Math.round(gaps.reduce((sum, gap) => sum + (gap.gap_size || 0), 0) * 20);
+    const initialGap = Math.round(
+      competencies.reduce((sum, comp) => sum + Math.max(0, (comp.first_score || 0) - (comp.latest_score || 0)), 0) * 20
+    );
+    const trend = competencies.flatMap((comp) =>
+      (comp.history || []).map((point) => ({
+        label: `${comp.skill_label} ${point.recorded_on}`,
+        score: Math.round(point.combined_score * 20),
+        gap: currentGap,
+      }))
+    );
+
+    return {
+      initial_gap: initialGap || currentGap,
+      current_gap: currentGap,
+      gap_reduction: Math.max(0, (initialGap || currentGap) - currentGap),
+      overall_trend: trend,
+    };
+  }, [gaps, passport]);
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
@@ -26,6 +67,12 @@ export default function ProgressPage() {
       </div>
 
       {/* KPI Cards */}
+      {loading ? (
+        <Card bordered={false} style={{ borderRadius: 10 }}>
+          <Skeleton active paragraph={{ rows: 8 }} />
+        </Card>
+      ) : (
+      <>
       <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={8}>
           <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
@@ -53,6 +100,11 @@ export default function ProgressPage() {
       </Row>
 
       {/* Charts */}
+      {data.overall_trend.length === 0 ? (
+        <Card bordered={false} style={{ borderRadius: 10 }}>
+          <Empty description="No assessment history found for this officer" />
+        </Card>
+      ) : (
       <Row gutter={[24, 24]}>
         <Col xs={24} lg={12}>
           <Card title="Competency Growth Trend" bordered={false} style={{ borderRadius: 10 }}>
@@ -86,6 +138,9 @@ export default function ProgressPage() {
           </Card>
         </Col>
       </Row>
+      )}
+      </>
+      )}
     </div>
   );
 }

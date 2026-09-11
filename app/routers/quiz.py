@@ -51,35 +51,24 @@ VALID_DIFFICULTIES = {"easy", "medium", "hard"}
 VALID_LANGUAGES = {"en", "hi"}
 
 
+from app.services.rag_retriever import retrieve_relevant_context
+
 # ── POST /api/quiz/generate ─────────────────────────────────────────────────
 
 @router.post("/quiz/generate")
 async def generate_quiz(
-    file: UploadFile = File(...),
+    file: UploadFile | None = File(default=None),
     difficulty: str = Form(default="medium"),
     language: str = Form(default="en"),
     num_questions: int = Form(default=10),
     officer_id: str = Form(...),
+    target_competency: str | None = Form(default=None),
     course_id: str | None = Form(default=None),
     db: Session = Depends(get_db),
 ):
     """
-    Generate MCQs from an uploaded document.
-
-    Accepts multipart/form-data with:
-    - file: binary document (.pdf, .pptx, .docx, .txt, .md)
-    - difficulty: "easy" | "medium" | "hard" (default "medium")
-    - language: "en" | "hi" (default "en")
-    - num_questions: 1-20 (default 10)
-    - officer_id: officer identifier (required, Phase 4B)
-    - course_id: optional course identifier (Phase 4B)
-
-    Returns:
-        {"attempt_id": str, "questions": [{"question": str, "options": [str,str,str,str],
-                         "correct": int, "explanation": str, "competency_tag": str}, ...]}
-
-    Note: The frontend's QuizGenerator.jsx ignores attempt_id and competency_tag
-    since it does not read those fields — adding them does not break it.
+    Generate MCQs either from an uploaded document (RAG-Grounded) or directly
+    for an officer's target competency (Competency-Based).
     """
     # ── Validate officer_id ──────────────────────────────────────────────
     officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
@@ -110,36 +99,51 @@ async def generate_quiz(
             detail=f"num_questions must be between 1 and 20 (got {num_questions}).",
         )
 
-    # ── Validate file extension ──────────────────────────────────────────
-    filename = file.filename or ""
-    ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-    if ext not in SUPPORTED_EXTENSIONS:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Unsupported file type '{ext}'. Accepted: {', '.join(sorted(SUPPORTED_EXTENSIONS))}",
-        )
+    filename = ""
+    text = ""
 
-    # ── Validate file size (5 MB limit) ──────────────────────────────────
-    # Read file content to check size, then seek back for extraction
-    content = await file.read()
-    if len(content) > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=413,
-            detail=f"File too large ({len(content) / (1024*1024):.1f} MB). Maximum allowed size is 5 MB.",
-        )
-    # Reset file position so extract_text can read it again
-    await file.seek(0)
+    # Check if a file was actually provided
+    has_file = file is not None and bool(file.filename and file.filename.strip())
 
-    # ── Extract text ─────────────────────────────────────────────────────
-    try:
-        text = await extract_text(file)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
-    except Exception as exc:
-        logger.exception("Unexpected error during text extraction")
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Text extraction failed: {exc}"},
+    if has_file:
+        filename = file.filename or ""
+        ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+        if ext not in SUPPORTED_EXTENSIONS:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Unsupported file type '{ext}'. Accepted: {', '.join(sorted(SUPPORTED_EXTENSIONS))}",
+            )
+
+        content = await file.read()
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large ({len(content) / (1024*1024):.1f} MB). Maximum allowed size is 5 MB.",
+            )
+        await file.seek(0)
+
+        # Mode 2: RAG Grounded Document Extraction + Context Retrieval
+        try:
+            raw_text = await extract_text(file)
+            text = retrieve_relevant_context(raw_text, target_competency=target_competency, top_k=5)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
+        except Exception as exc:
+            logger.exception("Unexpected error during text extraction / RAG")
+            return JSONResponse(
+                status_code=500,
+                content={"error": f"Text extraction failed: {exc}"},
+            )
+    else:
+        # Mode 1: Competency-Based Assessment (No File Uploaded)
+        filename = f"Competency-Based Assessment ({target_competency or 'General Statistical Competency'})"
+        comp_label = target_competency or "Statistical Operations"
+        text = (
+            f"Official Assessment Context for Officer: {officer.name} ({officer.designation}, {officer.department}).\n"
+            f"Role: {officer.role_id}.\n"
+            f"Target Competency Domain: {comp_label}.\n"
+            f"Scope: Professional statistical concepts, methodologies, sampling frameworks, data collection, data quality, "
+            f"and analytical standards in Indian Government Statistical Services (MoSPI / NSSTA)."
         )
 
     # ── Load CompetencyDictionary for LLM prompt ─────────────────────────
@@ -149,7 +153,8 @@ async def generate_quiz(
     ]
 
     # ── Check cache ──────────────────────────────────────────────────────
-    cached = get_cached(text, difficulty, language, num_questions)
+    cache_key = f"{text}_{target_competency}"
+    cached = get_cached(cache_key, difficulty, language, num_questions)
     if cached is not None:
         logger.info("Returning cached quiz (%d questions)", len(cached))
         questions = cached
@@ -162,6 +167,7 @@ async def generate_quiz(
                 language=language,
                 num_questions=num_questions,
                 valid_competencies=valid_competencies,
+                target_competency=target_competency,
             )
         except ValueError as exc:
             return JSONResponse(
@@ -176,7 +182,7 @@ async def generate_quiz(
             )
 
         # ── Cache the result ─────────────────────────────────────────────
-        set_cached(text, difficulty, language, num_questions, questions)
+        set_cached(cache_key, difficulty, language, num_questions, questions)
 
     # ── Persist QuizAttempt shell + QuizAttemptGenerated answer key ───────
     attempt_id = str(uuid.uuid4())

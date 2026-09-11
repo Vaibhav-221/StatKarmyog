@@ -2,8 +2,8 @@
  * iGOT / NSSTA Ecosystem Page — Mock learning platform integration.
  */
 
-import React, { useState } from 'react';
-import { Row, Col, Card, Typography, Tabs, Tag, Button, Progress, Alert, Space, Table } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Card, Typography, Tabs, Tag, Button, Progress, Alert, Table, Empty, Skeleton } from 'antd';
 import {
   BankOutlined,
   PlayCircleOutlined,
@@ -11,23 +11,57 @@ import {
   GlobalOutlined,
   ApiOutlined,
 } from '@ant-design/icons';
-import { MOCK_RECOMMENDED_COURSES } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { getCourses, getEnrollments, getRecommendations } from '../api/client';
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function IgotPage() {
+  const { user } = useAuth();
+  const officerId = user?.officer_id || 'OFF001';
   const [activeTab, setActiveTab] = useState('igot');
+  const [loading, setLoading] = useState(true);
+  const [recommendations, setRecommendations] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
+  const [courses, setCourses] = useState([]);
 
-  const igotCourses = [
-    { key: '1', id: 'C022', title: 'Sampling Methods in Official Statistics', competency: 'Sampling Methodology', status: 'In-Progress', progress: 45 },
-    { key: '2', id: 'C009', title: 'Python for Statistical Computing & Automation', competency: 'Python/Data Processing', status: 'Completed', progress: 100 },
-    { key: '3', id: 'C003', title: 'SSS Induction Training - Core Statistics', competency: 'Survey Design', status: 'Enrolled', progress: 0 },
-  ];
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const [recRes, enrollRes, courseRes] = await Promise.all([
+        getRecommendations(officerId),
+        getEnrollments(officerId),
+        getCourses(),
+      ]);
+      setRecommendations(recRes.data || []);
+      setEnrollments(enrollRes.data || []);
+      setCourses(courseRes.data || []);
+      setLoading(false);
+    }
+    load();
+  }, [officerId]);
 
-  const nsstaCourses = [
-    { key: '1', id: 'N015', title: 'Advanced Statistical Data Validation Framework', competency: 'Statistical Analysis', status: 'In-Progress', progress: 60 },
-    { key: '2', id: 'N008', title: 'National Accounts & Price Statistics Workshop', competency: 'Data Quality', status: 'Completed', progress: 100 },
-  ];
+  const learningRows = useMemo(() => {
+    const enrollmentByCourse = Object.fromEntries(enrollments.map((item) => [item.course_id, item]));
+    const courseById = Object.fromEntries(courses.map((item) => [item.course_id, item]));
+
+    return recommendations.map((rec) => {
+      const course = courseById[rec.course_id];
+      const enrollment = enrollmentByCourse[rec.course_id];
+      return {
+        key: rec.course_id,
+        id: rec.course_id,
+        title: rec.course_title,
+        competency: (rec.matched_skills || []).join(', ') || 'Officer competency gap',
+        provider: course?.source || 'Catalogue',
+        status: enrollment?.status || 'Recommended',
+        progress: enrollment?.progress_percent || 0,
+      };
+    });
+  }, [recommendations, enrollments, courses]);
+
+  const igotCourses = learningRows.filter((course) => !course.provider.toLowerCase().includes('nssta'));
+  const nsstaCourses = learningRows.filter((course) => course.provider.toLowerCase().includes('nssta'));
 
   const columns = [
     {
@@ -106,7 +140,10 @@ export default function IgotPage() {
       />
 
       <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-        <Tabs
+        {loading ? (
+          <Skeleton active paragraph={{ rows: 6 }} />
+        ) : (
+          <Tabs
           activeKey={activeTab}
           onChange={setActiveTab}
           items={[
@@ -117,7 +154,7 @@ export default function IgotPage() {
                   <GlobalOutlined /> iGOT Karmayogi Courses
                 </span>
               ),
-              children: <Table dataSource={igotCourses} columns={columns} pagination={false} />,
+              children: igotCourses.length > 0 ? <Table dataSource={igotCourses} columns={columns} pagination={false} /> : <Empty description="No iGOT resources recommended for this officer" />,
             },
             {
               key: 'nssta',
@@ -126,10 +163,11 @@ export default function IgotPage() {
                   <BankOutlined /> NSSTA Academy Courses
                 </span>
               ),
-              children: <Table dataSource={nsstaCourses} columns={columns} pagination={false} />,
+              children: nsstaCourses.length > 0 ? <Table dataSource={nsstaCourses} columns={columns} pagination={false} /> : <Empty description="No NSSTA resources recommended for this officer" />,
             },
           ]}
-        />
+          />
+        )}
       </Card>
     </div>
   );

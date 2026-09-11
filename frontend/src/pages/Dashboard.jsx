@@ -91,7 +91,7 @@ export default function Dashboard() {
   // Derived KPI metrics from real gap data
   const kpis = useMemo(() => {
     if (!gapsData || gapsData.length === 0) {
-      return { current: 68, required: 82, gap: 14, progress: 64 };
+      return { current: null, required: null, gap: null, progress: 0 };
     }
     const avgCurrent = Math.round(
       (gapsData.reduce((acc, g) => acc + (g.current_level || g.current || 0), 0) / gapsData.length) * 20
@@ -139,14 +139,14 @@ export default function Dashboard() {
       dataIndex: 'expected_level',
       key: 'expected_level',
       align: 'center',
-      render: (val) => <Text style={{ fontWeight: 600 }}>{val ? `${val * 20}%` : '80%'}</Text>,
+      render: (val) => <Text style={{ fontWeight: 600 }}>{val !== null && val !== undefined ? `${Math.round(val * 20)}%` : 'Not available'}</Text>,
     },
     {
       title: 'Current',
       dataIndex: 'current_level',
       key: 'current_level',
       align: 'center',
-      render: (val) => <Text style={{ fontWeight: 600, color: '#0C447C' }}>{val ? `${val * 20}%` : '60%'}</Text>,
+      render: (val) => <Text style={{ fontWeight: 600, color: '#0C447C' }}>{val !== null && val !== undefined ? `${Math.round(val * 20)}%` : 'Not assessed'}</Text>,
     },
     {
       title: 'Gap',
@@ -220,9 +220,9 @@ export default function Dashboard() {
           <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
             <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>CURRENT COMPETENCY</Text>
             <Title level={2} style={{ margin: '4px 0 0', color: '#0C447C' }}>
-              {kpis.current}%
+              {kpis.current === null ? 'Not assessed' : `${kpis.current}%`}
             </Title>
-            <Progress percent={kpis.current} strokeColor="#0C447C" showInfo={false} size="small" style={{ marginTop: 8 }} />
+            <Progress percent={kpis.current || 0} strokeColor="#0C447C" showInfo={false} size="small" style={{ marginTop: 8 }} />
           </Card>
         </Col>
 
@@ -230,9 +230,9 @@ export default function Dashboard() {
           <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
             <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>REQUIRED COMPETENCY</Text>
             <Title level={2} style={{ margin: '4px 0 0', color: '#334155' }}>
-              {kpis.required}%
+              {kpis.required === null ? 'Not available' : `${kpis.required}%`}
             </Title>
-            <Progress percent={kpis.required} strokeColor="#334155" showInfo={false} size="small" style={{ marginTop: 8 }} />
+            <Progress percent={kpis.required || 0} strokeColor="#334155" showInfo={false} size="small" style={{ marginTop: 8 }} />
           </Card>
         </Col>
 
@@ -240,7 +240,7 @@ export default function Dashboard() {
           <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderLeft: '4px solid #D97706' }}>
             <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>COMPETENCY GAP</Text>
             <Title level={2} style={{ margin: '4px 0 0', color: '#D97706' }}>
-              {kpis.gap}%
+              {kpis.gap === null ? 'Not available' : `${kpis.gap}%`}
             </Title>
             <Text style={{ fontSize: 11, color: '#D97706' }}>Live DB calculation</Text>
           </Card>

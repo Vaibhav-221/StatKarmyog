@@ -2,15 +2,30 @@
  * Evidence History page — Audit log of all uploaded work artifacts.
  */
 
-import React, { useState } from 'react';
-import { Card, Table, Typography, Tag, Button, Modal, Descriptions, Space } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Card, Table, Typography, Tag, Button, Modal, Descriptions, Space, Empty, Skeleton } from 'antd';
 import { FileTextOutlined, EyeOutlined, CheckCircleOutlined } from '@ant-design/icons';
-import { MOCK_RECENT_EVIDENCE } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { getWorkEvidence } from '../api/client';
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function EvidenceHistory() {
+  const { user } = useAuth();
+  const officerId = user?.officer_id || 'OFF001';
   const [selectedArtifact, setSelectedArtifact] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [evidence, setEvidence] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const res = await getWorkEvidence(officerId);
+      setEvidence(res.data || []);
+      setLoading(false);
+    }
+    load();
+  }, [officerId]);
 
   const columns = [
     {
@@ -28,8 +43,8 @@ export default function EvidenceHistory() {
     },
     {
       title: 'Upload Date',
-      dataIndex: 'upload_date',
-      key: 'upload_date',
+      dataIndex: 'recorded_on',
+      key: 'recorded_on',
       align: 'center',
     },
     {
@@ -48,19 +63,19 @@ export default function EvidenceHistory() {
     },
     {
       title: 'Confidence',
-      dataIndex: 'confidence',
-      key: 'confidence',
+      dataIndex: 'confidence_level',
+      key: 'confidence_level',
       align: 'center',
-      render: (conf) => <Tag color={conf === 'High' ? 'green' : 'orange'}>{conf}</Tag>,
+      render: (conf) => <Tag color={(conf || '').toLowerCase().includes('medium') ? 'orange' : 'green'}>{conf}</Tag>,
     },
     {
       title: 'Status',
-      dataIndex: 'status',
+      dataIndex: 'source',
       key: 'status',
       align: 'center',
-      render: (status) => (
+      render: () => (
         <Tag icon={<CheckCircleOutlined />} color="success">
-          {status}
+          Analyzed
         </Tag>
       ),
     },
@@ -94,7 +109,13 @@ export default function EvidenceHistory() {
       </div>
 
       <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-        <Table dataSource={MOCK_RECENT_EVIDENCE} columns={columns} pagination={false} rowKey="id" />
+        {loading ? (
+          <Skeleton active paragraph={{ rows: 6 }} />
+        ) : evidence.length > 0 ? (
+          <Table dataSource={evidence} columns={columns} pagination={false} rowKey="id" />
+        ) : (
+          <Empty description="No work evidence found for this officer" />
+        )}
       </Card>
 
       {/* Artifact Details Modal */}
@@ -111,9 +132,10 @@ export default function EvidenceHistory() {
         {selectedArtifact && (
           <div>
             <Descriptions column={1} bordered size="small" style={{ marginBottom: 16 }}>
-              <Descriptions.Item label="Upload Date">{selectedArtifact.upload_date}</Descriptions.Item>
-              <Descriptions.Item label="Analysis Status">{selectedArtifact.status}</Descriptions.Item>
-              <Descriptions.Item label="Evidence Confidence">{selectedArtifact.confidence}</Descriptions.Item>
+              <Descriptions.Item label="Recorded On">{selectedArtifact.recorded_on}</Descriptions.Item>
+              <Descriptions.Item label="Analysis Status">Analyzed</Descriptions.Item>
+              <Descriptions.Item label="Evidence Confidence">{selectedArtifact.confidence_level}</Descriptions.Item>
+              <Descriptions.Item label="Artifact Reference">{selectedArtifact.artifact_reference}</Descriptions.Item>
             </Descriptions>
 
             <Title level={5} style={{ color: '#0C447C' }}>Extracted Competency Scores:</Title>

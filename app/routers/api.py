@@ -8,7 +8,14 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db import get_db
-from app.models.models import Officer, CourseCatalogue, Enrollment, CompetencyScore
+from app.models.models import (
+    Officer,
+    CourseCatalogue,
+    Enrollment,
+    CompetencyScore,
+    QuizAttempt,
+    QuizAttemptQuestion,
+)
 from app.schemas.schemas import (
     OfficerListItem,
     OfficerDetail,
@@ -19,6 +26,8 @@ from app.schemas.schemas import (
     CourseItem,
     HealthResponse,
     CompetencyScoreItem,
+    AssessmentHistoryItem,
+    WorkEvidenceItem,
 )
 from app.services.gap_analysis import (
     compute_skill_gaps,
@@ -69,6 +78,107 @@ def get_officer_competency_scores(officer_id: str, db: Session = Depends(get_db)
         .order_by(CompetencyScore.recorded_on.asc(), CompetencyScore.id.asc())
         .all()
     )
+
+
+@router.get("/officers/{officer_id}/assessments", response_model=list[AssessmentHistoryItem])
+def get_officer_assessments(officer_id: str, db: Session = Depends(get_db)):
+    """Return quiz/assessment history for the requested officer only."""
+    officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
+    if not officer:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+
+    attempts = (
+        db.query(QuizAttempt)
+        .filter(QuizAttempt.officer_id == officer_id)
+        .order_by(QuizAttempt.attempted_on.desc().nullslast(), QuizAttempt.attempt_id.desc())
+        .all()
+    )
+
+    results = []
+    for attempt in attempts:
+        questions = (
+            db.query(QuizAttemptQuestion)
+            .filter(QuizAttemptQuestion.attempt_id == attempt.attempt_id)
+            .all()
+        )
+        grouped: dict[str, dict] = {}
+        for question in questions:
+            stats = grouped.setdefault(
+                question.competency_tag,
+                {
+                    "cid": question.competency_tag,
+                    "skill_label": question.skill_label,
+                    "correct_count": 0,
+                    "total_questions": 0,
+                },
+            )
+            stats["total_questions"] += 1
+            if question.is_correct:
+                stats["correct_count"] += 1
+
+        competency_scores = []
+        for stats in grouped.values():
+            total = stats["total_questions"]
+            score_percent = round((stats["correct_count"] / total) * 100, 1) if total else 0.0
+            competency_scores.append({
+                **stats,
+                "score_percent": score_percent,
+                "skill_level": round(1 + (score_percent / 100) * 4, 1),
+            })
+
+        results.append({
+            "attempt_id": attempt.attempt_id,
+            "officer_id": attempt.officer_id,
+            "course_id": attempt.course_id,
+            "quiz_source_material": attempt.quiz_source_material,
+            "attempted_on": attempt.attempted_on,
+            "raw_score_percent": attempt.raw_score_percent,
+            "competency_scores": competency_scores,
+        })
+
+    return results
+
+
+@router.get("/officers/{officer_id}/work-evidence", response_model=list[WorkEvidenceItem])
+def get_officer_work_evidence(officer_id: str, db: Session = Depends(get_db)):
+    """Return work artifact evidence represented in CompetencyScore rows for one officer."""
+    officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
+    if not officer:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+
+    scores = (
+        db.query(CompetencyScore)
+        .filter(
+            CompetencyScore.officer_id == officer_id,
+            CompetencyScore.artifact_reference.isnot(None),
+        )
+        .order_by(CompetencyScore.recorded_on.desc(), CompetencyScore.id.desc())
+        .all()
+    )
+
+    grouped: dict[str, dict] = {}
+    for score in scores:
+        artifact_key = score.artifact_reference or f"score-{score.id}"
+        item = grouped.setdefault(
+            artifact_key,
+            {
+                "id": artifact_key,
+                "officer_id": officer_id,
+                "artifact_reference": artifact_key,
+                "document_name": artifact_key.replace("\\", "/").split("/")[-1],
+                "recorded_on": score.recorded_on,
+                "source": score.source,
+                "confidence_level": score.confidence_level,
+                "competencies_detected": [],
+                "scores": {},
+                "summary": "Evidence derived from existing competency score history for this officer.",
+            },
+        )
+        item["competencies_detected"].append(score.skill_label)
+        if score.artifact_score is not None:
+            item["scores"][score.skill_label] = score.artifact_score
+
+    return list(grouped.values())
 
 
 # ── Gap Analysis ─────────────────────────────────────────────────────────────

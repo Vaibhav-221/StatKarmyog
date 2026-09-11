@@ -118,3 +118,35 @@ class TestCompetencyScoreHistoryEndpoint:
     def test_get_competency_scores_unknown_officer_404(self, client):
         response = client.get("/api/competency-scores/OFF999")
         assert response.status_code == 404
+
+
+class TestOfficerSpecificEvidenceEndpoints:
+    """Officer-scoped assessment and work-evidence endpoint tests."""
+
+    def test_assessments_are_filtered_by_officer(self, client):
+        off001 = client.get("/api/officers/OFF001/assessments")
+        off002 = client.get("/api/officers/OFF002/assessments")
+
+        assert off001.status_code == 200
+        assert off002.status_code == 200
+
+        off001_data = off001.json()
+        off002_data = off002.json()
+
+        assert {item["officer_id"] for item in off001_data} == {"OFF001"}
+        assert {item["officer_id"] for item in off002_data} == {"OFF002"}
+        assert {item["attempt_id"] for item in off001_data} != {item["attempt_id"] for item in off002_data}
+
+    def test_work_evidence_is_filtered_by_officer(self, client):
+        off001 = client.get("/api/officers/OFF001/work-evidence")
+        off003 = client.get("/api/officers/OFF003/work-evidence")
+
+        assert off001.status_code == 200
+        assert off003.status_code == 200
+
+        off001_data = off001.json()
+        off003_data = off003.json()
+
+        assert {item["officer_id"] for item in off001_data} == {"OFF001"}
+        assert {item["officer_id"] for item in off003_data} == {"OFF003"}
+        assert off001_data[0]["artifact_reference"] != off003_data[0]["artifact_reference"]

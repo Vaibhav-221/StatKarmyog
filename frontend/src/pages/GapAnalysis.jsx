@@ -2,8 +2,8 @@
  * Gap Analysis page — AI Competency Gap Breakdown & Root Cause Diagnostic.
  */
 
-import React from 'react';
-import { Row, Col, Card, Typography, Tag, Progress, Button, Space, Divider, Alert } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Row, Col, Card, Typography, Tag, Progress, Button, Space, Empty, Skeleton } from 'antd';
 import {
   WarningOutlined,
   ArrowRightOutlined,
@@ -12,12 +12,62 @@ import {
   RocketOutlined,
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { MOCK_GAP_TABLE } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { getGapAnalysis, getCompetencyScores } from '../api/client';
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function GapAnalysis() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const officerId = user?.officer_id || 'OFF001';
+  const [loading, setLoading] = useState(true);
+  const [gaps, setGaps] = useState([]);
+  const [scores, setScores] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const [gapRes, scoreRes] = await Promise.all([
+        getGapAnalysis(officerId),
+        getCompetencyScores(officerId),
+      ]);
+      setGaps(gapRes.data?.gaps || []);
+      setScores(scoreRes.data || []);
+      setLoading(false);
+    }
+    load();
+  }, [officerId]);
+
+  const rows = useMemo(() => {
+    const latestBySkill = {};
+    scores.forEach((score) => {
+      const existing = latestBySkill[score.skill_label];
+      if (!existing || `${score.recorded_on}-${score.id}` > `${existing.recorded_on}-${existing.id}`) {
+        latestBySkill[score.skill_label] = score;
+      }
+    });
+
+    return gaps.map((gap, index) => {
+      const score = latestBySkill[gap.skill];
+      const gapPercent = Math.max(0, Math.round(gap.gap_size * 20));
+      return {
+        key: gap.skill || index,
+        cid: score?.cid || gap.skill,
+        competency: gap.skill,
+        required: Math.round(gap.expected_level * 20),
+        current: Math.round(gap.current_level * 20),
+        gap: gapPercent,
+        status: gapPercent > 20 ? 'High Gap' : gapPercent > 5 ? 'Moderate Gap' : 'Near Target',
+        confidence: gap.confidence_level,
+        knowledge: score?.quiz_score !== null && score?.quiz_score !== undefined ? Math.round(score.quiz_score * 20) : null,
+        artifact: score?.artifact_score !== null && score?.artifact_score !== undefined ? Math.round(score.artifact_score * 20) : null,
+      };
+    });
+  }, [gaps, scores]);
+
+  const highestGap = rows[0];
+  const nearTargetCount = rows.filter((item) => item.gap <= 10).length;
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
@@ -37,7 +87,7 @@ export default function GapAnalysis() {
           <Card bordered={false} style={{ background: '#F0F7FF', border: '1px solid #BAE6FD', borderRadius: 10 }}>
             <Text type="secondary" style={{ fontSize: 12 }}>TOTAL TRACKED COMPETENCIES</Text>
             <Title level={2} style={{ margin: '4px 0 0', color: '#0C447C' }}>
-              5 Areas
+              {rows.length} Areas
             </Title>
           </Card>
         </Col>
@@ -46,9 +96,9 @@ export default function GapAnalysis() {
           <Card bordered={false} style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10 }}>
             <Text type="secondary" style={{ fontSize: 12 }}>HIGHEST GAP IDENTIFIED</Text>
             <Title level={2} style={{ margin: '4px 0 0', color: '#D97706' }}>
-              31 Points
+              {highestGap ? `${highestGap.gap} Points` : 'No gap'}
             </Title>
-            <Text style={{ fontSize: 12, color: '#92400E' }}>Sampling Methodology</Text>
+            <Text style={{ fontSize: 12, color: '#92400E' }}>{highestGap?.competency || 'All tracked competencies are at target'}</Text>
           </Card>
         </Col>
 
@@ -56,7 +106,7 @@ export default function GapAnalysis() {
           <Card bordered={false} style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10 }}>
             <Text type="secondary" style={{ fontSize: 12 }}>COMPETENCIES NEAR TARGET</Text>
             <Title level={2} style={{ margin: '4px 0 0', color: '#16A34A' }}>
-              3 Areas
+              {nearTargetCount} Areas
             </Title>
           </Card>
         </Col>
@@ -68,7 +118,15 @@ export default function GapAnalysis() {
       </Title>
 
       <Space direction="vertical" style={{ width: '100%' }} size={16}>
-        {MOCK_GAP_TABLE.map((item) => (
+        {loading ? (
+          <Card bordered={false} style={{ borderRadius: 10 }}>
+            <Skeleton active paragraph={{ rows: 8 }} />
+          </Card>
+        ) : rows.length === 0 ? (
+          <Card bordered={false} style={{ borderRadius: 10 }}>
+            <Empty description="No competency gaps found for this officer" />
+          </Card>
+        ) : rows.map((item) => (
           <Card
             key={item.cid}
             bordered={false}
@@ -123,11 +181,11 @@ export default function GapAnalysis() {
                 <Row gutter={[12, 8]}>
                   <Col span={12}>
                     <Text type="secondary" style={{ fontSize: 11 }}>Knowledge Assessment:</Text>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{item.knowledge}%</div>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{item.knowledge === null ? 'Not assessed' : `${item.knowledge}%`}</div>
                   </Col>
                   <Col span={12}>
                     <Text type="secondary" style={{ fontSize: 11 }}>Work Artifact Evidence:</Text>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{item.artifact}%</div>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>{item.artifact === null ? 'No evidence' : `${item.artifact}%`}</div>
                   </Col>
                   <Col span={24}>
                     <Text type="secondary" style={{ fontSize: 11 }}>Evidence Confidence: </Text>

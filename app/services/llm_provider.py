@@ -28,7 +28,9 @@ logger = logging.getLogger(__name__)
 _SYSTEM_PROMPT = """\
 You are an expert item-writer for professional training assessments used by \
 government statistical agencies. Your task is to generate high-quality \
-multiple-choice questions (MCQs) from the provided source text.
+multiple-choice questions (MCQs) for statistical officers.
+
+{target_competency_instruction}
 
 RULES:
 1. Generate exactly {num_questions} questions.
@@ -58,7 +60,7 @@ OUTPUT SCHEMA (strict):
   }}
 ]
 
-SOURCE TEXT:
+SOURCE / DOMAIN CONTEXT TEXT:
 {text}
 """
 
@@ -153,35 +155,10 @@ def generate_mcqs(
     language: str,
     num_questions: int = 10,
     valid_competencies: list[dict] | None = None,
+    target_competency: str | None = None,
 ) -> list[dict]:
     """
     Generate MCQs from *text* using Google Gemini via LangChain.
-
-    Parameters
-    ----------
-    text : str
-        Source document text (already extracted and possibly truncated).
-    difficulty : str
-        One of "easy", "medium", "hard".
-    language : str
-        One of "en" (English) or "hi" (Hindi).
-    num_questions : int
-        Number of questions to request (default 10, max 20).
-    valid_competencies : list[dict] | None
-        List of {"cid": str, "label": str} dicts from CompetencyDictionary.
-        When provided, the LLM prompt includes these for competency tagging
-        and validation drops questions with invalid cids.
-
-    Returns
-    -------
-    list[dict]
-        List of validated question dicts matching the API response schema.
-
-    Raises
-    ------
-    ValueError
-        If the API key is missing, the LLM output is unparseable, or fewer
-        than 3 valid questions remain after validation.
     """
     api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key:
@@ -194,17 +171,36 @@ def generate_mcqs(
     language_instruction = _LANGUAGE_INSTRUCTIONS.get(language, _LANGUAGE_INSTRUCTIONS["en"])
 
     # Build competency list string for the prompt
+    target_cid = None
     if valid_competencies:
         competency_list = "\n".join(
             f"- {c['cid']}: {c['label']}" for c in valid_competencies
         )
         valid_cids = {c["cid"] for c in valid_competencies}
+        if target_competency:
+            for c in valid_competencies:
+                if c['label'].lower() == target_competency.lower() or c['cid'] == target_competency:
+                    target_cid = c['cid']
+                    break
     else:
         competency_list = "(No competency dictionary provided)"
         valid_cids = None
 
+    if target_competency:
+        cid_clause = f" ({target_cid})" if target_cid else ""
+        target_competency_instruction = (
+            f"PRIMARY TARGET COMPETENCY FOCUS:\n"
+            f"All or most questions MUST specifically assess knowledge, concepts, principles, and applications "
+            f"related to '{target_competency}'{cid_clause}. Ensure questions focus on this competency topic."
+        )
+    else:
+        target_competency_instruction = ""
+
     prompt = PromptTemplate(
-        input_variables=["text", "num_questions", "difficulty_description", "language_instruction", "competency_list"],
+        input_variables=[
+            "text", "num_questions", "difficulty_description", "language_instruction",
+            "competency_list", "target_competency_instruction"
+        ],
         template=_SYSTEM_PROMPT,
     )
 
@@ -217,8 +213,8 @@ def generate_mcqs(
     chain = prompt | llm
 
     logger.info(
-        "Calling Gemini: difficulty=%s, language=%s, num_questions=%d, text_len=%d",
-        difficulty, language, num_questions, len(text),
+        "Calling Gemini: target_competency=%s, difficulty=%s, language=%s, num_questions=%d, text_len=%d",
+        target_competency, difficulty, language, num_questions, len(text),
     )
 
     response = chain.invoke({
@@ -227,6 +223,7 @@ def generate_mcqs(
         "difficulty_description": difficulty_description,
         "language_instruction": language_instruction,
         "competency_list": competency_list,
+        "target_competency_instruction": target_competency_instruction,
     })
 
     raw_content = response.content if hasattr(response, "content") else str(response)

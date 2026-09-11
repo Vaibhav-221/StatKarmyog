@@ -2,16 +2,66 @@
  * Learning Page — Recommended learning modules targeted to competency gaps.
  */
 
-import React from 'react';
-import { Row, Col, Card, Typography, Tag, Button, Progress, Space, Alert } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Row, Col, Card, Typography, Tag, Button, Progress, Space, Alert, Empty, Skeleton } from 'antd';
 import { BookOutlined, RocketOutlined, ClockCircleOutlined, TrophyOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { MOCK_RECOMMENDED_COURSES } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { getGapAnalysis, getRecommendations, getEnrollments, getCourses } from '../api/client';
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function LearningPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const officerId = user?.officer_id || 'OFF001';
+  const [loading, setLoading] = useState(true);
+  const [recommendations, setRecommendations] = useState([]);
+  const [gaps, setGaps] = useState([]);
+  const [enrollments, setEnrollments] = useState([]);
+  const [courses, setCourses] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const [recRes, gapRes, enrollRes, courseRes] = await Promise.all([
+        getRecommendations(officerId),
+        getGapAnalysis(officerId),
+        getEnrollments(officerId),
+        getCourses(),
+      ]);
+      setRecommendations(recRes.data || []);
+      setGaps(gapRes.data?.gaps || []);
+      setEnrollments(enrollRes.data || []);
+      setCourses(courseRes.data || []);
+      setLoading(false);
+    }
+    load();
+  }, [officerId]);
+
+  const rows = useMemo(() => {
+    const gapBySkill = Object.fromEntries(gaps.map((gap) => [gap.skill, gap]));
+    const enrollmentByCourse = Object.fromEntries(enrollments.map((item) => [item.course_id, item]));
+    const courseById = Object.fromEntries(courses.map((item) => [item.course_id, item]));
+
+    return recommendations.map((rec) => {
+      const enrollment = enrollmentByCourse[rec.course_id];
+      const course = courseById[rec.course_id];
+      const matchedGap = (rec.matched_skills || []).map((skill) => gapBySkill[skill]).find(Boolean);
+      return {
+        ...rec,
+        provider: course?.source || 'Catalogue',
+        competency: (rec.matched_skills || []).join(', ') || 'Officer competency gap',
+        gap: matchedGap ? Math.round(matchedGap.gap_size * 20) : null,
+        duration: course?.duration_hours ? `${course.duration_hours} Hours` : 'Duration unavailable',
+        reason: (rec.matched_skills || []).length
+          ? `Recommended from this officer's gaps: ${(rec.matched_skills || []).join(', ')}.`
+          : "Recommended by the backend semantic engine for this officer.",
+        progress: enrollment?.progress_percent || 0,
+        status: enrollment?.status || 'Not Started',
+      };
+    });
+  }, [recommendations, gaps, enrollments, courses]);
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
@@ -34,7 +84,19 @@ export default function LearningPage() {
       />
 
       <Row gutter={[24, 24]}>
-        {MOCK_RECOMMENDED_COURSES.map((course) => (
+        {loading ? (
+          <Col span={24}>
+            <Card bordered={false} style={{ borderRadius: 10 }}>
+              <Skeleton active paragraph={{ rows: 8 }} />
+            </Card>
+          </Col>
+        ) : rows.length === 0 ? (
+          <Col span={24}>
+            <Card bordered={false} style={{ borderRadius: 10 }}>
+              <Empty description="No learning recommendations found for this officer" />
+            </Card>
+          </Col>
+        ) : rows.map((course) => (
           <Col xs={24} md={12} lg={8} key={course.course_id}>
             <Card
               bordered={false}
@@ -52,11 +114,11 @@ export default function LearningPage() {
                   <Tag color="navy" style={{ background: '#0C447C', color: '#fff' }}>
                     {course.provider}
                   </Tag>
-                  <Tag color="orange">Gap: {course.gap} pts</Tag>
+                  <Tag color="orange">{course.gap === null ? 'Gap: backend-ranked' : `Gap: ${course.gap} pts`}</Tag>
                 </div>
 
                 <Title level={4} style={{ color: '#0C447C', fontSize: 16, marginTop: 4, minHeight: 44 }}>
-                  {course.title}
+                  {course.course_title}
                 </Title>
 
                 <Space style={{ fontSize: 12, color: '#64748B', marginBottom: 12 }}>

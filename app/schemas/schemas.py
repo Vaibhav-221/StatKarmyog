@@ -69,6 +69,41 @@ class CompetencyScoreItem(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class AssessmentCompetencyScore(BaseModel):
+    """Competency-wise score inside one quiz/assessment attempt."""
+    cid: str
+    skill_label: str
+    correct_count: int
+    total_questions: int
+    score_percent: float
+    skill_level: float
+
+
+class AssessmentHistoryItem(BaseModel):
+    """Historical quiz/assessment attempt for one officer."""
+    attempt_id: str
+    officer_id: str
+    course_id: str | None = None
+    quiz_source_material: str
+    attempted_on: str | None = None
+    raw_score_percent: float | None = None
+    competency_scores: list[AssessmentCompetencyScore]
+
+
+class WorkEvidenceItem(BaseModel):
+    """Work artifact evidence derived from competency score records."""
+    id: str
+    officer_id: str
+    artifact_reference: str
+    document_name: str
+    recorded_on: str
+    source: str
+    confidence_level: str
+    competencies_detected: list[str]
+    scores: dict[str, float]
+    summary: str
+
+
 
 # ── Recommendation schemas ───────────────────────────────────────────────────
 
