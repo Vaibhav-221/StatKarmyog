@@ -6,6 +6,7 @@ auto-seeding of the SQLite database, and semantic index build on startup.
 """
 
 import logging
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -26,6 +27,17 @@ from app.services.semantic_search import build_course_index
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
+
+
+def _get_allowed_origins() -> list[str]:
+    """Return localhost plus comma-separated deployed frontend origins."""
+    origins = [
+        "http://localhost:5173",  # Vite dev server
+        "http://localhost:3000",  # React dev server
+    ]
+    configured = os.environ.get("CORS_ALLOWED_ORIGINS", "")
+    origins.extend(origin.strip() for origin in configured.split(",") if origin.strip())
+    return origins
 
 
 # ── Lifespan — seed DB + build semantic index on startup ─────────────────────
@@ -63,10 +75,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Vite dev server
-        "http://localhost:3000",  # React dev server
-    ],
+    allow_origins=_get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -9,6 +9,7 @@ Provides:
 from __future__ import annotations
 
 import logging
+import os
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -28,7 +29,8 @@ logger = logging.getLogger(__name__)
 _MODEL_NAME = "all-MiniLM-L6-v2"
 _COLLECTION_NAME = "courses"
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-CHROMA_PATH = _PROJECT_ROOT / "data" / "chroma"
+DATA_DIR = Path(os.environ.get("DATA_DIR", _PROJECT_ROOT / "data"))
+CHROMA_PATH = Path(os.environ.get("CHROMA_PATH", DATA_DIR / "chroma"))
 
 # Module-level singletons (initialised lazily)
 _chroma_client: chromadb.PersistentClient | None = None
