@@ -108,6 +108,7 @@ async def extract_text(file: UploadFile) -> str:
             f"Accepted types: {', '.join(sorted(SUPPORTED_EXTENSIONS))}"
         )
 
+    await file.seek(0)
     content = await file.read()
     text = _EXTRACTORS[ext](content)
     text = text.strip()

@@ -132,7 +132,8 @@ MOCK_QUESTIONS = [
 ]
 
 
-def _mock_generate_mcqs(text, difficulty, language, num_questions=10, valid_competencies=None):
+
+def _mock_generate_mcqs(text, difficulty, language, num_questions=10, valid_competencies=None, **kwargs):
     """Return the fixed 3-question mock payload."""
     return MOCK_QUESTIONS[:num_questions] if num_questions <= 3 else MOCK_QUESTIONS
 

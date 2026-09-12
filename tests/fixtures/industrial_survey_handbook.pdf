@@ -1,0 +1,39 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kinds [3 0 R] /Count 1 /Kids [3 0 R] >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R >> >> >>
+endobj
+4 0 obj
+<< /Length 760 >>
+stream
+BT
+/F1 10 Tf
+50 750 Td
+(Industrial Survey Handbook) Tj
+0 -20 Td
+(Annual Survey of Industries ASI Official Manual and Guidelines) Tj
+0 -15 Td
+(Industrial Statistics Division MoSPI Government of India) Tj
+0 -15 Td
+(The Annual Survey of Industries is the principal source of industrial statistics in India.) Tj
+0 -15 Td
+(Factories registered under Sections 2m i and 2m ii of the Factories Act 1948 form the frame.) Tj
+0 -15 Td
+(Frame updating involves matching with GSTIN registers and state factory inspectorate lists.) Tj
+0 -15 Td
+(Data validation includes checking value-added estimates, capital consumption, and labor input ratios.) Tj
+0 -15 Td
+(Statistical quality audits are conducted annually to ensure national account reporting standards.) Tj
+0 -15 Td
+ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+%%EOF

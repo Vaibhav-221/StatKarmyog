@@ -7,7 +7,7 @@ POST /api/quiz/generate
     questions plus an attempt_id.
 
 POST /api/quiz/submit
-    Accept answers for a previously generated quiz, score them, persist
+    Accept answers for a previously generated quiz attempt, score them, persist
     results into QuizAttemptQuestion and CompetencyScore, and return
     detailed per-question results and per-competency score summaries.
 """
@@ -37,6 +37,7 @@ from app.schemas.schemas import (
     ScoreSummaryItem,
 )
 from app.services.document_extractor import extract_text, SUPPORTED_EXTENSIONS
+from app.services.llm_provider import generate_mcqs
 from app.services.quiz_cache import get_cached, set_cached
 
 logger = logging.getLogger(__name__)
@@ -67,6 +68,10 @@ async def generate_quiz(
     Generate MCQs either from an uploaded document (RAG-Grounded) or directly
     for an officer's target competency (Competency-Based).
     """
+    # ── Sanitize course_id ──────────────────────────────────────────────
+    if not isinstance(course_id, str):
+        course_id = None
+
     # ── Validate officer_id ──────────────────────────────────────────────
     officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
     if not officer:
@@ -135,6 +140,13 @@ async def generate_quiz(
             )
     else:
         # Mode 1: Competency-Based Assessment (No File Uploaded)
+        # Use logged-in officer's actual competency gap if target_competency is missing
+        if not target_competency or not target_competency.strip():
+            from app.services.gap_analysis import compute_skill_gaps
+            gap_res = compute_skill_gaps(db, officer_id)
+            if gap_res and gap_res.get("gaps"):
+                target_competency = gap_res["gaps"][0]["skill"]
+
         filename = f"Competency-Based Assessment ({target_competency or 'General Statistical Competency'})"
         comp_label = target_competency or "Statistical Operations"
         text = (
@@ -158,8 +170,6 @@ async def generate_quiz(
         logger.info("Returning cached quiz (%d questions)", len(cached))
         questions = cached
     else:
-        from app.services.llm_provider import generate_mcqs
-
         # ── Generate MCQs via LLM ────────────────────────────────────────
         try:
             questions = generate_mcqs(

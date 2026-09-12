@@ -1,0 +1,409 @@
+[
+  {
+    "artifact_id": "WA-2025-001",
+    "title": "Annual District-Level Employment Statistics Report – 2025",
+    "artifact_type": "Statistical Report",
+    "role": "Statistical Officer",
+    "department": "Directorate of Economics & Statistics",
+    "domain": "Employment Statistics",
+    "difficulty": "Intermediate",
+    "status": "Completed",
+    "required_competencies": [
+      "Data Analysis & Interpretation",
+      "Statistical Sampling",
+      "Survey Methodology",
+      "Data Quality Management",
+      "Report Writing"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "District-level employment indicators based on household survey data, including labour-force participation, worker population ratio and unemployment rate.",
+    "skills": [
+      "data validation",
+      "sampling weights",
+      "trend analysis",
+      "statistical reporting"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-002",
+    "title": "Quarterly Consumer Price Index Compilation Note – Q2 2025",
+    "artifact_type": "Technical Note",
+    "role": "Assistant Director",
+    "department": "Price Statistics Division",
+    "domain": "Price Statistics",
+    "difficulty": "Advanced",
+    "status": "Completed",
+    "required_competencies": [
+      "Index Number Methods",
+      "Data Validation",
+      "Statistical Analysis",
+      "Quality Assurance",
+      "Technical Documentation"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Technical documentation for compiling and validating quarterly consumer price indicators from collected market-price observations.",
+    "skills": [
+      "CPI calculation",
+      "index numbers",
+      "validation rules",
+      "quality assurance"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-003",
+    "title": "Household Survey Data Cleaning and Validation Report",
+    "artifact_type": "Data Quality Report",
+    "role": "Data Analyst",
+    "department": "Survey Processing Unit",
+    "domain": "Survey Data Management",
+    "difficulty": "Intermediate",
+    "status": "Completed",
+    "required_competencies": [
+      "Data Cleaning",
+      "Missing Value Treatment",
+      "Outlier Detection",
+      "Data Quality Management",
+      "Python/Pandas"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Report documenting missing-value checks, duplicate detection, outlier investigation and validation of a household survey dataset.",
+    "skills": [
+      "missing values",
+      "outliers",
+      "duplicates",
+      "data profiling",
+      "pandas"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-004",
+    "title": "Sampling Design for Rural Socio-Economic Survey",
+    "artifact_type": "Methodology Document",
+    "role": "Research Officer",
+    "department": "Survey Methodology Division",
+    "domain": "Survey Methodology",
+    "difficulty": "Advanced",
+    "status": "Under Review",
+    "required_competencies": [
+      "Sampling Theory",
+      "Stratified Sampling",
+      "Sample Size Determination",
+      "Survey Design",
+      "Statistical Inference"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Proposed sampling design covering strata formation, sample allocation and selection procedures for a rural socio-economic survey.",
+    "skills": [
+      "stratified sampling",
+      "sample allocation",
+      "sampling frame",
+      "inference"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-005",
+    "title": "District GDP Estimation Workbook – 2024-25",
+    "artifact_type": "Analytical Workbook",
+    "role": "Statistical Officer",
+    "department": "National Accounts Unit",
+    "domain": "National Accounts",
+    "difficulty": "Advanced",
+    "status": "Completed",
+    "required_competencies": [
+      "Economic Statistics",
+      "Data Analysis & Interpretation",
+      "Estimation Methods",
+      "Spreadsheet Analysis",
+      "Quality Assurance"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Analytical workbook used to estimate district-level economic output across major economic activities.",
+    "skills": [
+      "estimation",
+      "sector aggregation",
+      "spreadsheet analysis",
+      "validation"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-006",
+    "title": "Statistical Dashboard Requirements Specification",
+    "artifact_type": "Requirements Document",
+    "role": "Data Analyst",
+    "department": "Statistical Informatics Cell",
+    "domain": "Statistical IT Systems",
+    "difficulty": "Intermediate",
+    "status": "Approved",
+    "required_competencies": [
+      "Data Visualization",
+      "Requirements Analysis",
+      "Dashboard Design",
+      "Data Interpretation",
+      "Communication"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Functional requirements for an internal dashboard displaying statistical indicators, trends, filters and district comparisons.",
+    "skills": [
+      "dashboard design",
+      "KPIs",
+      "visualization",
+      "requirements gathering"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-007",
+    "title": "Agricultural Crop Yield Estimation Report – Kharif 2025",
+    "artifact_type": "Statistical Report",
+    "role": "Research Officer",
+    "department": "Agriculture Statistics Division",
+    "domain": "Agricultural Statistics",
+    "difficulty": "Intermediate",
+    "status": "Completed",
+    "required_competencies": [
+      "Agricultural Statistics",
+      "Estimation Methods",
+      "Data Interpretation",
+      "Survey Methodology",
+      "Report Writing"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Report analysing crop area, production and yield estimates for major Kharif crops across selected districts.",
+    "skills": [
+      "crop yield",
+      "estimation",
+      "district comparison",
+      "statistical reporting"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-008",
+    "title": "Automated Data Validation Rules Catalogue",
+    "artifact_type": "Technical Specification",
+    "role": "Technical Officer",
+    "department": "Data Processing Division",
+    "domain": "Data Engineering",
+    "difficulty": "Advanced",
+    "status": "Approved",
+    "required_competencies": [
+      "Data Validation",
+      "SQL",
+      "Python",
+      "Data Quality Management",
+      "Automation"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Catalogue of automated validation rules for range checks, referential checks, duplicate detection and cross-field consistency.",
+    "skills": [
+      "SQL",
+      "Python",
+      "validation rules",
+      "automation",
+      "data quality"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-009",
+    "title": "Annual Education Statistics Analytical Brief",
+    "artifact_type": "Analytical Brief",
+    "role": "Assistant Director",
+    "department": "Social Statistics Division",
+    "domain": "Education Statistics",
+    "difficulty": "Intermediate",
+    "status": "Completed",
+    "required_competencies": [
+      "Data Interpretation",
+      "Statistical Analysis",
+      "Report Writing",
+      "Data Visualization",
+      "Indicator Analysis"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Analytical brief comparing enrolment, dropout, pupil-teacher ratio and school infrastructure indicators.",
+    "skills": [
+      "education indicators",
+      "trend analysis",
+      "charts",
+      "policy interpretation"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-010",
+    "title": "Metadata Dictionary for Official Statistical Indicators",
+    "artifact_type": "Data Dictionary",
+    "role": "Data Analyst",
+    "department": "Statistical Standards Unit",
+    "domain": "Statistical Standards",
+    "difficulty": "Intermediate",
+    "status": "Approved",
+    "required_competencies": [
+      "Metadata Management",
+      "Data Standards",
+      "Documentation",
+      "Data Governance",
+      "Statistical Concepts"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Standardised definitions, units, calculation methods, source systems and update frequency for official statistical indicators.",
+    "skills": [
+      "metadata",
+      "data dictionary",
+      "standards",
+      "governance"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-011",
+    "title": "Labour Force Survey Field Inspection Checklist",
+    "artifact_type": "Inspection Checklist",
+    "role": "Field Supervisor",
+    "department": "Field Operations Division",
+    "domain": "Field Survey Operations",
+    "difficulty": "Beginner",
+    "status": "Active",
+    "required_competencies": [
+      "Survey Operations",
+      "Data Quality Management",
+      "Field Inspection",
+      "Communication",
+      "Documentation"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Checklist for supervising field investigators and verifying survey procedures, respondent coverage and questionnaire completeness.",
+    "skills": [
+      "field inspection",
+      "survey protocols",
+      "quality checks",
+      "documentation"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-012",
+    "title": "Seasonal Adjustment Methodology Review",
+    "artifact_type": "Methodology Review",
+    "role": "Research Officer",
+    "department": "Economic Analysis Division",
+    "domain": "Time Series Statistics",
+    "difficulty": "Advanced",
+    "status": "Under Review",
+    "required_competencies": [
+      "Time Series Analysis",
+      "Seasonal Adjustment",
+      "Statistical Modelling",
+      "Data Interpretation",
+      "Methodology Review"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Review of seasonal patterns and proposed methodology for producing seasonally adjusted economic indicators.",
+    "skills": [
+      "time series",
+      "seasonality",
+      "modelling",
+      "trend-cycle analysis"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-013",
+    "title": "Official Statistics Data Release Calendar",
+    "artifact_type": "Planning Document",
+    "role": "Administrative Officer",
+    "department": "Statistical Coordination Cell",
+    "domain": "Statistical Coordination",
+    "difficulty": "Beginner",
+    "status": "Approved",
+    "required_competencies": [
+      "Planning & Coordination",
+      "Documentation",
+      "Communication",
+      "Data Governance"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Annual calendar defining planned release dates, responsible units, review milestones and publication dependencies.",
+    "skills": [
+      "planning",
+      "coordination",
+      "release management",
+      "documentation"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-014",
+    "title": "Data Privacy and Confidentiality Procedure for Survey Microdata",
+    "artifact_type": "Standard Operating Procedure",
+    "role": "Statistical Officer",
+    "department": "Data Governance Unit",
+    "domain": "Data Governance",
+    "difficulty": "Advanced",
+    "status": "Approved",
+    "required_competencies": [
+      "Data Governance",
+      "Statistical Confidentiality",
+      "Data Security",
+      "Risk Management",
+      "Documentation"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Procedure describing access controls, anonymisation, secure handling and controlled sharing of survey microdata.",
+    "skills": [
+      "confidentiality",
+      "anonymisation",
+      "access control",
+      "risk assessment"
+    ]
+  },
+  {
+    "artifact_id": "WA-2025-015",
+    "title": "Monthly Industrial Production Trend Analysis – August 2025",
+    "artifact_type": "Analytical Report",
+    "role": "Statistical Officer",
+    "department": "Industrial Statistics Division",
+    "domain": "Industrial Statistics",
+    "difficulty": "Intermediate",
+    "status": "Completed",
+    "required_competencies": [
+      "Time Series Analysis",
+      "Data Visualization",
+      "Trend Analysis",
+      "Statistical Interpretation",
+      "Report Writing"
+    ],
+    "source_type": "Internal Work Artifact",
+    "rag_enabled": true,
+    "quiz_enabled": true,
+    "description": "Monthly analysis of industrial production indices with year-on-year and month-on-month comparisons.",
+    "skills": [
+      "IIP",
+      "trend analysis",
+      "time series",
+      "visualization",
+      "report writing"
+    ]
+  }
+]

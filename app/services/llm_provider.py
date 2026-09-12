@@ -14,6 +14,7 @@ import json
 import logging
 import os
 import re
+import time
 
 import requests
 from dotenv import load_dotenv
@@ -86,7 +87,6 @@ _LANGUAGE_INSTRUCTIONS = {
 def _strip_markdown_fences(raw: str) -> str:
     """Remove ```json ... ``` fences that LLMs sometimes add."""
     raw = raw.strip()
-    # Remove leading ```json or ``` and trailing ```
     raw = re.sub(r"^```(?:json)?\s*", "", raw)
     raw = re.sub(r"\s*```$", "", raw)
     return raw.strip()
@@ -114,35 +114,83 @@ def _parse_llm_response(raw: str) -> list[dict]:
 def _validate_questions(
     questions: list[dict],
     valid_cids: set[str] | None = None,
+    cid_map: dict[str, str] | None = None,
+    default_cid: str | None = None,
 ) -> list[dict]:
     """
-    Keep only well-formed question dicts. A valid question has:
+    Keep and normalize well-formed question dicts. A valid question has:
     - "question" (str)
     - "options" (list of exactly 4 strings)
-    - "correct" (int 0-3)
+    - "correct" (int 0-3, or coercible string)
     - "explanation" (str)
-    - "competency_tag" (str, must be in valid_cids if provided)
+    - "competency_tag" (str, mapped to valid CID)
     """
     valid = []
     for i, q in enumerate(questions):
         try:
-            assert isinstance(q.get("question"), str) and q["question"].strip()
-            assert isinstance(q.get("options"), list) and len(q["options"]) == 4
-            assert all(isinstance(o, str) and o.strip() for o in q["options"])
-            assert isinstance(q.get("correct"), int) and 0 <= q["correct"] <= 3
-            assert isinstance(q.get("explanation"), str) and q["explanation"].strip()
-            # Phase 4B: validate competency_tag against CompetencyDictionary
-            if valid_cids is not None:
-                assert isinstance(q.get("competency_tag"), str) and q["competency_tag"].strip()
-                if q["competency_tag"] not in valid_cids:
-                    logger.warning(
-                        "Dropping question at index %d: competency_tag '%s' not in CompetencyDictionary",
-                        i, q.get("competency_tag"),
-                    )
-                    continue
-            valid.append(q)
-        except (AssertionError, KeyError, TypeError):
-            logger.warning("Dropping malformed question at index %d: %s", i, q)
+            if not isinstance(q, dict):
+                continue
+
+            question_text = q.get("question")
+            if not (isinstance(question_text, str) and question_text.strip()):
+                logger.warning("Dropping question at index %d: missing question text", i)
+                continue
+
+            options = q.get("options")
+            if not (isinstance(options, list) and len(options) == 4):
+                logger.warning("Dropping question at index %d: options is not a list of 4 items", i)
+                continue
+            options = [str(o).strip() for o in options]
+            if not all(options):
+                logger.warning("Dropping question at index %d: empty option string", i)
+                continue
+
+            raw_correct = q.get("correct")
+            correct_idx = None
+            if isinstance(raw_correct, int) and 0 <= raw_correct <= 3:
+                correct_idx = raw_correct
+            elif isinstance(raw_correct, str):
+                raw_str = raw_correct.strip().upper()
+                if raw_str in {"0", "1", "2", "3"}:
+                    correct_idx = int(raw_str)
+                elif raw_str in {"A", "B", "C", "D"}:
+                    correct_idx = ord(raw_str) - ord("A")
+
+            if correct_idx is None or not (0 <= correct_idx <= 3):
+                logger.warning("Dropping question at index %d: invalid correct index %s", i, raw_correct)
+                continue
+
+            explanation = q.get("explanation", "")
+            if not isinstance(explanation, str) or not explanation.strip():
+                explanation = "Explanation provided by assessment system."
+
+            tag = q.get("competency_tag")
+            final_tag = None
+
+            if isinstance(tag, str) and tag.strip():
+                tag_str = tag.strip()
+                if valid_cids and tag_str in valid_cids:
+                    final_tag = tag_str
+                elif cid_map and tag_str.lower() in cid_map:
+                    final_tag = cid_map[tag_str.lower()]
+
+            if not final_tag:
+                if default_cid:
+                    final_tag = default_cid
+                elif valid_cids:
+                    final_tag = next(iter(valid_cids))
+                else:
+                    final_tag = "CID-D-101"
+
+            valid.append({
+                "question": question_text.strip(),
+                "options": options,
+                "correct": correct_idx,
+                "explanation": explanation.strip(),
+                "competency_tag": final_tag,
+            })
+        except Exception as exc:
+            logger.warning("Dropping malformed question at index %d: %s (error: %s)", i, q, exc)
     return valid
 
 
@@ -166,24 +214,42 @@ def generate_mcqs(
             "Please set it to your Google AI Studio API key."
         )
 
+    # Primary model from env; fallback chain tried on 503/429/timeout
+    primary_model = os.environ.get("GEMINI_MODEL", "gemini-flash-lite-latest").strip()
+    _FALLBACK_MODELS = ["gemini-flash-lite-latest", "gemini-flash-latest"]
+    # Build ordered candidate list: primary first, then any fallbacks not already primary
+    _candidate_models = [primary_model] + [m for m in _FALLBACK_MODELS if m != primary_model]
+
     difficulty_description = _DIFFICULTY_DESCRIPTIONS.get(difficulty, _DIFFICULTY_DESCRIPTIONS["medium"])
     language_instruction = _LANGUAGE_INSTRUCTIONS.get(language, _LANGUAGE_INSTRUCTIONS["en"])
 
-    # Build competency list string for the prompt
+    # Build competency list string & cid lookup maps for the prompt
     target_cid = None
+    cid_map = {}
+    valid_cids = set()
+
     if valid_competencies:
         competency_list = "\n".join(
             f"- {c['cid']}: {c['label']}" for c in valid_competencies
         )
-        valid_cids = {c["cid"] for c in valid_competencies}
+        for c in valid_competencies:
+            cid = c["cid"]
+            lbl = c["label"]
+            valid_cids.add(cid)
+            cid_map[cid.lower()] = cid
+            cid_map[lbl.lower()] = cid
+
         if target_competency:
-            for c in valid_competencies:
-                if c['label'].lower() == target_competency.lower() or c['cid'] == target_competency:
-                    target_cid = c['cid']
-                    break
+            target_lower = target_competency.lower()
+            if target_lower in cid_map:
+                target_cid = cid_map[target_lower]
+            else:
+                for c in valid_competencies:
+                    if target_lower in c['label'].lower():
+                        target_cid = c['cid']
+                        break
     else:
         competency_list = "(No competency dictionary provided)"
-        valid_cids = None
 
     if target_competency:
         cid_clause = f" ({target_cid})" if target_cid else ""
@@ -204,36 +270,91 @@ def generate_mcqs(
         target_competency_instruction=target_competency_instruction,
     )
 
-    logger.info(
-        "Calling Gemini: target_competency=%s, difficulty=%s, language=%s, num_questions=%d, text_len=%d",
-        target_competency, difficulty, language, num_questions, len(text),
-    )
+    # ── Retry loop: try each candidate model up to 2 times ───────────────
+    last_err_msg = ""
+    response = None
+    model_name = primary_model
 
-    response = requests.post(
-        "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
-        params={"key": api_key},
-        json={
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [{"text": prompt}],
-                }
-            ],
-            "generationConfig": {
-                "temperature": 0.3,
-                "responseMimeType": "application/json",
-            },
-        },
-        timeout=90,
-    )
-    response.raise_for_status()
+    for attempt_model in _candidate_models:
+        model_name = attempt_model
+        endpoint_url = (
+            f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
+        )
+        for retry in range(2):
+            logger.info(
+                "Calling Gemini (%s) attempt %d: target_competency=%s (cid=%s), "
+                "difficulty=%s, language=%s, num_questions=%d, text_len=%d",
+                model_name, retry + 1,
+                target_competency, target_cid, difficulty, language, num_questions, len(text),
+            )
+            try:
+                response = requests.post(
+                    endpoint_url,
+                    params={"key": api_key},
+                    json={
+                        "contents": [
+                            {
+                                "role": "user",
+                                "parts": [{"text": prompt}],
+                            }
+                        ],
+                        "generationConfig": {
+                            "temperature": 0.3,
+                            "responseMimeType": "application/json",
+                        },
+                    },
+                    timeout=90,
+                )
+            except requests.exceptions.Timeout:
+                last_err_msg = f"Gemini model '{model_name}' timed out on attempt {retry + 1}."
+                logger.warning(last_err_msg)
+                time.sleep(2 ** retry)  # 1s, 2s
+                continue
+
+            if response.status_code == 200:
+                break  # success — exit retry loop
+
+            # Retryable: 503 overloaded, 429 quota
+            if response.status_code in (503, 429):
+                last_err_msg = (
+                    f"Gemini model '{model_name}' returned {response.status_code} "
+                    f"on attempt {retry + 1}: {response.text[:200]}"
+                )
+                logger.warning(last_err_msg)
+                time.sleep(2 ** retry)  # 1s, 2s
+                continue
+
+            # Non-retryable error for this model — break inner, try next model
+            last_err_msg = (
+                f"Gemini model '{model_name}' returned status {response.status_code}: "
+                f"{response.text[:300]}"
+            )
+            logger.error(last_err_msg)
+            response = None
+            break
+
+        if response is not None and response.status_code == 200:
+            break  # success — exit model loop
+        response = None  # reset so next model is tried
+
+    if response is None or response.status_code != 200:
+        err_msg = last_err_msg or "All Gemini model candidates failed."
+        logger.error(err_msg)
+        raise ValueError(err_msg)
+
     payload = response.json()
     try:
         raw_content = payload["candidates"][0]["content"]["parts"][0]["text"]
     except (KeyError, IndexError, TypeError) as exc:
         raise ValueError(f"Gemini returned an unexpected response shape: {payload}") from exc
+
     questions = _parse_llm_response(raw_content)
-    valid_questions = _validate_questions(questions, valid_cids=valid_cids)
+    valid_questions = _validate_questions(
+        questions,
+        valid_cids=valid_cids,
+        cid_map=cid_map,
+        default_cid=target_cid or (next(iter(valid_cids)) if valid_cids else None),
+    )
 
     if len(valid_questions) < 3:
         raise ValueError(
