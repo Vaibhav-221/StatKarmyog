@@ -26,6 +26,14 @@ function extractErrorMessage(err) {
   return 'An unknown error occurred.';
 }
 
+export function buildAssetUrl(url) {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
+  return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // MOCK DATA — matches Pydantic schemas from app/schemas/schemas.py
 // Modeled after OFF001 (Rakesh Kumar) from officer_profiles.json
@@ -279,6 +287,26 @@ export async function getArtifactDetail(artifactId) {
   } catch {
     console.warn(`[API] Artifact detail unavailable for ${artifactId}`);
     return { data: null, isMock: false, error: true };
+  }
+}
+
+export async function uploadProfilePhoto(officerId, file) {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await api.post(`/api/officers/${officerId}/profile-photo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 30000,
+    });
+    return { data: res.data, isMock: false };
+  } catch (err) {
+    console.error(`[API] Profile photo upload failed for ${officerId}:`, err);
+    return {
+      data: null,
+      isMock: false,
+      error: true,
+      message: extractErrorMessage(err),
+    };
   }
 }
 

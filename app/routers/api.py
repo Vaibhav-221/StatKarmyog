@@ -4,10 +4,13 @@ API routers for the Skill Intelligence platform.
 All endpoints are mounted under the /api prefix in main.py.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+import uuid
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
-from app.db import get_db
+from app.db import DATA_DIR, get_db
 from app.models.models import (
     Officer,
     CourseCatalogue,
@@ -28,6 +31,7 @@ from app.schemas.schemas import (
     CompetencyScoreItem,
     AssessmentHistoryItem,
     WorkEvidenceItem,
+    ProfilePhotoResponse,
     WorkArtifactItem,
     WorkArtifactDetail,
     ArtifactCompetencyItem,
@@ -49,6 +53,12 @@ from app.services.work_artifacts import (
 )
 
 router = APIRouter()
+
+PROFILE_PHOTO_DIR = DATA_DIR / "profile_photos"
+PROFILE_PHOTO_DIR.mkdir(parents=True, exist_ok=True)
+PROFILE_PHOTO_MAX_BYTES = 5 * 1024 * 1024
+PROFILE_PHOTO_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+PROFILE_PHOTO_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
 # ── Health ───────────────────────────────────────────────────────────────────
@@ -74,6 +84,45 @@ def get_officer(officer_id: str, db: Session = Depends(get_db)):
     if not officer:
         raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
     return officer
+
+
+@router.post("/officers/{officer_id}/profile-photo", response_model=ProfilePhotoResponse)
+async def upload_officer_profile_photo(
+    officer_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    """Upload or replace the profile photo for one officer."""
+    officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
+    if not officer:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+
+    filename = file.filename or ""
+    ext = Path(filename).suffix.lower()
+    if ext not in PROFILE_PHOTO_EXTENSIONS or file.content_type not in PROFILE_PHOTO_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=422,
+            detail="Unsupported image type. Upload a JPG, PNG, or WEBP image.",
+        )
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=422, detail="Profile photo file is empty.")
+    if len(content) > PROFILE_PHOTO_MAX_BYTES:
+        raise HTTPException(status_code=413, detail="Profile photo must be 5 MB or smaller.")
+
+    safe_name = f"{officer_id}_{uuid.uuid4().hex}{ext}"
+    target = PROFILE_PHOTO_DIR / safe_name
+    target.write_bytes(content)
+
+    officer.profile_photo_url = f"/static/profile_photos/{safe_name}"
+    db.commit()
+    db.refresh(officer)
+
+    return {
+        "officer_id": officer.officer_id,
+        "profile_photo_url": officer.profile_photo_url,
+    }
 
 
 # ── Competency Scores ────────────────────────────────────────────────────────

@@ -80,11 +80,132 @@ body {
   color: var(--color-text-primary);
   background: var(--color-bg);
   line-height: 1.6;
+  overflow-x: hidden;
 }
 
 ::selection {
   background: var(--color-primary);
   color: #fff;
+}
+
+:focus-visible {
+  outline: 3px solid rgba(12, 68, 124, 0.28);
+  outline-offset: 2px;
+}
+
+.ant-layout-content {
+  background:
+    linear-gradient(180deg, rgba(232, 240, 248, 0.55) 0%, rgba(244, 246, 249, 0) 260px),
+    var(--color-bg) !important;
+}
+
+.ant-typography,
+.ant-card,
+.ant-table,
+.ant-btn,
+.ant-input,
+.ant-select {
+  letter-spacing: 0;
+}
+
+.ant-btn {
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+}
+
+.ant-btn-primary {
+  box-shadow: 0 2px 6px rgba(12, 68, 124, 0.16);
+}
+
+.ant-btn-primary:hover {
+  filter: brightness(1.04);
+}
+
+.ant-card {
+  border: 1px solid var(--color-border) !important;
+}
+
+.ant-card-head {
+  border-bottom-color: var(--color-border) !important;
+}
+
+.ant-table-wrapper {
+  overflow-x: auto;
+}
+
+.ant-table-thead > tr > th {
+  font-size: 12px;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  color: var(--color-text-secondary) !important;
+}
+
+.ant-table-tbody > tr > td {
+  vertical-align: middle;
+}
+
+.ant-upload-wrapper .ant-upload-drag {
+  border-color: #C8D6E5 !important;
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.ant-upload-wrapper .ant-upload-drag:hover {
+  border-color: var(--color-primary) !important;
+  background: #F6FAFE !important;
+}
+
+.app-card {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-sm) !important;
+  border: 1px solid var(--color-border) !important;
+}
+
+.app-card:hover {
+  box-shadow: var(--shadow-md) !important;
+}
+
+.header-profile-button {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  display: inline-flex;
+  cursor: pointer;
+  border-radius: 999px;
+}
+
+.header-user-text {
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  padding: 2px 4px;
+}
+
+.header-user-text:hover {
+  background: #F4F7FB;
+}
+
+.profile-photo-frame {
+  position: relative;
+  width: 112px;
+  height: 112px;
+  margin: 0 auto 14px;
+}
+
+.profile-photo-frame .ant-avatar {
+  border: 4px solid #fff;
+  box-shadow: 0 8px 24px rgba(12, 68, 124, 0.18);
+}
+
+.profile-photo-frame .ant-avatar > img {
+  object-fit: cover;
+}
+
+.profile-photo-edit {
+  position: absolute !important;
+  right: 0;
+  bottom: 6px;
+  color: var(--color-primary) !important;
+  border-color: #C8D6E5 !important;
+  box-shadow: var(--shadow-md);
 }
 
 /* ── Scrollbar ─────────────────────────────────────────────────────────── */
@@ -394,6 +515,15 @@ body {
 
   .course-card {
     min-width: 220px;
+  }
+
+  .ant-layout-header {
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+  }
+
+  .header-user-text {
+    display: none;
   }
 }
 

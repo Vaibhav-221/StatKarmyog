@@ -16,6 +16,7 @@ class Officer(Base):
     department = Column(String, nullable=False)
     experience_years = Column(Integer, nullable=False)
     qualification = Column(String, nullable=False)
+    profile_photo_url = Column(String, nullable=True)
     past_trainings = Column(JSON, default=list)     # list[str]
     current_skills = Column(JSON, default=dict)      # {skill_name: level}
 

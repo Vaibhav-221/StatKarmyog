@@ -17,6 +17,11 @@ const antdTheme = {
     // ── Typography ────────────────────────────────────────────
     fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     fontSize: 14,
+    fontSizeHeading1: 30,
+    fontSizeHeading2: 24,
+    fontSizeHeading3: 20,
+    fontSizeHeading4: 17,
+    lineHeight: 1.55,
 
     // ── Shape ─────────────────────────────────────────────────
     borderRadius: 10,
@@ -26,6 +31,8 @@ const antdTheme = {
     // ── Surfaces ──────────────────────────────────────────────
     colorBgContainer: '#ffffff',
     colorBgLayout: '#F4F6F9',
+    colorText: '#1A2332',
+    colorTextSecondary: '#5A6B7D',
     colorBorderSecondary: '#E8ECF1',
 
     // ── Spacing ───────────────────────────────────────────────
@@ -42,6 +49,7 @@ const antdTheme = {
       boxShadowTertiary: '0 1px 3px rgba(0, 0, 0, 0.08)',
       headerFontSize: 16,
       headerFontSizeSM: 14,
+      borderRadiusLG: 10,
     },
     Table: {
       headerBg: '#F4F6F9',
@@ -57,6 +65,7 @@ const antdTheme = {
       controlHeightSM: 32,
       fontWeight: 500,
       primaryShadow: '0 2px 4px rgba(12, 68, 124, 0.2)',
+      borderRadius: 8,
     },
     Progress: {
       defaultColor: '#0C447C',
@@ -81,9 +90,15 @@ const antdTheme = {
     },
     Input: {
       controlHeight: 40,
+      activeBorderColor: '#0C447C',
+      hoverBorderColor: '#1A5BA0',
     },
     Select: {
       controlHeight: 40,
+      optionSelectedBg: '#E8F0F8',
+    },
+    Upload: {
+      colorPrimaryHover: '#1A5BA0',
     },
   },
 };

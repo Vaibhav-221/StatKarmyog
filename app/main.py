@@ -12,8 +12,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
-from app.db import Base, engine, SessionLocal
+from app.db import Base, DATA_DIR, engine, SessionLocal
 from app.routers.api import (
     router as api_router,
     get_officer_competency_scores,
@@ -90,6 +91,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.mount("/static", StaticFiles(directory=DATA_DIR), name="static")
 
 
 # ── Global exception handler ────────────────────────────────────────────────

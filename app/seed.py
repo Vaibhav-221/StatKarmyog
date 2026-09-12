@@ -440,6 +440,10 @@ def _ensure_lightweight_schema_upgrades() -> None:
             conn.exec_driver_sql("ALTER TABLE quiz_attempts ADD COLUMN artifact_id VARCHAR")
         if rows and "target_competency" not in columns:
             conn.exec_driver_sql("ALTER TABLE quiz_attempts ADD COLUMN target_competency VARCHAR")
+        officer_rows = conn.exec_driver_sql("PRAGMA table_info(officers)").fetchall()
+        officer_columns = {row[1] for row in officer_rows}
+        if officer_rows and "profile_photo_url" not in officer_columns:
+            conn.exec_driver_sql("ALTER TABLE officers ADD COLUMN profile_photo_url VARCHAR")
 
 
 def seed_database(session=None) -> None:

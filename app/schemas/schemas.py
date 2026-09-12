@@ -14,6 +14,7 @@ class OfficerListItem(BaseModel):
     designation: str
     department: str
     role_id: str
+    profile_photo_url: str | None = None
 
     model_config = {"from_attributes": True}
 
@@ -27,8 +28,16 @@ class OfficerDetail(BaseModel):
     department: str
     experience_years: int
     qualification: str
+    profile_photo_url: str | None = None
     past_trainings: list[str]
     current_skills: dict[str, int]
+
+    model_config = {"from_attributes": True}
+
+
+class ProfilePhotoResponse(BaseModel):
+    officer_id: str
+    profile_photo_url: str
 
     model_config = {"from_attributes": True}
 

@@ -7,12 +7,11 @@
  * Used across all pages (AppShell for authenticated pages, Login page for public header).
  */
 
-import React from 'react';
-import { Layout, Button, Typography, Space, Avatar, Dropdown } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { Layout, Button, Typography, Space, Dropdown } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  UserOutlined,
   LogoutOutlined,
   SafetyCertificateOutlined,
   DashboardOutlined,
@@ -22,7 +21,8 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MOCK_OFFICERS } from '../api/client';
+import { getOfficerProfile, MOCK_OFFICERS } from '../api/client';
+import OfficerAvatar from './OfficerAvatar';
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -31,6 +31,25 @@ export default function AppHeader({ collapsed, setCollapsed, showUser = true, is
   const { user, setUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    async function loadProfile() {
+      if (!user?.officer_id) {
+        setProfile(null);
+        return;
+      }
+      const res = await getOfficerProfile(user.officer_id);
+      if (active) {
+        setProfile(res.data || user);
+      }
+    }
+    loadProfile();
+    return () => {
+      active = false;
+    };
+  }, [user?.officer_id, user?.profile_photo_url]);
 
   const handleLogout = () => {
     logout();
@@ -58,6 +77,7 @@ export default function AppHeader({ collapsed, setCollapsed, showUser = true, is
       designation: officer.designation,
       department: officer.department,
       role: officer.role || 'officer',
+      profile_photo_url: officer.profile_photo_url || null,
     });
     navigate(officer.role === 'admin' ? '/admin' : '/dashboard');
   };
@@ -77,16 +97,8 @@ export default function AppHeader({ collapsed, setCollapsed, showUser = true, is
     onClick: () => handleQuickLogin(o.officer_id),
   }));
 
-  const initials = user?.name
-    ? user.name
-        .split(' ')
-        .map((w) => w[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
-    : 'U';
-
   const isPublicView = isLanding || location.pathname === '/' || location.pathname === '/login';
+  const displayUser = profile || user;
 
   return (
     <Header
@@ -213,15 +225,29 @@ export default function AppHeader({ collapsed, setCollapsed, showUser = true, is
                 Go to Dashboard
               </Button>
             )}
-            <Avatar style={{ backgroundColor: '#0C447C' }} icon={<UserOutlined />} size={34}>
-              {initials}
-            </Avatar>
-            <div style={{ lineHeight: 1.2, textAlign: 'left' }}>
+            <button
+              type="button"
+              onClick={() => navigate('/profile')}
+              aria-label="Open officer profile"
+              className="header-profile-button"
+            >
+              <OfficerAvatar officer={displayUser} size={34} />
+            </button>
+            <div
+              onClick={() => navigate('/profile')}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') navigate('/profile');
+              }}
+              role="button"
+              tabIndex={0}
+              className="header-user-text"
+              style={{ lineHeight: 1.2, textAlign: 'left' }}
+            >
               <Text strong style={{ fontSize: 12, display: 'block', color: '#0F172A' }}>
-                {user?.name || 'Officer'}
+                {displayUser?.name || 'Officer'}
               </Text>
               <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>
-                {user?.designation || user?.department || ''}
+                {displayUser?.designation || displayUser?.department || ''}
               </Text>
             </div>
             <Button
