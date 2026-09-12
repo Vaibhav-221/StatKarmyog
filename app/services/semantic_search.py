@@ -9,15 +9,13 @@ Provides:
 from __future__ import annotations
 
 import logging
+import os
 import time
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
-
-import chromadb
-from sentence_transformers import SentenceTransformer
 
 from app.models.models import CourseCatalogue
 
@@ -28,26 +26,30 @@ logger = logging.getLogger(__name__)
 _MODEL_NAME = "all-MiniLM-L6-v2"
 _COLLECTION_NAME = "courses"
 _PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
-CHROMA_PATH = _PROJECT_ROOT / "data" / "chroma"
+DATA_DIR = Path(os.environ.get("DATA_DIR", _PROJECT_ROOT / "data"))
+CHROMA_PATH = Path(os.environ.get("CHROMA_PATH", DATA_DIR / "chroma"))
 
 # Module-level singletons (initialised lazily)
-_chroma_client: chromadb.PersistentClient | None = None
-_embedding_model: SentenceTransformer | None = None
+_chroma_client: Any | None = None
+_embedding_model: Any | None = None
 
 
-def _get_chroma_client() -> chromadb.PersistentClient:
+def _get_chroma_client() -> Any:
     """Return (or create) the persistent ChromaDB client."""
     global _chroma_client
     if _chroma_client is None:
+        import chromadb
+
         CHROMA_PATH.mkdir(parents=True, exist_ok=True)
         _chroma_client = chromadb.PersistentClient(path=str(CHROMA_PATH))
     return _chroma_client
 
 
-def _get_embedding_model() -> SentenceTransformer:
-    """Return (or download/load) the sentence-transformer model."""
+def _get_embedding_model() -> Any:
+    """Return (or download/load) the sentence-transformer model lazily."""
     global _embedding_model
     if _embedding_model is None:
+        from sentence_transformers import SentenceTransformer
         logger.info("Loading sentence-transformer model '%s' ...", _MODEL_NAME)
         _embedding_model = SentenceTransformer(_MODEL_NAME)
     return _embedding_model

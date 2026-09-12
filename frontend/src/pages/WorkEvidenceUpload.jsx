@@ -13,11 +13,14 @@ import {
   ThunderboltOutlined,
 } from '@ant-design/icons';
 import { uploadArtifact } from '../api/client';
+import { useAuth } from '../context/AuthContext';
 
 const { Title, Text, Paragraph } = Typography;
 const { Dragger } = Upload;
 
 export default function WorkEvidenceUpload() {
+  const { user } = useAuth();
+  const officerId = user?.officer_id || 'OFF001';
   const [fileList, setFileList] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
@@ -44,11 +47,21 @@ export default function WorkEvidenceUpload() {
     setTimeout(async () => {
       const formData = new FormData();
       formData.append('file', fileList[0].originFileObj || fileList[0]);
+      formData.append('officer_id', officerId);
       const res = await uploadArtifact(formData);
-      setAnalysisResult(res.data);
+      if (res.error || !res.data) {
+        setAnalysisResult({
+          error: true,
+          document_name: fileList[0].name,
+          summary: 'Work artifact analysis is not available from the backend for this officer yet.',
+        });
+        message.warning('Backend work artifact analysis is not available yet.');
+      } else {
+        setAnalysisResult(res.data);
+        message.success('Work artifact analyzed successfully!');
+      }
       setAnalyzing(false);
       setCurrentStep(4);
-      message.success('Work artifact analyzed successfully!');
     }, 2400);
   };
 
@@ -140,9 +153,9 @@ export default function WorkEvidenceUpload() {
               style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderTop: '4px solid #0C447C' }}
             >
               <Alert
-                message="AI-Assisted Competency Evidence"
-                description="Evidence scores are derived using sentence-transformers semantic concept matching. Scores contribute 40% weight towards overall competency score."
-                type="success"
+                message={analysisResult.error ? 'No Backend Artifact Analysis Available' : 'AI-Assisted Competency Evidence'}
+                description={analysisResult.error ? analysisResult.summary : 'Evidence scores are derived using the backend evidence pipeline and contribute to this officer only.'}
+                type={analysisResult.error ? 'warning' : 'success'}
                 showIcon
                 style={{ marginBottom: 20 }}
               />

@@ -29,7 +29,8 @@ import {
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { MOCK_OFFICERS } from '../api/client';
+import { getOfficerProfile, MOCK_OFFICERS } from '../api/client';
+import OfficerAvatar from './OfficerAvatar';
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -53,6 +54,25 @@ export default function AppHeader({
   const { user, setUser, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    let active = true;
+    async function loadProfile() {
+      if (!user?.officer_id) {
+        setProfile(null);
+        return;
+      }
+      const res = await getOfficerProfile(user.officer_id);
+      if (active) {
+        setProfile(res.data || user);
+      }
+    }
+    loadProfile();
+    return () => {
+      active = false;
+    };
+  }, [user?.officer_id, user?.profile_photo_url]);
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -88,6 +108,7 @@ export default function AppHeader({
       designation: officer.designation,
       department: officer.department,
       role: officer.role || 'officer',
+      profile_photo_url: officer.profile_photo_url || null,
     });
 
     setMobileMenuOpen(false);

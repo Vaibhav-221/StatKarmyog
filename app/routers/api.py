@@ -4,11 +4,23 @@ API routers for the Skill Intelligence platform.
 All endpoints are mounted under the /api prefix in main.py.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+import uuid
+from pathlib import Path
+
+from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
-from app.db import get_db
-from app.models.models import Officer, CourseCatalogue, Enrollment, CompetencyScore
+from app.db import DATA_DIR, get_db
+from app.models.models import (
+    Officer,
+    CourseCatalogue,
+    CompetencyDictionary,
+    Enrollment,
+    CompetencyScore,
+    QuizAttempt,
+    QuizAttemptGenerated,
+    QuizAttemptQuestion,
+)
 from app.schemas.schemas import (
     OfficerListItem,
     OfficerDetail,
@@ -19,14 +31,36 @@ from app.schemas.schemas import (
     CourseItem,
     HealthResponse,
     CompetencyScoreItem,
+    AssessmentHistoryItem,
+    WorkEvidenceItem,
+    ProfilePhotoResponse,
+    WorkArtifactItem,
+    WorkArtifactDetail,
+    ArtifactCompetencyItem,
+    ArtifactGapItem,
+    ArtifactRecommendationItem,
 )
 from app.services.gap_analysis import (
     compute_skill_gaps,
     recommend_courses,
     recommend_courses_hybrid,
 )
+from app.services.work_artifacts import (
+    get_artifact,
+    get_artifact_competencies,
+    get_artifact_gaps,
+    get_artifact_recommendations,
+    get_officer_artifacts,
+    list_artifacts as list_work_artifacts,
+)
 
 router = APIRouter()
+
+PROFILE_PHOTO_DIR = DATA_DIR / "profile_photos"
+PROFILE_PHOTO_DIR.mkdir(parents=True, exist_ok=True)
+PROFILE_PHOTO_MAX_BYTES = 5 * 1024 * 1024
+PROFILE_PHOTO_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
+PROFILE_PHOTO_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
 # ── Health ───────────────────────────────────────────────────────────────────
@@ -54,6 +88,45 @@ def get_officer(officer_id: str, db: Session = Depends(get_db)):
     return officer
 
 
+@router.post("/officers/{officer_id}/profile-photo", response_model=ProfilePhotoResponse)
+async def upload_officer_profile_photo(
+    officer_id: str,
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+):
+    """Upload or replace the profile photo for one officer."""
+    officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
+    if not officer:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+
+    filename = file.filename or ""
+    ext = Path(filename).suffix.lower()
+    if ext not in PROFILE_PHOTO_EXTENSIONS or file.content_type not in PROFILE_PHOTO_CONTENT_TYPES:
+        raise HTTPException(
+            status_code=422,
+            detail="Unsupported image type. Upload a JPG, PNG, or WEBP image.",
+        )
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=422, detail="Profile photo file is empty.")
+    if len(content) > PROFILE_PHOTO_MAX_BYTES:
+        raise HTTPException(status_code=413, detail="Profile photo must be 5 MB or smaller.")
+
+    safe_name = f"{officer_id}_{uuid.uuid4().hex}{ext}"
+    target = PROFILE_PHOTO_DIR / safe_name
+    target.write_bytes(content)
+
+    officer.profile_photo_url = f"/static/profile_photos/{safe_name}"
+    db.commit()
+    db.refresh(officer)
+
+    return {
+        "officer_id": officer.officer_id,
+        "profile_photo_url": officer.profile_photo_url,
+    }
+
+
 # ── Competency Scores ────────────────────────────────────────────────────────
 
 @router.get("/competency-scores/{officer_id}", response_model=list[CompetencyScoreItem])
@@ -69,6 +142,207 @@ def get_officer_competency_scores(officer_id: str, db: Session = Depends(get_db)
         .order_by(CompetencyScore.recorded_on.asc(), CompetencyScore.id.asc())
         .all()
     )
+
+
+@router.get("/officers/{officer_id}/assessments", response_model=list[AssessmentHistoryItem])
+def get_officer_assessments(officer_id: str, db: Session = Depends(get_db)):
+    """Return quiz/assessment history for the requested officer only."""
+    officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
+    if not officer:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+
+    attempts = (
+        db.query(QuizAttempt)
+        .filter(QuizAttempt.officer_id == officer_id)
+        .order_by(QuizAttempt.attempted_on.desc().nullslast(), QuizAttempt.attempt_id.desc())
+        .all()
+    )
+
+    results = []
+    for attempt in attempts:
+        questions = (
+            db.query(QuizAttemptQuestion)
+            .filter(QuizAttemptQuestion.attempt_id == attempt.attempt_id)
+            .all()
+        )
+        generated_questions = (
+            db.query(QuizAttemptGenerated)
+            .filter(QuizAttemptGenerated.attempt_id == attempt.attempt_id)
+            .order_by(QuizAttemptGenerated.question_index.asc())
+            .all()
+        )
+        grouped: dict[str, dict] = {}
+        for question in questions:
+            stats = grouped.setdefault(
+                question.competency_tag,
+                {
+                    "cid": question.competency_tag,
+                    "skill_label": question.skill_label,
+                    "correct_count": 0,
+                    "total_questions": 0,
+                },
+            )
+            stats["total_questions"] += 1
+            if question.is_correct:
+                stats["correct_count"] += 1
+
+        competency_scores = []
+        for stats in grouped.values():
+            total = stats["total_questions"]
+            score_percent = round((stats["correct_count"] / total) * 100, 1) if total else 0.0
+            competency_scores.append({
+                **stats,
+                "score_percent": score_percent,
+                "skill_level": round(1 + (score_percent / 100) * 4, 1),
+            })
+
+        generated_competencies = sorted(
+            {
+                row.skill_label
+                for row in (
+                    db.query(CompetencyScore.skill_label)
+                    .filter(
+                        CompetencyScore.officer_id == officer_id,
+                        CompetencyScore.source == f"quiz_attempt_{attempt.attempt_id}",
+                    )
+                    .all()
+                )
+                if row.skill_label
+            }
+        )
+        if not generated_competencies:
+            comp_dict = {
+                row.cid: row.label
+                for row in db.query(CompetencyDictionary).all()
+            }
+            generated_competencies = sorted(
+                {
+                    comp_dict.get(gq.competency_tag, gq.competency_tag)
+                    for gq in generated_questions
+                }
+            )
+
+        question_count = len(generated_questions) if generated_questions else len(questions)
+
+        results.append({
+            "attempt_id": attempt.attempt_id,
+            "officer_id": attempt.officer_id,
+            "course_id": attempt.course_id,
+            "artifact_id": attempt.artifact_id,
+            "target_competency": attempt.target_competency,
+            "quiz_source_material": attempt.quiz_source_material,
+            "attempted_on": attempt.attempted_on,
+            "raw_score_percent": attempt.raw_score_percent,
+            "status": "submitted" if attempt.attempted_on else "generated",
+            "question_count": question_count,
+            "competencies": generated_competencies,
+            "competency_scores": competency_scores,
+        })
+
+    return results
+
+
+@router.get("/officers/{officer_id}/work-evidence", response_model=list[WorkEvidenceItem])
+def get_officer_work_evidence(officer_id: str, db: Session = Depends(get_db)):
+    """Return work artifact evidence represented in CompetencyScore rows for one officer."""
+    officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
+    if not officer:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+
+    scores = (
+        db.query(CompetencyScore)
+        .filter(
+            CompetencyScore.officer_id == officer_id,
+            CompetencyScore.artifact_reference.isnot(None),
+        )
+        .order_by(CompetencyScore.recorded_on.desc(), CompetencyScore.id.desc())
+        .all()
+    )
+
+    grouped: dict[str, dict] = {}
+    for score in scores:
+        artifact_key = score.artifact_reference or f"score-{score.id}"
+        item = grouped.setdefault(
+            artifact_key,
+            {
+                "id": artifact_key,
+                "officer_id": officer_id,
+                "artifact_reference": artifact_key,
+                "document_name": artifact_key.replace("\\", "/").split("/")[-1],
+                "recorded_on": score.recorded_on,
+                "source": score.source,
+                "confidence_level": score.confidence_level,
+                "competencies_detected": [],
+                "scores": {},
+                "summary": "Evidence derived from existing competency score history for this officer.",
+            },
+        )
+        item["competencies_detected"].append(score.skill_label)
+        if score.artifact_score is not None:
+            item["scores"][score.skill_label] = score.artifact_score
+
+    return list(grouped.values())
+
+
+# ── Work Artifacts ───────────────────────────────────────────────────────────
+
+@router.get("/artifacts", response_model=list[WorkArtifactItem])
+def list_artifacts(db: Session = Depends(get_db)):
+    """Return all work artifacts from the database."""
+    return list_work_artifacts(db)
+
+
+@router.get("/artifacts/{artifact_id}", response_model=WorkArtifactDetail)
+def get_artifact_detail(artifact_id: str, db: Session = Depends(get_db)):
+    """Return one work artifact plus its normalized required competencies."""
+    artifact = get_artifact(db, artifact_id)
+    if artifact is None:
+        raise HTTPException(status_code=404, detail=f"Artifact '{artifact_id}' not found")
+    return artifact
+
+
+@router.get("/officers/{officer_id}/artifacts", response_model=list[WorkArtifactItem])
+def get_assigned_work_artifacts(officer_id: str, db: Session = Depends(get_db)):
+    """Return work artifacts assigned to a single officer."""
+    artifacts = get_officer_artifacts(db, officer_id)
+    if artifacts is None:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+    return artifacts
+
+
+@router.get("/artifacts/{artifact_id}/competencies", response_model=list[ArtifactCompetencyItem])
+def get_required_artifact_competencies(artifact_id: str, db: Session = Depends(get_db)):
+    """Return FRAC-linked competencies required by a work artifact."""
+    competencies = get_artifact_competencies(db, artifact_id)
+    if competencies is None:
+        raise HTTPException(status_code=404, detail=f"Artifact '{artifact_id}' not found")
+    return competencies
+
+
+@router.get("/officers/{officer_id}/artifact-gaps", response_model=list[ArtifactGapItem])
+def get_officer_artifact_gaps(
+    officer_id: str,
+    artifact_id: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    """Return artifact-specific competency gaps for an officer."""
+    gaps = get_artifact_gaps(db, officer_id, artifact_id=artifact_id)
+    if gaps is None:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+    return gaps
+
+
+@router.get("/officers/{officer_id}/artifact-recommendations", response_model=list[ArtifactRecommendationItem])
+def get_officer_artifact_recommendations(
+    officer_id: str,
+    artifact_id: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    """Return explainable course recommendations for artifact competency gaps."""
+    recs = get_artifact_recommendations(db, officer_id, artifact_id=artifact_id)
+    if recs is None:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+    return recs
 
 
 # ── Gap Analysis ─────────────────────────────────────────────────────────────

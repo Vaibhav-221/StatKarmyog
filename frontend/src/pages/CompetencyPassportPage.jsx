@@ -2,8 +2,8 @@
  * Competency Passport Page — Signature feature proving before/after competency improvement.
  */
 
-import React from 'react';
-import { Row, Col, Card, Typography, Tag, Space, Divider, Alert, Badge } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Row, Col, Card, Typography, Tag, Space, Alert, Empty, Skeleton } from 'antd';
 import {
   SafetyCertificateOutlined,
   CheckCircleOutlined,
@@ -22,12 +22,81 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from 'recharts';
-import { MOCK_PASSPORT_DATA } from '../data/mockData';
+import { useAuth } from '../context/AuthContext';
+import { getCompetencyScores, getGapAnalysis, getOfficerProfile, getPassportSummary } from '../api/client';
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function CompetencyPassportPage() {
-  const passport = MOCK_PASSPORT_DATA;
+  const { user } = useAuth();
+  const officerId = user?.officer_id || 'OFF001';
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState(null);
+  const [passport, setPassport] = useState(null);
+  const [gaps, setGaps] = useState([]);
+  const [scores, setScores] = useState([]);
+
+  useEffect(() => {
+    async function load() {
+      setLoading(true);
+      const [profileRes, passportRes, gapRes, scoreRes] = await Promise.all([
+        getOfficerProfile(officerId),
+        getPassportSummary(officerId),
+        getGapAnalysis(officerId),
+        getCompetencyScores(officerId),
+      ]);
+      setProfile(profileRes.data);
+      setPassport(passportRes.data);
+      setGaps(gapRes.data?.gaps || []);
+      setScores(scoreRes.data || []);
+      setLoading(false);
+    }
+    load();
+  }, [officerId]);
+
+  const cards = useMemo(() => {
+    const gapBySkill = Object.fromEntries(gaps.map((gap) => [gap.skill, gap]));
+    const scoresByCid = scores.reduce((acc, score) => {
+      acc[score.cid] = acc[score.cid] || [];
+      acc[score.cid].push(score);
+      return acc;
+    }, {});
+
+    return (passport?.competencies || []).map((comp) => {
+      const relatedScores = scoresByCid[comp.cid] || [];
+      const hasQuiz = relatedScores.some((score) => score.quiz_score !== null && score.quiz_score !== undefined);
+      const hasArtifact = relatedScores.some((score) => score.artifact_score !== null && score.artifact_score !== undefined);
+      const requiredScore = gapBySkill[comp.skill_label]?.expected_level;
+      return {
+        ...comp,
+        chart_history: (comp.history || []).map((point) => ({
+          label: point.recorded_on,
+          score: Math.round(point.combined_score * 20),
+        })),
+        current_score: Math.round(comp.latest_score * 20),
+        previous_score: Math.round(comp.first_score * 20),
+        required_score: requiredScore !== undefined ? Math.round(requiredScore * 20) : null,
+        improvement: Math.round(comp.delta * 20),
+        confidence: comp.history?.[comp.history.length - 1]?.confidence_level || 'Not available',
+        evidence_checkmarks: {
+          knowledge_assessment: hasQuiz,
+          work_artifact: hasArtifact,
+          ai_quiz: hasQuiz,
+          reassessment: (comp.history || []).length > 1,
+        },
+      };
+    });
+  }, [passport, gaps, scores]);
+
+  if (loading) {
+    return (
+      <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+        <Skeleton active paragraph={{ rows: 8 }} />
+      </div>
+    );
+  }
+
+  const firstCard = cards[0];
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
@@ -43,7 +112,7 @@ export default function CompetencyPassportPage() {
         </div>
 
         <Tag color="navy" style={{ background: '#0C447C', color: '#fff', fontSize: 13, padding: '4px 14px', borderRadius: 12 }}>
-          Officer Passport: {passport.officer_name} ({passport.role})
+          Officer Passport: {profile?.name || user?.name || officerId} ({profile?.designation || profile?.role_id || 'Officer'})
         </Tag>
       </div>
 
@@ -66,15 +135,16 @@ export default function CompetencyPassportPage() {
         bordered={false}
         style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', marginBottom: 24 }}
       >
+        {firstCard ? (
         <div style={{ height: 260, width: '100%' }}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={passport.competencies[0].history}>
+            <LineChart data={firstCard.chart_history}>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-              <XAxis dataKey="month" stroke="#64748B" />
+              <XAxis dataKey="label" stroke="#64748B" />
               <YAxis domain={[0, 100]} stroke="#64748B" />
               <Tooltip
                 contentStyle={{ background: '#fff', borderRadius: 8, border: '1px solid #CBD5E1' }}
-                formatter={(val) => [`${val}%`, 'Sampling Methodology Score']}
+                formatter={(val) => [`${val}%`, `${firstCard.skill_label} Score`]}
               />
               <Line
                 type="monotone"
@@ -87,6 +157,9 @@ export default function CompetencyPassportPage() {
             </LineChart>
           </ResponsiveContainer>
         </div>
+        ) : (
+          <Empty description="No competency passport history found for this officer" />
+        )}
       </Card>
 
       {/* Passport Cards per Competency */}
@@ -95,7 +168,13 @@ export default function CompetencyPassportPage() {
       </Title>
 
       <Row gutter={[24, 24]}>
-        {passport.competencies.map((comp) => (
+        {cards.length === 0 ? (
+          <Col span={24}>
+            <Card bordered={false} style={{ borderRadius: 10 }}>
+              <Empty description="No competency passport history found for this officer" />
+            </Card>
+          </Col>
+        ) : cards.map((comp) => (
           <Col xs={24} md={12} lg={8} key={comp.cid}>
             <Card
               bordered={false}
@@ -141,11 +220,15 @@ export default function CompetencyPassportPage() {
                 </Col>
                 <Col span={6} style={{ textAlign: 'center' }}>
                   <Text type="secondary" style={{ fontSize: 10 }}>REQUIRED</Text>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#334155' }}>{comp.required_score}%</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: '#334155' }}>
+                    {comp.required_score === null ? 'N/A' : `${comp.required_score}%`}
+                  </div>
                 </Col>
                 <Col span={6} style={{ textAlign: 'center' }}>
                   <Text type="secondary" style={{ fontSize: 10 }}>GAIN</Text>
-                  <div style={{ fontSize: 16, fontWeight: 700, color: '#389E0D' }}>+{comp.improvement}</div>
+                  <div style={{ fontSize: 16, fontWeight: 700, color: comp.improvement >= 0 ? '#389E0D' : '#CF1322' }}>
+                    {comp.improvement > 0 ? `+${comp.improvement}` : comp.improvement}
+                  </div>
                 </Col>
               </Row>
 

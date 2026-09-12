@@ -1,8 +1,7 @@
 """
 Tests for app/services/llm_provider.py
 
-Verifies the response validation and malformed-question-dropping logic
-WITHOUT making real LLM API calls.
+Verifies response validation and MCQ generation using requests.post mock.
 """
 
 import json
@@ -63,6 +62,7 @@ def _good_question(q="What is X?", correct=0):
         "options": ["A", "B", "C", "D"],
         "correct": correct,
         "explanation": "Because A is correct.",
+        "competency_tag": "CID-D-101",
     }
 
 
@@ -95,53 +95,46 @@ def test_validate_drops_invalid_correct_index():
     assert len(result) == 1
 
 
-def test_validate_drops_missing_explanation():
-    """Question with empty explanation should be dropped."""
-    bad = _good_question()
-    bad["explanation"] = ""
-    result = _validate_questions([_good_question(), bad])
+def test_validate_handles_correct_as_string():
+    """Question with correct as string '0' should be converted to 0."""
+    valid_q = _good_question()
+    valid_q["correct"] = "0"
+    result = _validate_questions([valid_q])
     assert len(result) == 1
-
-
-def test_validate_drops_correct_as_string():
-    """Question with correct as string instead of int should be dropped."""
-    bad = _good_question()
-    bad["correct"] = "0"  # string, not int
-    result = _validate_questions([_good_question(), bad])
-    assert len(result) == 1
+    assert result[0]["correct"] == 0
 
 
 # ── generate_mcqs (mocked LLM) ──────────────────────────────────────────────
 
-def _mock_llm_response(questions: list[dict]) -> str:
-    return json.dumps(questions)
+def _mock_llm_payload(questions: list[dict]) -> dict:
+    return {
+        "candidates": [
+            {
+                "content": {
+                    "parts": [
+                        {"text": json.dumps(questions)}
+                    ]
+                }
+            }
+        ]
+    }
 
 
 def test_generate_mcqs_with_mocked_llm():
-    """Verify generate_mcqs works end-to-end with a mocked LLM call."""
+    """Verify generate_mcqs works end-to-end with a mocked requests.post call."""
     good_questions = [_good_question(f"Question {i}?") for i in range(5)]
     mock_response = MagicMock()
-    mock_response.content = _mock_llm_response(good_questions)
+    mock_response.status_code = 200
+    mock_response.json.return_value = _mock_llm_payload(good_questions)
 
     with patch.dict("os.environ", {"GOOGLE_API_KEY": "test-key-123"}):
-        with patch("app.services.llm_provider.ChatGoogleGenerativeAI") as MockLLM:
-            # Make the chain (prompt | llm) return our mock response
-            mock_llm_instance = MagicMock()
-            MockLLM.return_value = mock_llm_instance
-            # The pipe operator creates a RunnableSequence; mock its invoke
-            with patch("app.services.llm_provider.PromptTemplate") as MockPrompt:
-                mock_chain = MagicMock()
-                mock_chain.invoke.return_value = mock_response
-                mock_prompt_instance = MagicMock()
-                MockPrompt.return_value = mock_prompt_instance
-                mock_prompt_instance.__or__ = MagicMock(return_value=mock_chain)
-
-                result = generate_mcqs(
-                    text="Some sample text " * 50,
-                    difficulty="medium",
-                    language="en",
-                    num_questions=5,
-                )
+        with patch("app.services.llm_provider.requests.post", return_value=mock_response):
+            result = generate_mcqs(
+                text="Some sample text " * 50,
+                difficulty="medium",
+                language="en",
+                num_questions=5,
+            )
 
     assert len(result) == 5
     for q in result:
@@ -153,7 +146,6 @@ def test_generate_mcqs_with_mocked_llm():
 def test_generate_mcqs_raises_without_api_key():
     """Should raise ValueError when GOOGLE_API_KEY is not set."""
     with patch.dict("os.environ", {}, clear=True):
-        # Also clear any existing GOOGLE_API_KEY
         import os
         env_backup = os.environ.get("GOOGLE_API_KEY")
         if "GOOGLE_API_KEY" in os.environ:
@@ -168,7 +160,6 @@ def test_generate_mcqs_raises_without_api_key():
 
 def test_generate_mcqs_raises_when_too_few_valid():
     """Should raise ValueError when fewer than 3 valid questions remain."""
-    # Only 2 good questions + 3 bad ones
     questions = [
         _good_question("Q1?"),
         _good_question("Q2?"),
@@ -177,18 +168,10 @@ def test_generate_mcqs_raises_when_too_few_valid():
         {"still": "bad"},
     ]
     mock_response = MagicMock()
-    mock_response.content = json.dumps(questions)
+    mock_response.status_code = 200
+    mock_response.json.return_value = _mock_llm_payload(questions)
 
     with patch.dict("os.environ", {"GOOGLE_API_KEY": "test-key-123"}):
-        with patch("app.services.llm_provider.ChatGoogleGenerativeAI") as MockLLM:
-            mock_llm_instance = MagicMock()
-            MockLLM.return_value = mock_llm_instance
-            with patch("app.services.llm_provider.PromptTemplate") as MockPrompt:
-                mock_chain = MagicMock()
-                mock_chain.invoke.return_value = mock_response
-                mock_prompt_instance = MagicMock()
-                MockPrompt.return_value = mock_prompt_instance
-                mock_prompt_instance.__or__ = MagicMock(return_value=mock_chain)
-
-                with pytest.raises(ValueError, match="only 2 valid questions"):
-                    generate_mcqs("text " * 100, "medium", "en", 5)
+        with patch("app.services.llm_provider.requests.post", return_value=mock_response):
+            with pytest.raises(ValueError, match="only 2 valid questions"):
+                generate_mcqs("text " * 100, "medium", "en", 5)

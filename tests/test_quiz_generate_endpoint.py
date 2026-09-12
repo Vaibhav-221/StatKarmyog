@@ -105,20 +105,22 @@ def _mock_generate_mcqs(text, difficulty, language, num_questions=10, **kwargs):
 def test_generate_quiz_success(client):
     """Happy path: valid .txt file, mocked LLM returns valid questions."""
     fixture_content = (FIXTURES_DIR / "sample_doc.txt").read_bytes()
+    rag_context = {"context": "Sampling document context.", "chunk_count": 1, "retrieved_chunk_count": 1}
 
     with patch("app.routers.quiz.generate_mcqs", side_effect=_mock_generate_mcqs):
         with patch("app.routers.quiz.get_cached", return_value=None):
             with patch("app.routers.quiz.set_cached"):
-                resp = client.post(
-                    "/api/quiz/generate",
-                    files={"file": ("sample_doc.txt", fixture_content, "text/plain")},
-                    data={
-                        "officer_id": "OFF001",
-                        "difficulty": "medium",
-                        "language": "en",
-                        "num_questions": "5",
-                    },
-                )
+                with patch("app.services.document_rag.retrieve_relevant_context", return_value=rag_context):
+                    resp = client.post(
+                        "/api/quiz/generate",
+                        files={"file": ("sample_doc.txt", fixture_content, "text/plain")},
+                        data={
+                            "officer_id": "OFF001",
+                            "difficulty": "medium",
+                            "language": "en",
+                            "num_questions": "5",
+                        },
+                    )
 
     assert resp.status_code == 200
     body = resp.json()
@@ -196,15 +198,17 @@ def test_generate_quiz_empty_document(client):
 def test_generate_quiz_md_file(client):
     """Should accept .md files."""
     content = ("# Heading\n\nThis is a markdown test document with sufficient content. " * 20).encode()
+    rag_context = {"context": "Markdown document context.", "chunk_count": 1, "retrieved_chunk_count": 1}
 
     with patch("app.routers.quiz.generate_mcqs", side_effect=_mock_generate_mcqs):
         with patch("app.routers.quiz.get_cached", return_value=None):
             with patch("app.routers.quiz.set_cached"):
-                resp = client.post(
-                    "/api/quiz/generate",
-                    files={"file": ("notes.md", content, "text/markdown")},
-                    data={"officer_id": "OFF001", "difficulty": "hard", "language": "en", "num_questions": "3"},
-                )
+                with patch("app.services.document_rag.retrieve_relevant_context", return_value=rag_context):
+                    resp = client.post(
+                        "/api/quiz/generate",
+                        files={"file": ("notes.md", content, "text/markdown")},
+                        data={"officer_id": "OFF001", "difficulty": "hard", "language": "en", "num_questions": "3"},
+                    )
 
     assert resp.status_code == 200
     assert len(resp.json()["questions"]) == 3
@@ -214,14 +218,143 @@ def test_generate_quiz_cached_response(client):
     """Should return cached questions without calling the LLM."""
     fixture_content = (FIXTURES_DIR / "sample_doc.txt").read_bytes()
     cached_questions = [_good_question(i) for i in range(5)]
+    rag_context = {"context": "Cached document context.", "chunk_count": 1, "retrieved_chunk_count": 1}
 
     with patch("app.routers.quiz.get_cached", return_value=cached_questions):
-        resp = client.post(
-            "/api/quiz/generate",
-            files={"file": ("sample_doc.txt", fixture_content, "text/plain")},
-            data={"officer_id": "OFF001", "difficulty": "medium", "language": "en", "num_questions": "5"},
-        )
+        with patch("app.services.document_rag.retrieve_relevant_context", return_value=rag_context):
+            resp = client.post(
+                "/api/quiz/generate",
+                files={"file": ("sample_doc.txt", fixture_content, "text/plain")},
+                data={"officer_id": "OFF001", "difficulty": "medium", "language": "en", "num_questions": "5"},
+            )
 
     assert resp.status_code == 200
     assert len(resp.json()["questions"]) == 5
+
+
+def test_generate_quiz_without_file_still_works(client):
+    """Normal competency-based quiz generation must keep working without PDF upload."""
+    with patch("app.routers.quiz.generate_mcqs", side_effect=_mock_generate_mcqs):
+        with patch("app.routers.quiz.get_cached", return_value=None):
+            with patch("app.routers.quiz.set_cached"):
+                resp = client.post(
+                    "/api/quiz/generate",
+                    data={
+                        "officer_id": "OFF001",
+                        "difficulty": "medium",
+                        "language": "en",
+                        "num_questions": "4",
+                        "target_competency": "Sampling",
+                    },
+                )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert len(body["questions"]) == 4
+    db = TestingSessionLocal()
+    try:
+        attempt = db.query(QuizAttempt).filter_by(attempt_id=body["attempt_id"]).first()
+        assert attempt is not None
+        assert attempt.officer_id == "OFF001"
+        assert attempt.target_competency == "Sampling"
+    finally:
+        db.close()
+
+
+def test_generate_quiz_pdf_uses_document_rag_and_persists(client):
+    """Valid PDF upload should flow through document RAG before LLM generation."""
+    pdf_content = (FIXTURES_DIR / "test_sampling_manual.pdf").read_bytes()
+    rag_context = {
+        "context": "Sampling guideline context from uploaded PDF. Stratification and sample allocation are covered.",
+        "chunk_count": 3,
+        "retrieved_chunk_count": 2,
+        "collection_name": "quiz_pdf_test",
+    }
+
+    with patch("app.routers.quiz.generate_mcqs", side_effect=_mock_generate_mcqs) as gen:
+        with patch("app.routers.quiz.get_cached", return_value=None):
+            with patch("app.routers.quiz.set_cached"):
+                with patch("app.services.document_rag.retrieve_relevant_context", return_value=rag_context) as rag:
+                    resp = client.post(
+                        "/api/quiz/generate",
+                        files={"file": ("test_sampling_manual.pdf", pdf_content, "application/pdf")},
+                        data={
+                            "officer_id": "OFF001",
+                            "difficulty": "medium",
+                            "language": "en",
+                            "num_questions": "3",
+                            "target_competency": "Sampling",
+                        },
+                    )
+
+    assert resp.status_code == 200
+    body = resp.json()
+    assert len(body["questions"]) == 3
+    rag.assert_called_once()
+    assert gen.call_args.kwargs["target_competency"] == "Sampling"
+    assert "uploaded PDF" in gen.call_args.kwargs.get("text", "") or "uploaded PDF" in gen.call_args.args[0]
+
+    db = TestingSessionLocal()
+    try:
+        attempt = db.query(QuizAttempt).filter_by(attempt_id=body["attempt_id"]).first()
+        assert attempt is not None
+        assert attempt.officer_id == "OFF001"
+        assert attempt.quiz_source_material == "test_sampling_manual.pdf"
+        assert db.query(QuizAttemptGenerated).filter_by(attempt_id=body["attempt_id"]).count() == 3
+    finally:
+        db.close()
+
+
+def test_generate_quiz_short_text_pdf_reaches_rag(client):
+    """A valid text PDF below the generic text threshold should still use PDF RAG."""
+    pdf_content = (FIXTURES_DIR / "sample_sampling_guidelines.pdf").read_bytes()
+    rag_context = {
+        "context": "Short readable PDF context about Stratified Sampling.",
+        "chunk_count": 1,
+        "retrieved_chunk_count": 1,
+        "collection_name": "quiz_pdf_short_test",
+    }
+
+    with patch("app.routers.quiz.generate_mcqs", side_effect=_mock_generate_mcqs):
+        with patch("app.routers.quiz.get_cached", return_value=None):
+            with patch("app.routers.quiz.set_cached"):
+                with patch("app.services.document_rag.retrieve_relevant_context", return_value=rag_context) as rag:
+                    resp = client.post(
+                        "/api/quiz/generate",
+                        files={"file": ("sample_sampling_guidelines.pdf", pdf_content, "application/pdf")},
+                        data={
+                            "officer_id": "OFF001",
+                            "difficulty": "medium",
+                            "language": "en",
+                            "num_questions": "3",
+                            "target_competency": "Sampling",
+                        },
+                    )
+
+    assert resp.status_code == 200
+    rag.assert_called_once()
+
+
+def test_generate_quiz_pdf_returns_specific_rag_error(client):
+    """RAG failures should be returned as useful 422 errors, not fake quizzes."""
+    pdf_content = (FIXTURES_DIR / "test_sampling_manual.pdf").read_bytes()
+
+    with patch(
+        "app.services.document_rag.retrieve_relevant_context",
+        side_effect=ValueError("No relevant context retrieved from uploaded document."),
+    ):
+        resp = client.post(
+            "/api/quiz/generate",
+            files={"file": ("test_sampling_manual.pdf", pdf_content, "application/pdf")},
+            data={
+                "officer_id": "OFF001",
+                "difficulty": "medium",
+                "language": "en",
+                "num_questions": "3",
+                "target_competency": "Sampling",
+            },
+        )
+
+    assert resp.status_code == 422
+    assert "No relevant context retrieved" in resp.json()["detail"]
 

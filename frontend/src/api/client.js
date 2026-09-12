@@ -7,11 +7,32 @@
 
 import axios from 'axios';
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
 const api = axios.create({
-  baseURL: 'http://localhost:8000',
-  timeout: 8000,
+  baseURL: API_BASE_URL,
+  timeout: 15000,
   headers: { 'Content-Type': 'application/json' },
 });
+
+/**
+ * Extract a human-readable error message from an axios error.
+ */
+function extractErrorMessage(err) {
+  if (err.response?.data?.error) return err.response.data.error;
+  if (err.response?.data?.detail) return err.response.data.detail;
+  if (err.code === 'ECONNABORTED') return 'Request timed out. The server may be busy.';
+  if (err.message) return err.message;
+  return 'An unknown error occurred.';
+}
+
+export function buildAssetUrl(url) {
+  if (!url) return '';
+  if (/^https?:\/\//i.test(url) || url.startsWith('data:') || url.startsWith('blob:')) {
+    return url;
+  }
+  return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MOCK DATA — matches Pydantic schemas from app/schemas/schemas.py
@@ -152,9 +173,8 @@ export async function getOfficerProfile(officerId) {
     const res = await api.get(`/api/officers/${officerId}`);
     return { data: res.data, isMock: false };
   } catch {
-    console.warn(`[API] Officer profile fallback to mock for ${officerId}`);
-    // If we have the default mock, use it; otherwise adapt the ID
-    return { data: { ...MOCK_PROFILE, officer_id: officerId }, isMock: true };
+    console.warn(`[API] Officer profile unavailable for ${officerId}`);
+    return { data: null, isMock: false, error: true };
   }
 }
 
@@ -168,8 +188,8 @@ export async function getGapAnalysis(officerId) {
     const res = await api.get(`/api/officers/${officerId}/gaps`);
     return { data: res.data, isMock: false };
   } catch {
-    console.warn(`[API] Gap analysis fallback to mock for ${officerId}`);
-    return { data: { ...MOCK_GAPS, officer_id: officerId }, isMock: true };
+    console.warn(`[API] Gap analysis unavailable for ${officerId}`);
+    return { data: { officer_id: officerId, gaps: [] }, isMock: false, error: true };
   }
 }
 
@@ -185,8 +205,8 @@ export async function getRecommendations(officerId) {
     });
     return { data: res.data, isMock: false };
   } catch {
-    console.warn(`[API] Recommendations fallback to mock for ${officerId}`);
-    return { data: MOCK_RECOMMENDATIONS, isMock: true };
+    console.warn(`[API] Recommendations unavailable for ${officerId}`);
+    return { data: [], isMock: false, error: true };
   }
 }
 
@@ -200,8 +220,8 @@ export async function getEnrollments(officerId) {
     const res = await api.get(`/api/officers/${officerId}/enrollments`);
     return { data: res.data, isMock: false };
   } catch {
-    console.warn(`[API] Enrollments fallback to mock for ${officerId}`);
-    return { data: MOCK_ENROLLMENTS, isMock: true };
+    console.warn(`[API] Enrollments unavailable for ${officerId}`);
+    return { data: [], isMock: false, error: true };
   }
 }
 
@@ -215,8 +235,110 @@ export async function getPassportSummary(officerId) {
     const res = await api.get(`/api/passport/${officerId}`);
     return { data: res.data, isMock: false };
   } catch {
-    console.warn(`[API] Passport summary fallback to mock for ${officerId}`);
-    return { data: { ...MOCK_PASSPORT, officer_id: officerId }, isMock: true };
+    console.warn(`[API] Passport summary unavailable for ${officerId}`);
+    return { data: { officer_id: officerId, competencies: [] }, isMock: false, error: true };
+  }
+}
+
+export async function getCompetencyScores(officerId) {
+  try {
+    const res = await api.get(`/api/competency-scores/${officerId}`);
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn(`[API] Competency scores unavailable for ${officerId}`);
+    return { data: [], isMock: false, error: true };
+  }
+}
+
+export async function getAssessmentHistory(officerId) {
+  try {
+    const res = await api.get(`/api/officers/${officerId}/assessments`);
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn(`[API] Assessment history unavailable for ${officerId}`);
+    return { data: [], isMock: false, error: true };
+  }
+}
+
+export async function getWorkEvidence(officerId) {
+  try {
+    const res = await api.get(`/api/officers/${officerId}/work-evidence`);
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn(`[API] Work evidence unavailable for ${officerId}`);
+    return { data: [], isMock: false, error: true };
+  }
+}
+
+export async function getOfficerArtifacts(officerId) {
+  try {
+    const res = await api.get(`/api/officers/${officerId}/artifacts`);
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn(`[API] Work artifacts unavailable for ${officerId}`);
+    return { data: [], isMock: false, error: true };
+  }
+}
+
+export async function getArtifactDetail(artifactId) {
+  try {
+    const res = await api.get(`/api/artifacts/${artifactId}`);
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn(`[API] Artifact detail unavailable for ${artifactId}`);
+    return { data: null, isMock: false, error: true };
+  }
+}
+
+export async function uploadProfilePhoto(officerId, file) {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await api.post(`/api/officers/${officerId}/profile-photo`, formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 30000,
+    });
+    return { data: res.data, isMock: false };
+  } catch (err) {
+    console.error(`[API] Profile photo upload failed for ${officerId}:`, err);
+    return {
+      data: null,
+      isMock: false,
+      error: true,
+      message: extractErrorMessage(err),
+    };
+  }
+}
+
+export async function getOfficerArtifactGaps(officerId, artifactId) {
+  try {
+    const params = artifactId ? { artifact_id: artifactId } : {};
+    const res = await api.get(`/api/officers/${officerId}/artifact-gaps`, { params });
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn(`[API] Artifact gaps unavailable for ${officerId}`);
+    return { data: [], isMock: false, error: true };
+  }
+}
+
+export async function getOfficerArtifactRecommendations(officerId, artifactId) {
+  try {
+    const params = artifactId ? { artifact_id: artifactId } : {};
+    const res = await api.get(`/api/officers/${officerId}/artifact-recommendations`, { params });
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn(`[API] Artifact recommendations unavailable for ${officerId}`);
+    return { data: [], isMock: false, error: true };
+  }
+}
+
+export async function getCourses(limit = 100) {
+  try {
+    const res = await api.get('/api/courses', { params: { limit } });
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn('[API] Course catalogue unavailable');
+    return { data: [], isMock: false, error: true };
   }
 }
 
@@ -312,55 +434,30 @@ export async function uploadArtifact(formData) {
     });
     return { data: res.data, isMock: false };
   } catch {
-    return {
-      data: {
-        document_name: formData.get('file')?.name || 'Sampling_Plan.pdf',
-        detected_competencies: [
-          { name: 'Sampling Methodology', score: 78 },
-          { name: 'Survey Design', score: 72 },
-          { name: 'Data Quality', score: 64 },
-        ],
-        confidence: 'High',
-        summary: 'AI-assisted competency evidence detected related to sampling strategy, sample selection, and survey design.',
-      },
-      isMock: true,
-    };
+    return { data: null, isMock: false, error: true };
   }
 }
 
 /**
  * Generate AI quiz from uploaded file or material via backend API.
+ * Uses a 120-second timeout since LLM generation can take 15-60 seconds.
  * @param {FormData} formData
- * @returns {Promise<{data: object, isMock: boolean}>}
+ * @returns {Promise<{data: object|null, isMock: boolean, error?: boolean, message?: string}>}
  */
 export async function generateQuizApi(formData) {
   try {
     const res = await api.post('/api/quiz/generate', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 120000, // 120s — LLM generation is slow
     });
     return { data: res.data, isMock: false };
-  } catch {
+  } catch (err) {
+    console.error('[API] Quiz generation failed:', err);
     return {
-      data: {
-        attempt_id: 'ATT-DEMO-' + Date.now(),
-        questions: [
-          {
-            question_id: 'Q1',
-            text: 'Which sampling method is most appropriate when the population is divided into distinct subgroups (strata)?',
-            options: ['Simple Random Sampling', 'Stratified Random Sampling', 'Systematic Sampling', 'Cluster Sampling'],
-            cid: 'CID-D-102',
-            skill_label: 'Sampling Methodology',
-          },
-          {
-            question_id: 'Q2',
-            text: 'In official statistical sample surveys, what does Primary Sampling Unit (PSU) refer to?',
-            options: ['The final individual household surveyed', 'The first-stage sampling unit, such as a census village or urban block', 'The non-sampling error rate', 'The variance multiplier'],
-            cid: 'CID-D-102',
-            skill_label: 'Sampling Methodology',
-          },
-        ],
-      },
-      isMock: true,
+      data: null,
+      isMock: false,
+      error: true,
+      message: extractErrorMessage(err),
     };
   }
 }
@@ -368,25 +465,19 @@ export async function generateQuizApi(formData) {
 /**
  * Submit quiz answers to backend API.
  * @param {object} payload - { attempt_id, officer_id, answers }
- * @returns {Promise<{data: object, isMock: boolean}>}
+ * @returns {Promise<{data: object|null, isMock: boolean, error?: boolean, message?: string}>}
  */
 export async function submitQuizApi(payload) {
   try {
     const res = await api.post('/api/quiz/submit', payload);
     return { data: res.data, isMock: false };
-  } catch {
+  } catch (err) {
+    console.error('[API] Quiz submission failed:', err);
     return {
-      data: {
-        attempt_id: payload.attempt_id || 'ATT-DEMO',
-        total_questions: 10,
-        correct_count: 8,
-        score_percent: 80.0,
-        passed: true,
-        score_summaries: [
-          { cid: 'CID-D-102', skill_label: 'Sampling Methodology', quiz_score: 80.0, artifact_score: 78.0, combined_score: 79.2, confidence_level: 'medium (2 sources)' },
-        ],
-      },
-      isMock: true,
+      data: null,
+      isMock: false,
+      error: true,
+      message: extractErrorMessage(err),
     };
   }
 }

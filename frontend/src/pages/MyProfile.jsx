@@ -3,33 +3,90 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Typography, Tag, Space, Descriptions, Skeleton } from 'antd';
+import { Row, Col, Card, Typography, Tag, Space, Descriptions, Skeleton, Upload, Button, message, Alert, Empty } from 'antd';
 import {
   SafetyCertificateOutlined,
   ArrowRightOutlined,
-  UserOutlined,
+  CameraOutlined,
+  CloseOutlined,
+  SaveOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
-import { getOfficerProfile } from '../api/client';
+import { getOfficerProfile, uploadProfilePhoto } from '../api/client';
+import OfficerAvatar from '../components/OfficerAvatar';
 
 const { Title, Text, Paragraph } = Typography;
 
+const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+
 export default function MyProfile() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   const officerId = user?.officer_id || 'OFF001';
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
+  const [loadError, setLoadError] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
       setLoading(true);
       const res = await getOfficerProfile(officerId);
       setProfile(res.data);
+      setLoadError(Boolean(res.error || !res.data));
       setLoading(false);
     }
     loadProfile();
   }, [officerId]);
+
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const beforePhotoSelect = (file) => {
+    if (!PHOTO_TYPES.includes(file.type)) {
+      message.error('Upload a JPG, PNG, or WEBP image.');
+      return Upload.LIST_IGNORE;
+    }
+    if (file.size > PHOTO_MAX_BYTES) {
+      message.error('Profile photo must be 5 MB or smaller.');
+      return Upload.LIST_IGNORE;
+    }
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setSelectedPhoto(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    return false;
+  };
+
+  const cancelPhotoChange = () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    setSelectedPhoto(null);
+    setPreviewUrl('');
+  };
+
+  const savePhoto = async () => {
+    if (!selectedPhoto) return;
+    setUploading(true);
+    const res = await uploadProfilePhoto(officerId, selectedPhoto);
+    setUploading(false);
+    if (res.error || !res.data?.profile_photo_url) {
+      message.error(res.message || 'Profile photo upload failed. Please try another image.');
+      return;
+    }
+    const nextProfile = { ...profile, profile_photo_url: res.data.profile_photo_url };
+    setProfile(nextProfile);
+    setUser({
+      ...user,
+      profile_photo_url: res.data.profile_photo_url,
+    });
+    cancelPhotoChange();
+    message.success('Profile photo updated successfully.');
+  };
 
   if (loading) {
     return (
@@ -39,16 +96,27 @@ export default function MyProfile() {
     );
   }
 
-  const name = profile?.name || user?.name || 'Statistical Officer';
-  const initials = name
-    .split(' ')
-    .map((w) => w[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+  if (loadError || !profile) {
+    return (
+      <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+        <Alert
+          type="error"
+          showIcon
+          message="Officer profile could not be loaded"
+          description="Please check that the backend is running and try again."
+          style={{ marginBottom: 16 }}
+        />
+        <Card bordered={false} className="app-card">
+          <Empty description="No officer profile data available" />
+        </Card>
+      </div>
+    );
+  }
 
+  const name = profile.name;
   const currentSkills = profile?.current_skills || {};
   const skillEntries = Object.entries(currentSkills);
+  const avatarOfficer = previewUrl ? { ...profile, profile_photo_url: previewUrl } : profile;
 
   return (
     <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
@@ -63,44 +131,52 @@ export default function MyProfile() {
       </div>
 
       {/* Officer Bio Card */}
-      <Card bordered={false} style={{ marginBottom: 24, borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      <Card bordered={false} className="app-card" style={{ marginBottom: 24 }}>
         <Row gutter={[24, 24]} align="middle">
           <Col xs={24} md={6} style={{ textAlign: 'center' }}>
-            <div
-              style={{
-                width: 90,
-                height: 90,
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #0C447C 0%, #1E5AA8 100%)',
-                color: '#fff',
-                fontSize: 32,
-                fontWeight: 700,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                margin: '0 auto 12px',
-                boxShadow: '0 4px 12px rgba(12,68,124,0.2)',
-              }}
-            >
-              {initials}
+            <div className="profile-photo-frame">
+              <OfficerAvatar officer={avatarOfficer} size={112} alt={`${name} profile photo`} />
+              <Upload
+                accept=".jpg,.jpeg,.png,.webp"
+                showUploadList={false}
+                beforeUpload={beforePhotoSelect}
+                maxCount={1}
+              >
+                <Button
+                  shape="circle"
+                  icon={<CameraOutlined />}
+                  aria-label="Change profile photo"
+                  className="profile-photo-edit"
+                />
+              </Upload>
             </div>
+            {selectedPhoto && (
+              <Space size={8} style={{ marginBottom: 12 }}>
+                <Button size="small" icon={<SaveOutlined />} type="primary" loading={uploading} onClick={savePhoto}>
+                  Save
+                </Button>
+                <Button size="small" icon={<CloseOutlined />} disabled={uploading} onClick={cancelPhotoChange}>
+                  Cancel
+                </Button>
+              </Space>
+            )}
             <Title level={4} style={{ margin: 0 }}>
               {name}
             </Title>
             <Tag color="blue" style={{ marginTop: 6, fontWeight: 600 }}>
-              {profile?.designation || 'Statistical Officer'}
+              {profile.designation}
             </Tag>
           </Col>
 
           <Col xs={24} md={18}>
             <Descriptions title="Officer Summary (Dynamic Backend Entity)" column={{ xs: 1, sm: 2, md: 3 }} bordered size="small">
-              <Descriptions.Item label="Officer ID">{profile?.officer_id || officerId}</Descriptions.Item>
-              <Descriptions.Item label="Department">{profile?.department || 'MoSPI Division'}</Descriptions.Item>
-              <Descriptions.Item label="Experience">{profile?.experience_years || 5} Years</Descriptions.Item>
-              <Descriptions.Item label="Qualification">{profile?.qualification || 'M.Sc. Statistics'}</Descriptions.Item>
-              <Descriptions.Item label="Role ID">{profile?.role_id || 'R01'}</Descriptions.Item>
+              <Descriptions.Item label="Officer ID">{profile.officer_id || officerId}</Descriptions.Item>
+              <Descriptions.Item label="Department">{profile.department}</Descriptions.Item>
+              <Descriptions.Item label="Experience">{profile.experience_years} Years</Descriptions.Item>
+              <Descriptions.Item label="Qualification">{profile.qualification}</Descriptions.Item>
+              <Descriptions.Item label="Role ID">{profile.role_id}</Descriptions.Item>
               <Descriptions.Item label="Past Trainings">
-                {(profile?.past_trainings || ['SSS Induction']).join(', ')}
+                {(profile.past_trainings || []).length ? profile.past_trainings.join(', ') : 'No past trainings recorded'}
               </Descriptions.Item>
             </Descriptions>
           </Col>
@@ -116,7 +192,7 @@ export default function MyProfile() {
           </Space>
         }
         bordered={false}
-        style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}
+        className="app-card"
       >
         <Row gutter={[24, 24]} align="stretch">
           <Col xs={24} md={8}>
@@ -125,7 +201,7 @@ export default function MyProfile() {
                 1. ASSIGNED ROLE
               </Tag>
               <Title level={4} style={{ color: '#0C447C', marginTop: 4 }}>
-                {profile?.designation || 'Statistical Officer'}
+                {profile.designation}
               </Title>
               <Paragraph style={{ fontSize: 13, color: '#64748B' }}>
                 Responsible for sampling design, statistical data collection, data quality validation, and reporting.
@@ -159,12 +235,12 @@ export default function MyProfile() {
                 3. CURRENT COMPETENCY LEVELS
               </Tag>
               <Space direction="vertical" style={{ width: '100%' }} size={8}>
-                {skillEntries.map(([skill, lvl]) => (
+                {skillEntries.length ? skillEntries.map(([skill, lvl]) => (
                   <div key={skill} style={{ background: '#fff', padding: '6px 12px', borderRadius: 6, border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between' }}>
                     <Text strong style={{ fontSize: 13, color: '#0C447C' }}>{skill}</Text>
                     <Tag color="blue">Level {lvl} / 5</Tag>
                   </div>
-                ))}
+                )) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No current skills recorded" />}
               </Space>
             </div>
           </Col>

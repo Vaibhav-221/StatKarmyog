@@ -7,7 +7,7 @@ POST /api/quiz/generate
     questions plus an attempt_id.
 
 POST /api/quiz/submit
-    Accept answers for a previously generated quiz, score them, persist
+    Accept answers for a previously generated quiz attempt, score them, persist
     results into QuizAttemptQuestion and CompetencyScore, and return
     detailed per-question results and per-competency score summaries.
 """
@@ -39,6 +39,10 @@ from app.schemas.schemas import (
 from app.services.document_extractor import extract_text, SUPPORTED_EXTENSIONS
 from app.services.llm_provider import generate_mcqs
 from app.services.quiz_cache import get_cached, set_cached
+from app.services.work_artifacts import (
+    get_artifact,
+    validate_officer_artifact_assignment,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -55,32 +59,26 @@ VALID_LANGUAGES = {"en", "hi"}
 
 @router.post("/quiz/generate")
 async def generate_quiz(
-    file: UploadFile = File(...),
+    file: UploadFile | None = File(default=None),
     difficulty: str = Form(default="medium"),
     language: str = Form(default="en"),
     num_questions: int = Form(default=10),
     officer_id: str = Form(...),
+    target_competency: str | None = Form(default=None),
     course_id: str | None = Form(default=None),
+    artifact_id: str | None = Form(default=None),
     db: Session = Depends(get_db),
 ):
     """
-    Generate MCQs from an uploaded document.
-
-    Accepts multipart/form-data with:
-    - file: binary document (.pdf, .pptx, .docx, .txt, .md)
-    - difficulty: "easy" | "medium" | "hard" (default "medium")
-    - language: "en" | "hi" (default "en")
-    - num_questions: 1-20 (default 10)
-    - officer_id: officer identifier (required, Phase 4B)
-    - course_id: optional course identifier (Phase 4B)
-
-    Returns:
-        {"attempt_id": str, "questions": [{"question": str, "options": [str,str,str,str],
-                         "correct": int, "explanation": str, "competency_tag": str}, ...]}
-
-    Note: The frontend's QuizGenerator.jsx ignores attempt_id and competency_tag
-    since it does not read those fields — adding them does not break it.
+    Generate MCQs either from an uploaded document (RAG-Grounded) or directly
+    for an officer's target competency (Competency-Based).
     """
+    # ── Sanitize course_id ──────────────────────────────────────────────
+    if not isinstance(course_id, str):
+        course_id = None
+    if not isinstance(artifact_id, str) or not artifact_id.strip():
+        artifact_id = None
+
     # ── Validate officer_id ──────────────────────────────────────────────
     officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
     if not officer:
@@ -110,36 +108,97 @@ async def generate_quiz(
             detail=f"num_questions must be between 1 and 20 (got {num_questions}).",
         )
 
-    # ── Validate file extension ──────────────────────────────────────────
-    filename = file.filename or ""
-    ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-    if ext not in SUPPORTED_EXTENSIONS:
-        raise HTTPException(
-            status_code=422,
-            detail=f"Unsupported file type '{ext}'. Accepted: {', '.join(sorted(SUPPORTED_EXTENSIONS))}",
-        )
+    artifact_context = None
+    if artifact_id:
+        artifact_context = get_artifact(db, artifact_id)
+        if artifact_context is None:
+            raise HTTPException(status_code=404, detail=f"Artifact '{artifact_id}' not found.")
+        if not validate_officer_artifact_assignment(db, officer_id, artifact_id):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Artifact '{artifact_id}' is not assigned to officer '{officer_id}'.",
+            )
+        if not target_competency and artifact_context.get("competencies"):
+            target_competency = artifact_context["competencies"][0]["competency_label"]
 
-    # ── Validate file size (5 MB limit) ──────────────────────────────────
-    # Read file content to check size, then seek back for extraction
-    content = await file.read()
-    if len(content) > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=413,
-            detail=f"File too large ({len(content) / (1024*1024):.1f} MB). Maximum allowed size is 5 MB.",
-        )
-    # Reset file position so extract_text can read it again
-    await file.seek(0)
+    filename = ""
+    text = ""
 
-    # ── Extract text ─────────────────────────────────────────────────────
-    try:
-        text = await extract_text(file)
-    except ValueError as exc:
-        raise HTTPException(status_code=422, detail=str(exc))
-    except Exception as exc:
-        logger.exception("Unexpected error during text extraction")
-        return JSONResponse(
-            status_code=500,
-            content={"error": f"Text extraction failed: {exc}"},
+    # Check if a file was actually provided
+    has_file = file is not None and bool(file.filename and file.filename.strip())
+
+    if has_file:
+        filename = file.filename or ""
+        ext = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+        if ext not in SUPPORTED_EXTENSIONS:
+            raise HTTPException(
+                status_code=422,
+                detail=f"Unsupported file type '{ext}'. Accepted: {', '.join(sorted(SUPPORTED_EXTENSIONS))}",
+            )
+
+        content = await file.read()
+        if len(content) > MAX_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=f"File too large ({len(content) / (1024*1024):.1f} MB). Maximum allowed size is 5 MB.",
+            )
+        await file.seek(0)
+
+        # Mode 2: RAG Grounded Document Extraction + ChromaDB Context Retrieval
+        try:
+            from app.services.document_rag import retrieve_relevant_context
+
+            logger.info("[PDF] filename=%s size=%d", filename, len(content))
+            raw_text = await extract_text(file)
+            logger.info("[EXTRACTION] filename=%s characters_extracted=%d", filename, len(raw_text))
+            rag_result = retrieve_relevant_context(
+                raw_text,
+                source=filename,
+                target_competency=target_competency,
+            )
+            text = rag_result["context"]
+            logger.info(
+                "[RAG] filename=%s chunks_created=%d retrieved_chunks=%d context_length=%d",
+                filename,
+                rag_result["chunk_count"],
+                rag_result["retrieved_chunk_count"],
+                len(text),
+            )
+        except ValueError as exc:
+            logger.warning("[RAG] filename=%s status=failed error=%s", filename, exc)
+            raise HTTPException(status_code=422, detail=str(exc))
+        except Exception as exc:
+            logger.exception("Unexpected error during text extraction / RAG")
+            return JSONResponse(
+                status_code=500,
+                content={"error": "Text extraction or document retrieval failed. Please try another readable PDF."},
+            )
+    else:
+        # Mode 1: Competency-Based Assessment (No File Uploaded)
+        # Use logged-in officer's actual competency gap if target_competency is missing
+        if not target_competency or not target_competency.strip():
+            from app.services.gap_analysis import compute_skill_gaps
+            gap_res = compute_skill_gaps(db, officer_id)
+            if gap_res and gap_res.get("gaps"):
+                target_competency = gap_res["gaps"][0]["skill"]
+
+        filename = f"Competency-Based Assessment ({target_competency or 'General Statistical Competency'})"
+        comp_label = target_competency or "Statistical Operations"
+        artifact_clause = ""
+        if artifact_context:
+            artifact_clause = (
+                f"\nAssigned Work Artifact: {artifact_context['title']}.\n"
+                f"Artifact Domain: {artifact_context['domain']}.\n"
+                f"Artifact Description: {artifact_context['description']}.\n"
+                f"Artifact Skills: {', '.join(artifact_context.get('skills') or [])}.\n"
+            )
+        text = (
+            f"Official Assessment Context for Officer: {officer.name} ({officer.designation}, {officer.department}).\n"
+            f"Role: {officer.role_id}.\n"
+            f"Target Competency Domain: {comp_label}.\n"
+            f"{artifact_clause}"
+            f"Scope: Professional statistical concepts, methodologies, sampling frameworks, data collection, data quality, "
+            f"and analytical standards in Indian Government Statistical Services (MoSPI / NSSTA)."
         )
 
     # ── Load CompetencyDictionary for LLM prompt ─────────────────────────
@@ -149,34 +208,39 @@ async def generate_quiz(
     ]
 
     # ── Check cache ──────────────────────────────────────────────────────
-    cached = get_cached(text, difficulty, language, num_questions)
+    cache_key = f"{text}_{target_competency}"
+    cached = get_cached(cache_key, difficulty, language, num_questions)
     if cached is not None:
         logger.info("Returning cached quiz (%d questions)", len(cached))
         questions = cached
     else:
         # ── Generate MCQs via LLM ────────────────────────────────────────
         try:
+            logger.info("[LLM] request_started context_length=%d target_competency=%s", len(text), target_competency)
             questions = generate_mcqs(
                 text=text,
                 difficulty=difficulty,
                 language=language,
                 num_questions=num_questions,
                 valid_competencies=valid_competencies,
+                target_competency=target_competency,
             )
+            logger.info("[QUIZ] questions_generated=%d schema_valid=true", len(questions))
         except ValueError as exc:
+            logger.warning("MCQ generation failed: %s", exc)
             return JSONResponse(
                 status_code=500,
-                content={"error": str(exc)},
+                content={"error": "LLM request failed or returned an invalid quiz response. Please try again."},
             )
         except Exception as exc:
             logger.exception("Unexpected error during MCQ generation")
             return JSONResponse(
                 status_code=500,
-                content={"error": f"Quiz generation failed: {exc}"},
+                content={"error": "Quiz generation failed. Please try another learning material or reduce the number of questions."},
             )
 
         # ── Cache the result ─────────────────────────────────────────────
-        set_cached(text, difficulty, language, num_questions, questions)
+        set_cached(cache_key, difficulty, language, num_questions, questions)
 
     # ── Persist QuizAttempt shell + QuizAttemptGenerated answer key ───────
     attempt_id = str(uuid.uuid4())
@@ -185,6 +249,8 @@ async def generate_quiz(
         attempt_id=attempt_id,
         officer_id=officer_id,
         course_id=course_id,
+        artifact_id=artifact_id,
+        target_competency=target_competency,
         quiz_source_material=filename,
         attempted_on=None,       # Not yet submitted
         raw_score_percent=None,  # Not yet scored
@@ -203,6 +269,7 @@ async def generate_quiz(
         ))
 
     db.commit()
+    logger.info("[DATABASE] quiz_saved=true attempt_id=%s officer_id=%s source=%s", attempt_id, officer_id, filename)
 
     return {"attempt_id": attempt_id, "questions": questions}
 
