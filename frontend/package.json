@@ -11,12 +11,14 @@
   },
   "dependencies": {
     "@ant-design/icons": "^6.3.4",
+    "@tailwindcss/vite": "^4.3.3",
     "antd": "^6.6.3",
     "axios": "^1.20.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "react-router-dom": "^7.18.3",
-    "recharts": "^3.10.1"
+    "recharts": "^3.10.1",
+    "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@types/react": "^19.2.18",
