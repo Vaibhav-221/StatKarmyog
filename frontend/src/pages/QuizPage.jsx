@@ -151,7 +151,7 @@ export default function QuizPage() {
       const res = await generateQuizApi(formData);
 
       if (res.error || !res.data?.attempt_id || !Array.isArray(res.data?.questions)) {
-        message.error('Quiz generation failed. Please try another learning material or reduce the number of questions.', 6);
+        message.error(res.message || 'Quiz generation failed. Please try another learning material or reduce the number of questions.', 6);
         setStage('generator');
         return;
       }

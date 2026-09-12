@@ -6,6 +6,7 @@ and truncation of excessively long documents.
 """
 
 import io
+import asyncio
 import pytest
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock
@@ -36,14 +37,13 @@ FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
 # ── Tests ────────────────────────────────────────────────────────────────────
 
-@pytest.mark.asyncio
-async def test_extract_text_from_txt_fixture():
+def test_extract_text_from_txt_fixture():
     """Extract text from the sample_doc.txt fixture file."""
     fixture_path = FIXTURES_DIR / "sample_doc.txt"
     content = fixture_path.read_bytes()
     upload = _make_upload_file(content, "sample_doc.txt")
 
-    text = await extract_text(upload)
+    text = asyncio.run(extract_text(upload))
 
     assert isinstance(text, str)
     assert len(text) >= MIN_TEXT_LENGTH
@@ -51,51 +51,46 @@ async def test_extract_text_from_txt_fixture():
     assert "probability" in text.lower()
 
 
-@pytest.mark.asyncio
-async def test_extract_text_from_md():
+def test_extract_text_from_md():
     """Extract text from a .md file (same code path as .txt)."""
     content = "# Heading\n\n" + "This is a test document with enough content. " * 20
     upload = _make_upload_file(content, "notes.md")
 
-    text = await extract_text(upload)
+    text = asyncio.run(extract_text(upload))
 
     assert "Heading" in text
     assert len(text) >= MIN_TEXT_LENGTH
 
 
-@pytest.mark.asyncio
-async def test_reject_too_short_text():
+def test_reject_too_short_text():
     """Documents with < MIN_TEXT_LENGTH chars should raise ValueError."""
     upload = _make_upload_file("Short.", "tiny.txt")
 
     with pytest.raises(ValueError, match="no extractable text"):
-        await extract_text(upload)
+        asyncio.run(extract_text(upload))
 
 
-@pytest.mark.asyncio
-async def test_reject_empty_file():
+def test_reject_empty_file():
     """Empty files should raise ValueError."""
     upload = _make_upload_file("", "empty.txt")
 
     with pytest.raises(ValueError, match="no extractable text"):
-        await extract_text(upload)
+        asyncio.run(extract_text(upload))
 
 
-@pytest.mark.asyncio
-async def test_truncate_long_text():
+def test_truncate_long_text():
     """Documents longer than MAX_TEXT_LENGTH should be truncated."""
     long_content = "A" * (MAX_TEXT_LENGTH + 5000)
     upload = _make_upload_file(long_content, "long.txt")
 
-    text = await extract_text(upload)
+    text = asyncio.run(extract_text(upload))
 
     assert len(text) == MAX_TEXT_LENGTH
 
 
-@pytest.mark.asyncio
-async def test_reject_unsupported_extension():
+def test_reject_unsupported_extension():
     """Unsupported file types should raise ValueError."""
     upload = _make_upload_file("some content " * 50, "data.xlsx")
 
     with pytest.raises(ValueError, match="Unsupported file type"):
-        await extract_text(upload)
+        asyncio.run(extract_text(upload))

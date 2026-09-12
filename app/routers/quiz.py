@@ -144,19 +144,34 @@ async def generate_quiz(
             )
         await file.seek(0)
 
-        # Mode 2: RAG Grounded Document Extraction + Context Retrieval
+        # Mode 2: RAG Grounded Document Extraction + ChromaDB Context Retrieval
         try:
-            from app.services.rag_retriever import retrieve_relevant_context
+            from app.services.document_rag import retrieve_relevant_context
 
+            logger.info("[PDF] filename=%s size=%d", filename, len(content))
             raw_text = await extract_text(file)
-            text = retrieve_relevant_context(raw_text, target_competency=target_competency, top_k=5)
+            logger.info("[EXTRACTION] filename=%s characters_extracted=%d", filename, len(raw_text))
+            rag_result = retrieve_relevant_context(
+                raw_text,
+                source=filename,
+                target_competency=target_competency,
+            )
+            text = rag_result["context"]
+            logger.info(
+                "[RAG] filename=%s chunks_created=%d retrieved_chunks=%d context_length=%d",
+                filename,
+                rag_result["chunk_count"],
+                rag_result["retrieved_chunk_count"],
+                len(text),
+            )
         except ValueError as exc:
+            logger.warning("[RAG] filename=%s status=failed error=%s", filename, exc)
             raise HTTPException(status_code=422, detail=str(exc))
         except Exception as exc:
             logger.exception("Unexpected error during text extraction / RAG")
             return JSONResponse(
                 status_code=500,
-                content={"error": "Quiz generation failed. Please try another learning material or reduce the number of questions."},
+                content={"error": "Text extraction or document retrieval failed. Please try another readable PDF."},
             )
     else:
         # Mode 1: Competency-Based Assessment (No File Uploaded)
@@ -201,6 +216,7 @@ async def generate_quiz(
     else:
         # ── Generate MCQs via LLM ────────────────────────────────────────
         try:
+            logger.info("[LLM] request_started context_length=%d target_competency=%s", len(text), target_competency)
             questions = generate_mcqs(
                 text=text,
                 difficulty=difficulty,
@@ -209,11 +225,12 @@ async def generate_quiz(
                 valid_competencies=valid_competencies,
                 target_competency=target_competency,
             )
+            logger.info("[QUIZ] questions_generated=%d schema_valid=true", len(questions))
         except ValueError as exc:
             logger.warning("MCQ generation failed: %s", exc)
             return JSONResponse(
                 status_code=500,
-                content={"error": "Quiz generation failed. Please try another learning material or reduce the number of questions."},
+                content={"error": "LLM request failed or returned an invalid quiz response. Please try again."},
             )
         except Exception as exc:
             logger.exception("Unexpected error during MCQ generation")
@@ -252,6 +269,7 @@ async def generate_quiz(
         ))
 
     db.commit()
+    logger.info("[DATABASE] quiz_saved=true attempt_id=%s officer_id=%s source=%s", attempt_id, officer_id, filename)
 
     return {"attempt_id": attempt_id, "questions": questions}
 

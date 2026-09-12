@@ -8,6 +8,7 @@ truncates excessively long documents to control token cost.
 
 import logging
 from pathlib import Path
+import re
 
 from fastapi import UploadFile
 
@@ -24,21 +25,50 @@ MIN_TEXT_LENGTH = 200
 MAX_TEXT_LENGTH = 12_000
 
 
+def _clean_text(text: str) -> str:
+    """Normalize extracted text while preserving paragraph boundaries."""
+    text = text.replace("\x00", " ")
+    text = re.sub(r"[ \t\f\v]+", " ", text)
+    text = re.sub(r"\n{3,}", "\n\n", text)
+    return text.strip()
+
+
 def _extract_pdf(content: bytes) -> str:
     """Extract text from a PDF file using pypdf."""
     from pypdf import PdfReader
     import io
 
-    reader = PdfReader(io.BytesIO(content))
+    try:
+        reader = PdfReader(io.BytesIO(content))
+    except Exception as exc:
+        raise ValueError("Invalid or corrupted PDF file.") from exc
+
+    page_count = len(reader.pages)
+    logger.info("[PDF] pages=%d size=%d", page_count, len(content))
+
     if reader.is_encrypted:
-        raise ValueError("Could not extract readable text from this PDF.")
+        raise ValueError("Could not extract readable text from this PDF. The file appears to be protected.")
 
     pages = []
-    for page in reader.pages:
-        text = page.extract_text()
-        if text:
-            pages.append(text)
-    return "\n\n".join(pages)
+    for index, page in enumerate(reader.pages, start=1):
+        try:
+            text = page.extract_text() or ""
+        except Exception as exc:
+            logger.warning("[EXTRACTION] page=%d status=failed error=%s", index, exc)
+            text = ""
+        cleaned = _clean_text(text)
+        logger.info("[EXTRACTION] page=%d characters_extracted=%d", index, len(cleaned))
+        if cleaned:
+            pages.append(f"[Page {index}]\n{cleaned}")
+
+    extracted = _clean_text("\n\n".join(pages))
+    logger.info(
+        "[EXTRACTION] pages_processed=%d characters_extracted=%d text_preview=%r",
+        page_count,
+        len(extracted),
+        extracted[:160],
+    )
+    return extracted
 
 
 def _extract_pptx(content: bytes) -> str:
@@ -119,11 +149,14 @@ async def extract_text(file: UploadFile) -> str:
         if ext == ".pdf":
             raise ValueError("Could not extract readable text from this PDF.") from exc
         raise
-    text = text.strip()
+    text = _clean_text(text)
 
     if len(text) < MIN_TEXT_LENGTH:
         if ext == ".pdf":
-            raise ValueError("Could not extract readable text from this PDF.")
+            raise ValueError(
+                "Could not extract readable text from this PDF. "
+                "The document may be scanned/image-based, protected, or too short."
+            )
         raise ValueError(
             "Document has no extractable text (or text is too short — "
             f"need at least {MIN_TEXT_LENGTH} characters, got {len(text)})."
