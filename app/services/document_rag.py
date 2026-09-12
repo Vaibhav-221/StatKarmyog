@@ -10,8 +10,7 @@ from __future__ import annotations
 import re
 import uuid
 import logging
-
-import chromadb
+from typing import Any
 
 from app.services.semantic_search import _get_embedding_model
 
@@ -20,6 +19,16 @@ logger = logging.getLogger(__name__)
 CHUNK_SIZE = 1600
 CHUNK_OVERLAP = 250
 TOP_K_CHUNKS = 6
+
+
+class _LazyChroma:
+    def EphemeralClient(self):
+        import chromadb
+
+        return chromadb.EphemeralClient()
+
+
+chromadb: Any = _LazyChroma()
 
 
 def _as_plain_list(vectors):
@@ -94,6 +103,11 @@ def retrieve_relevant_context(
     try:
         model = _get_embedding_model()
         embeddings = _as_plain_list(model.encode(chunks, show_progress_bar=False))
+    except ModuleNotFoundError as exc:
+        logger.exception("[EMBEDDING] dependency_missing source=%s", source)
+        raise ValueError(
+            "Backend PDF RAG dependency is missing. Install sentence-transformers and redeploy the backend."
+        ) from exc
     except Exception as exc:
         logger.exception("[EMBEDDING] status=failed source=%s", source)
         raise ValueError("Embedding generation failed for uploaded document.") from exc
@@ -114,6 +128,11 @@ def retrieve_relevant_context(
         ids = [f"chunk-{idx}" for idx in range(len(chunks))]
         metadatas = [{"source": source, "chunk_index": idx} for idx in range(len(chunks))]
         collection.add(ids=ids, documents=chunks, embeddings=embeddings, metadatas=metadatas)
+    except ModuleNotFoundError as exc:
+        logger.exception("[CHROMADB] dependency_missing collection_name=%s", collection_name)
+        raise ValueError(
+            "Backend vector-store dependency is missing. Install chromadb and redeploy the backend."
+        ) from exc
     except Exception as exc:
         logger.exception("[CHROMADB] status=failed collection_name=%s", collection_name)
         raise ValueError("Vector store insertion failed for uploaded document.") from exc

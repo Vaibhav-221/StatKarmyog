@@ -17,8 +17,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
-import chromadb
-
 from app.models.models import CourseCatalogue
 
 logger = logging.getLogger(__name__)
@@ -32,14 +30,16 @@ DATA_DIR = Path(os.environ.get("DATA_DIR", _PROJECT_ROOT / "data"))
 CHROMA_PATH = Path(os.environ.get("CHROMA_PATH", DATA_DIR / "chroma"))
 
 # Module-level singletons (initialised lazily)
-_chroma_client: chromadb.PersistentClient | None = None
+_chroma_client: Any | None = None
 _embedding_model: Any | None = None
 
 
-def _get_chroma_client() -> chromadb.PersistentClient:
+def _get_chroma_client() -> Any:
     """Return (or create) the persistent ChromaDB client."""
     global _chroma_client
     if _chroma_client is None:
+        import chromadb
+
         CHROMA_PATH.mkdir(parents=True, exist_ok=True)
         _chroma_client = chromadb.PersistentClient(path=str(CHROMA_PATH))
     return _chroma_client

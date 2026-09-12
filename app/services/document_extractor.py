@@ -36,8 +36,14 @@ def _clean_text(text: str) -> str:
 
 def _extract_pdf(content: bytes) -> str:
     """Extract text from a PDF file using pypdf."""
-    from pypdf import PdfReader
     import io
+
+    try:
+        from pypdf import PdfReader
+    except ModuleNotFoundError as exc:
+        raise ValueError(
+            "Backend PDF extraction dependency is missing. Install pypdf and redeploy the backend."
+        ) from exc
 
     try:
         reader = PdfReader(io.BytesIO(content))
@@ -146,9 +152,13 @@ async def extract_text(file: UploadFile) -> str:
     content = await file.read()
     try:
         text = _EXTRACTORS[ext](content)
+    except ValueError:
+        raise
     except Exception as exc:
         if ext == ".pdf":
-            raise ValueError("Could not extract readable text from this PDF.") from exc
+            raise ValueError(
+                "Text extraction failed for this PDF. The file may be corrupted, protected, or unsupported."
+            ) from exc
         raise
     text = _clean_text(text)
 
