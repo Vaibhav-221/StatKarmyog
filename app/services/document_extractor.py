@@ -19,6 +19,7 @@ SUPPORTED_EXTENSIONS = {".pdf", ".pptx", ".docx", ".txt", ".md"}
 
 # Minimum extractable text length (characters)
 MIN_TEXT_LENGTH = 200
+PDF_MIN_TEXT_LENGTH = 40
 
 # Maximum text length sent to the LLM (characters) — prototype cap to
 # avoid excessive token cost.  ~12 000 chars ≈ ~3 000 tokens.
@@ -151,7 +152,8 @@ async def extract_text(file: UploadFile) -> str:
         raise
     text = _clean_text(text)
 
-    if len(text) < MIN_TEXT_LENGTH:
+    min_length = PDF_MIN_TEXT_LENGTH if ext == ".pdf" else MIN_TEXT_LENGTH
+    if len(text) < min_length:
         if ext == ".pdf":
             raise ValueError(
                 "Could not extract readable text from this PDF. "
@@ -159,7 +161,7 @@ async def extract_text(file: UploadFile) -> str:
             )
         raise ValueError(
             "Document has no extractable text (or text is too short — "
-            f"need at least {MIN_TEXT_LENGTH} characters, got {len(text)})."
+            f"need at least {min_length} characters, got {len(text)})."
         )
 
     if len(text) > MAX_TEXT_LENGTH:

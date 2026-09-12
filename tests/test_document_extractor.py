@@ -14,6 +14,7 @@ from unittest.mock import AsyncMock, MagicMock
 from app.services.document_extractor import (
     extract_text,
     MIN_TEXT_LENGTH,
+    PDF_MIN_TEXT_LENGTH,
     MAX_TEXT_LENGTH,
     SUPPORTED_EXTENSIONS,
 )
@@ -60,6 +61,18 @@ def test_extract_text_from_md():
 
     assert "Heading" in text
     assert len(text) >= MIN_TEXT_LENGTH
+
+
+def test_extract_text_from_short_valid_pdf():
+    """Short but readable text PDFs should not be treated as scanned PDFs."""
+    fixture_path = FIXTURES_DIR / "sample_sampling_guidelines.pdf"
+    content = fixture_path.read_bytes()
+    upload = _make_upload_file(content, "sample_sampling_guidelines.pdf")
+
+    text = asyncio.run(extract_text(upload))
+
+    assert len(text) >= PDF_MIN_TEXT_LENGTH
+    assert "Stratified Sampling" in text
 
 
 def test_reject_too_short_text():
