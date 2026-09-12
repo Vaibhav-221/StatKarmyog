@@ -2,7 +2,7 @@
  * QuizPage — AI Quiz Generator, MCQ Interface & Before/After Re-Assessment Result.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   Row,
   Col,
@@ -19,26 +19,28 @@ import {
   Upload,
   Result,
   message,
+  Table,
+  Empty,
+  Skeleton,
 } from 'antd';
 import {
   ThunderboltOutlined,
   FilePdfOutlined,
-  CheckCircleOutlined,
   LoadingOutlined,
-  ArrowRightOutlined,
   SafetyCertificateOutlined,
-  RiseOutlined,
-  FormOutlined,
+  ReloadOutlined,
+  HistoryOutlined,
 } from '@ant-design/icons';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { generateQuizApi, submitQuizApi, getGapAnalysis } from '../api/client';
+import { generateQuizApi, submitQuizApi, getGapAnalysis, getAssessmentHistory } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 const { Title, Text, Paragraph } = Typography;
 
 export default function QuizPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const officerId = user?.officer_id || 'OFF001';
@@ -63,6 +65,23 @@ export default function QuizPage() {
   const [attemptId, setAttemptId] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [submitResult, setSubmitResult] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [historyError, setHistoryError] = useState(false);
+  const [quizHistory, setQuizHistory] = useState([]);
+
+  const isMyQuizzesRoute = location.pathname === '/my-quizzes';
+
+  const fetchQuizHistory = async () => {
+    setHistoryLoading(true);
+    const res = await getAssessmentHistory(officerId);
+    setHistoryError(Boolean(res.error));
+    setQuizHistory(res.data || []);
+    setHistoryLoading(false);
+  };
+
+  useEffect(() => {
+    fetchQuizHistory();
+  }, [officerId]);
 
   // Fetch officer-specific competency gaps for target competency selection
   useEffect(() => {
@@ -178,12 +197,132 @@ export default function QuizPage() {
       }
       setSubmitResult(res.data);
       setStage('result');
+      fetchQuizHistory();
       message.success('Quiz submitted! Competency Passport score updated.');
     } catch (err) {
       console.error('[QuizPage] Submission error:', err);
       message.error(`Submission error: ${err.message || err}`, 6);
     }
   };
+
+  const historyRows = useMemo(() => {
+    return (quizHistory || []).map((attempt) => ({
+      key: attempt.attempt_id,
+      attempt_id: attempt.attempt_id,
+      title: attempt.quiz_source_material,
+      target: attempt.target_competency || (attempt.competencies || []).join(', ') || 'Not tagged',
+      question_count: attempt.question_count,
+      status: attempt.status,
+      score: attempt.raw_score_percent,
+      submitted_on: attempt.attempted_on,
+      course_id: attempt.course_id,
+      artifact_id: attempt.artifact_id,
+    }));
+  }, [quizHistory]);
+
+  const historyColumns = [
+    {
+      title: 'Quiz',
+      dataIndex: 'title',
+      key: 'title',
+      render: (title, record) => (
+        <div>
+          <Text strong style={{ color: '#0C447C' }}>{title}</Text>
+          <div style={{ fontSize: 11, color: '#64748B' }}>{record.attempt_id}</div>
+        </div>
+      ),
+    },
+    {
+      title: 'Target Competency',
+      dataIndex: 'target',
+      key: 'target',
+      render: (target) => <Text>{target}</Text>,
+    },
+    {
+      title: 'Questions',
+      dataIndex: 'question_count',
+      key: 'question_count',
+      align: 'center',
+      render: (count) => <Tag color="blue">{count || 0}</Tag>,
+    },
+    {
+      title: 'Status',
+      dataIndex: 'status',
+      key: 'status',
+      align: 'center',
+      render: (status) => (
+        <Tag color={status === 'submitted' ? 'green' : 'gold'}>
+          {status === 'submitted' ? 'Submitted' : 'Generated'}
+        </Tag>
+      ),
+    },
+    {
+      title: 'Score',
+      dataIndex: 'score',
+      key: 'score',
+      align: 'center',
+      render: (score) => (
+        <Text strong style={{ color: score === null || score === undefined ? '#64748B' : '#0C447C' }}>
+          {score === null || score === undefined ? 'Pending' : `${score}%`}
+        </Text>
+      ),
+    },
+    {
+      title: 'Submitted',
+      dataIndex: 'submitted_on',
+      key: 'submitted_on',
+      align: 'center',
+      render: (date) => <Text>{date || 'Not submitted'}</Text>,
+    },
+    {
+      title: 'Linked To',
+      key: 'linked_to',
+      render: (_, record) => (
+        <Space wrap size={4}>
+          {record.course_id && <Tag>{record.course_id}</Tag>}
+          {record.artifact_id && <Tag color="purple">{record.artifact_id}</Tag>}
+          {!record.course_id && !record.artifact_id && <Text type="secondary">Competency assessment</Text>}
+        </Space>
+      ),
+    },
+  ];
+
+  const renderMyQuizzes = () => (
+    <Card
+      title={
+        <Space>
+          <HistoryOutlined style={{ color: '#0C447C' }} />
+          <span style={{ color: '#0C447C', fontWeight: 600 }}>My Quizzes</span>
+        </Space>
+      }
+      extra={<Button icon={<ReloadOutlined />} onClick={fetchQuizHistory}>Refresh</Button>}
+      bordered={false}
+      className="app-card"
+      style={{ marginTop: 24 }}
+    >
+      {historyError && (
+        <Alert
+          type="error"
+          showIcon
+          message="Could not load your quizzes"
+          description="Please check the backend connection and refresh this section."
+          style={{ marginBottom: 16 }}
+        />
+      )}
+      {historyLoading ? (
+        <Skeleton active paragraph={{ rows: 5 }} />
+      ) : historyRows.length === 0 ? (
+        <Empty description="No quizzes attempted yet." />
+      ) : (
+        <Table
+          dataSource={historyRows}
+          columns={historyColumns}
+          pagination={{ pageSize: 5 }}
+          scroll={{ x: 900 }}
+        />
+      )}
+    </Card>
+  );
 
   return (
     <div style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
@@ -268,6 +407,7 @@ export default function QuizPage() {
               </Button>
             </Space>
           </Card>
+          {renderMyQuizzes()}
         </div>
       )}
 
@@ -402,8 +542,21 @@ export default function QuizPage() {
           >
             View Competency Passport
           </Button>
+          <Button
+            size="large"
+            icon={<HistoryOutlined />}
+            onClick={() => {
+              setStage('generator');
+              fetchQuizHistory();
+              navigate('/my-quizzes');
+            }}
+            style={{ marginLeft: 12 }}
+          >
+            View My Quizzes
+          </Button>
         </Card>
       )}
+      {isMyQuizzesRoute && stage !== 'generator' && renderMyQuizzes()}
     </div>
   );
 }

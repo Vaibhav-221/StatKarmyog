@@ -14,9 +14,11 @@ from app.db import DATA_DIR, get_db
 from app.models.models import (
     Officer,
     CourseCatalogue,
+    CompetencyDictionary,
     Enrollment,
     CompetencyScore,
     QuizAttempt,
+    QuizAttemptGenerated,
     QuizAttemptQuestion,
 )
 from app.schemas.schemas import (
@@ -163,6 +165,12 @@ def get_officer_assessments(officer_id: str, db: Session = Depends(get_db)):
             .filter(QuizAttemptQuestion.attempt_id == attempt.attempt_id)
             .all()
         )
+        generated_questions = (
+            db.query(QuizAttemptGenerated)
+            .filter(QuizAttemptGenerated.attempt_id == attempt.attempt_id)
+            .order_by(QuizAttemptGenerated.question_index.asc())
+            .all()
+        )
         grouped: dict[str, dict] = {}
         for question in questions:
             stats = grouped.setdefault(
@@ -188,13 +196,46 @@ def get_officer_assessments(officer_id: str, db: Session = Depends(get_db)):
                 "skill_level": round(1 + (score_percent / 100) * 4, 1),
             })
 
+        generated_competencies = sorted(
+            {
+                row.skill_label
+                for row in (
+                    db.query(CompetencyScore.skill_label)
+                    .filter(
+                        CompetencyScore.officer_id == officer_id,
+                        CompetencyScore.source == f"quiz_attempt_{attempt.attempt_id}",
+                    )
+                    .all()
+                )
+                if row.skill_label
+            }
+        )
+        if not generated_competencies:
+            comp_dict = {
+                row.cid: row.label
+                for row in db.query(CompetencyDictionary).all()
+            }
+            generated_competencies = sorted(
+                {
+                    comp_dict.get(gq.competency_tag, gq.competency_tag)
+                    for gq in generated_questions
+                }
+            )
+
+        question_count = len(generated_questions) if generated_questions else len(questions)
+
         results.append({
             "attempt_id": attempt.attempt_id,
             "officer_id": attempt.officer_id,
             "course_id": attempt.course_id,
+            "artifact_id": attempt.artifact_id,
+            "target_competency": attempt.target_competency,
             "quiz_source_material": attempt.quiz_source_material,
             "attempted_on": attempt.attempted_on,
             "raw_score_percent": attempt.raw_score_percent,
+            "status": "submitted" if attempt.attempted_on else "generated",
+            "question_count": question_count,
+            "competencies": generated_competencies,
             "competency_scores": competency_scores,
         })
 

@@ -93,9 +93,14 @@ class AssessmentHistoryItem(BaseModel):
     attempt_id: str
     officer_id: str
     course_id: str | None = None
+    artifact_id: str | None = None
+    target_competency: str | None = None
     quiz_source_material: str
     attempted_on: str | None = None
     raw_score_percent: float | None = None
+    status: str
+    question_count: int
+    competencies: list[str]
     competency_scores: list[AssessmentCompetencyScore]
 
 

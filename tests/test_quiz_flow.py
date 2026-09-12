@@ -357,6 +357,41 @@ class TestSubmitQuiz:
         assert resp.status_code == 404
 
 
+class TestMyQuizzesHistory:
+    """My Quizzes must read generated/submitted attempts from the database."""
+
+    def test_generated_and_submitted_quiz_appears_for_current_officer_only(self, client):
+        gen_resp = _generate_quiz(client, officer_id="OFF001")
+        assert gen_resp.status_code == 200
+        attempt_id = gen_resp.json()["attempt_id"]
+
+        history_before = client.get("/api/officers/OFF001/assessments")
+        assert history_before.status_code == 200
+        attempts_before = {item["attempt_id"]: item for item in history_before.json()}
+        assert attempt_id in attempts_before
+        assert attempts_before[attempt_id]["status"] == "generated"
+        assert attempts_before[attempt_id]["question_count"] == 3
+        assert attempts_before[attempt_id]["raw_score_percent"] is None
+
+        other_officer_history = client.get("/api/officers/OFF002/assessments")
+        assert other_officer_history.status_code == 200
+        assert attempt_id not in {item["attempt_id"] for item in other_officer_history.json()}
+
+        submit_resp = client.post(
+            "/api/quiz/submit",
+            json={"attempt_id": attempt_id, "officer_id": "OFF001", "answers": [0, 0, 0]},
+        )
+        assert submit_resp.status_code == 200
+
+        history_after = client.get("/api/officers/OFF001/assessments")
+        assert history_after.status_code == 200
+        attempts_after = {item["attempt_id"]: item for item in history_after.json()}
+        assert attempts_after[attempt_id]["status"] == "submitted"
+        assert attempts_after[attempt_id]["raw_score_percent"] == 100.0
+        assert attempts_after[attempt_id]["attempted_on"] is not None
+        assert attempts_after[attempt_id]["competency_scores"]
+
+
 class TestGapAnalysisReflectsSubmit:
     """Verify that gap-analysis endpoint reflects CompetencyScore written by quiz submit."""
 

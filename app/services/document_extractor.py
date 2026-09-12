@@ -30,6 +30,9 @@ def _extract_pdf(content: bytes) -> str:
     import io
 
     reader = PdfReader(io.BytesIO(content))
+    if reader.is_encrypted:
+        raise ValueError("Could not extract readable text from this PDF.")
+
     pages = []
     for page in reader.pages:
         text = page.extract_text()
@@ -110,10 +113,17 @@ async def extract_text(file: UploadFile) -> str:
 
     await file.seek(0)
     content = await file.read()
-    text = _EXTRACTORS[ext](content)
+    try:
+        text = _EXTRACTORS[ext](content)
+    except Exception as exc:
+        if ext == ".pdf":
+            raise ValueError("Could not extract readable text from this PDF.") from exc
+        raise
     text = text.strip()
 
     if len(text) < MIN_TEXT_LENGTH:
+        if ext == ".pdf":
+            raise ValueError("Could not extract readable text from this PDF.")
         raise ValueError(
             "Document has no extractable text (or text is too short — "
             f"need at least {MIN_TEXT_LENGTH} characters, got {len(text)})."
