@@ -262,6 +262,48 @@ export async function getWorkEvidence(officerId) {
   }
 }
 
+export async function getOfficerArtifacts(officerId) {
+  try {
+    const res = await api.get(`/api/officers/${officerId}/artifacts`);
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn(`[API] Work artifacts unavailable for ${officerId}`);
+    return { data: [], isMock: false, error: true };
+  }
+}
+
+export async function getArtifactDetail(artifactId) {
+  try {
+    const res = await api.get(`/api/artifacts/${artifactId}`);
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn(`[API] Artifact detail unavailable for ${artifactId}`);
+    return { data: null, isMock: false, error: true };
+  }
+}
+
+export async function getOfficerArtifactGaps(officerId, artifactId) {
+  try {
+    const params = artifactId ? { artifact_id: artifactId } : {};
+    const res = await api.get(`/api/officers/${officerId}/artifact-gaps`, { params });
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn(`[API] Artifact gaps unavailable for ${officerId}`);
+    return { data: [], isMock: false, error: true };
+  }
+}
+
+export async function getOfficerArtifactRecommendations(officerId, artifactId) {
+  try {
+    const params = artifactId ? { artifact_id: artifactId } : {};
+    const res = await api.get(`/api/officers/${officerId}/artifact-recommendations`, { params });
+    return { data: res.data, isMock: false };
+  } catch {
+    console.warn(`[API] Artifact recommendations unavailable for ${officerId}`);
+    return { data: [], isMock: false, error: true };
+  }
+}
+
 export async function getCourses(limit = 100) {
   try {
     const res = await api.get('/api/courses', { params: { limit } });

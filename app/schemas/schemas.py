@@ -104,6 +104,70 @@ class WorkEvidenceItem(BaseModel):
     summary: str
 
 
+class WorkArtifactItem(BaseModel):
+    artifact_id: str
+    title: str
+    artifact_type: str
+    role: str
+    department: str
+    domain: str
+    difficulty: str
+    status: str
+    required_competencies: list[str]
+    description: str
+    skills: list[str]
+    rag_enabled: bool = True
+    quiz_enabled: bool = True
+    assignment_status: str | None = None
+    assigned_at: str | None = None
+
+
+class ArtifactCompetencyItem(BaseModel):
+    cid: str
+    competency_label: str
+    display_label: str
+    required_level: float
+    required_percent: float
+
+
+class WorkArtifactDetail(WorkArtifactItem):
+    competencies: list[ArtifactCompetencyItem]
+
+
+class ArtifactGapItem(BaseModel):
+    officer_id: str
+    artifact_id: str
+    artifact_title: str
+    cid: str
+    competency: str
+    display_competency: str
+    required_level: float
+    current_level: float
+    required_percent: float
+    current_percent: float
+    gap: float
+    gap_status: str
+    score_source: str
+    confidence_level: str
+
+
+class ArtifactRecommendationItem(BaseModel):
+    artifact_id: str
+    artifact_title: str
+    cid: str
+    competency: str
+    gap: float
+    gap_status: str
+    course_id: str
+    course_title: str
+    matched_skills: list[str]
+    score: float
+    duration_hours: int
+    level: str
+    reason: str
+    current_percent: float
+
+
 
 # ── Recommendation schemas ───────────────────────────────────────────────────
 

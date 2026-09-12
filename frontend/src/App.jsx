@@ -23,6 +23,8 @@ import MyProfile from './pages/MyProfile';
 import MyCompetencies from './pages/MyCompetencies';
 import GapAnalysis from './pages/GapAnalysis';
 import WorkEvidenceUpload from './pages/WorkEvidenceUpload';
+import WorkArtifacts from './pages/WorkArtifacts';
+import WorkArtifactDetail from './pages/WorkArtifactDetail';
 import EvidenceHistory from './pages/EvidenceHistory';
 import LearningPage from './pages/LearningPage';
 import IgotPage from './pages/IgotPage';
@@ -73,6 +75,8 @@ export default function App() {
             <Route path="/profile" element={<MyProfile />} />
             <Route path="/competencies" element={<MyCompetencies />} />
             <Route path="/gaps" element={<GapAnalysis />} />
+            <Route path="/artifacts" element={<WorkArtifacts />} />
+            <Route path="/artifacts/:artifactId" element={<WorkArtifactDetail />} />
             <Route path="/upload-artifact" element={<WorkEvidenceUpload />} />
             <Route path="/evidence-history" element={<EvidenceHistory />} />
             <Route path="/learning" element={<LearningPage />} />

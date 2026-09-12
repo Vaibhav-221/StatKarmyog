@@ -39,6 +39,10 @@ from app.schemas.schemas import (
 from app.services.document_extractor import extract_text, SUPPORTED_EXTENSIONS
 from app.services.llm_provider import generate_mcqs
 from app.services.quiz_cache import get_cached, set_cached
+from app.services.work_artifacts import (
+    get_artifact,
+    validate_officer_artifact_assignment,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +66,7 @@ async def generate_quiz(
     officer_id: str = Form(...),
     target_competency: str | None = Form(default=None),
     course_id: str | None = Form(default=None),
+    artifact_id: str | None = Form(default=None),
     db: Session = Depends(get_db),
 ):
     """
@@ -71,6 +76,8 @@ async def generate_quiz(
     # ── Sanitize course_id ──────────────────────────────────────────────
     if not isinstance(course_id, str):
         course_id = None
+    if not isinstance(artifact_id, str) or not artifact_id.strip():
+        artifact_id = None
 
     # ── Validate officer_id ──────────────────────────────────────────────
     officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
@@ -100,6 +107,19 @@ async def generate_quiz(
             status_code=422,
             detail=f"num_questions must be between 1 and 20 (got {num_questions}).",
         )
+
+    artifact_context = None
+    if artifact_id:
+        artifact_context = get_artifact(db, artifact_id)
+        if artifact_context is None:
+            raise HTTPException(status_code=404, detail=f"Artifact '{artifact_id}' not found.")
+        if not validate_officer_artifact_assignment(db, officer_id, artifact_id):
+            raise HTTPException(
+                status_code=403,
+                detail=f"Artifact '{artifact_id}' is not assigned to officer '{officer_id}'.",
+            )
+        if not target_competency and artifact_context.get("competencies"):
+            target_competency = artifact_context["competencies"][0]["competency_label"]
 
     filename = ""
     text = ""
@@ -136,7 +156,7 @@ async def generate_quiz(
             logger.exception("Unexpected error during text extraction / RAG")
             return JSONResponse(
                 status_code=500,
-                content={"error": f"Text extraction failed: {exc}"},
+                content={"error": "Quiz generation failed. Please try another learning material or reduce the number of questions."},
             )
     else:
         # Mode 1: Competency-Based Assessment (No File Uploaded)
@@ -149,10 +169,19 @@ async def generate_quiz(
 
         filename = f"Competency-Based Assessment ({target_competency or 'General Statistical Competency'})"
         comp_label = target_competency or "Statistical Operations"
+        artifact_clause = ""
+        if artifact_context:
+            artifact_clause = (
+                f"\nAssigned Work Artifact: {artifact_context['title']}.\n"
+                f"Artifact Domain: {artifact_context['domain']}.\n"
+                f"Artifact Description: {artifact_context['description']}.\n"
+                f"Artifact Skills: {', '.join(artifact_context.get('skills') or [])}.\n"
+            )
         text = (
             f"Official Assessment Context for Officer: {officer.name} ({officer.designation}, {officer.department}).\n"
             f"Role: {officer.role_id}.\n"
             f"Target Competency Domain: {comp_label}.\n"
+            f"{artifact_clause}"
             f"Scope: Professional statistical concepts, methodologies, sampling frameworks, data collection, data quality, "
             f"and analytical standards in Indian Government Statistical Services (MoSPI / NSSTA)."
         )
@@ -181,15 +210,16 @@ async def generate_quiz(
                 target_competency=target_competency,
             )
         except ValueError as exc:
+            logger.warning("MCQ generation failed: %s", exc)
             return JSONResponse(
                 status_code=500,
-                content={"error": str(exc)},
+                content={"error": "Quiz generation failed. Please try another learning material or reduce the number of questions."},
             )
         except Exception as exc:
             logger.exception("Unexpected error during MCQ generation")
             return JSONResponse(
                 status_code=500,
-                content={"error": f"Quiz generation failed: {exc}"},
+                content={"error": "Quiz generation failed. Please try another learning material or reduce the number of questions."},
             )
 
         # ── Cache the result ─────────────────────────────────────────────
@@ -202,6 +232,8 @@ async def generate_quiz(
         attempt_id=attempt_id,
         officer_id=officer_id,
         course_id=course_id,
+        artifact_id=artifact_id,
+        target_competency=target_competency,
         quiz_source_material=filename,
         attempted_on=None,       # Not yet submitted
         raw_score_percent=None,  # Not yet scored

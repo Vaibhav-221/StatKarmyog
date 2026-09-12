@@ -28,11 +28,24 @@ from app.schemas.schemas import (
     CompetencyScoreItem,
     AssessmentHistoryItem,
     WorkEvidenceItem,
+    WorkArtifactItem,
+    WorkArtifactDetail,
+    ArtifactCompetencyItem,
+    ArtifactGapItem,
+    ArtifactRecommendationItem,
 )
 from app.services.gap_analysis import (
     compute_skill_gaps,
     recommend_courses,
     recommend_courses_hybrid,
+)
+from app.services.work_artifacts import (
+    get_artifact,
+    get_artifact_competencies,
+    get_artifact_gaps,
+    get_artifact_recommendations,
+    get_officer_artifacts,
+    list_artifacts as list_work_artifacts,
 )
 
 router = APIRouter()
@@ -179,6 +192,67 @@ def get_officer_work_evidence(officer_id: str, db: Session = Depends(get_db)):
             item["scores"][score.skill_label] = score.artifact_score
 
     return list(grouped.values())
+
+
+# ── Work Artifacts ───────────────────────────────────────────────────────────
+
+@router.get("/artifacts", response_model=list[WorkArtifactItem])
+def list_artifacts(db: Session = Depends(get_db)):
+    """Return all work artifacts from the database."""
+    return list_work_artifacts(db)
+
+
+@router.get("/artifacts/{artifact_id}", response_model=WorkArtifactDetail)
+def get_artifact_detail(artifact_id: str, db: Session = Depends(get_db)):
+    """Return one work artifact plus its normalized required competencies."""
+    artifact = get_artifact(db, artifact_id)
+    if artifact is None:
+        raise HTTPException(status_code=404, detail=f"Artifact '{artifact_id}' not found")
+    return artifact
+
+
+@router.get("/officers/{officer_id}/artifacts", response_model=list[WorkArtifactItem])
+def get_assigned_work_artifacts(officer_id: str, db: Session = Depends(get_db)):
+    """Return work artifacts assigned to a single officer."""
+    artifacts = get_officer_artifacts(db, officer_id)
+    if artifacts is None:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+    return artifacts
+
+
+@router.get("/artifacts/{artifact_id}/competencies", response_model=list[ArtifactCompetencyItem])
+def get_required_artifact_competencies(artifact_id: str, db: Session = Depends(get_db)):
+    """Return FRAC-linked competencies required by a work artifact."""
+    competencies = get_artifact_competencies(db, artifact_id)
+    if competencies is None:
+        raise HTTPException(status_code=404, detail=f"Artifact '{artifact_id}' not found")
+    return competencies
+
+
+@router.get("/officers/{officer_id}/artifact-gaps", response_model=list[ArtifactGapItem])
+def get_officer_artifact_gaps(
+    officer_id: str,
+    artifact_id: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    """Return artifact-specific competency gaps for an officer."""
+    gaps = get_artifact_gaps(db, officer_id, artifact_id=artifact_id)
+    if gaps is None:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+    return gaps
+
+
+@router.get("/officers/{officer_id}/artifact-recommendations", response_model=list[ArtifactRecommendationItem])
+def get_officer_artifact_recommendations(
+    officer_id: str,
+    artifact_id: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+):
+    """Return explainable course recommendations for artifact competency gaps."""
+    recs = get_artifact_recommendations(db, officer_id, artifact_id=artifact_id)
+    if recs is None:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+    return recs
 
 
 # ── Gap Analysis ─────────────────────────────────────────────────────────────

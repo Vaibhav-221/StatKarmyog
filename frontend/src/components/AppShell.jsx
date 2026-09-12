@@ -12,7 +12,7 @@ import {
   DashboardOutlined,
   UserOutlined,
   BookOutlined,
-  FilePdfOutlined,
+  FileTextOutlined,
   ThunderboltOutlined,
   SafetyCertificateOutlined,
   RiseOutlined,
@@ -75,9 +75,10 @@ export default function AppShell() {
     },
     {
       key: 'evidence_group',
-      icon: <FilePdfOutlined />,
+      icon: <FileTextOutlined />,
       label: 'Work Evidence',
       children: [
+        { key: '/artifacts', label: 'Work Artifacts' },
         { key: '/upload-artifact', label: 'Upload Artifact' },
         { key: '/evidence-history', label: 'Evidence History' },
       ],
@@ -239,4 +240,3 @@ export default function AppShell() {
     </Layout>
   );
 }
-

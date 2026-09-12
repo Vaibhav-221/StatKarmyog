@@ -45,6 +45,8 @@ import {
   getGapAnalysis,
   getRecommendations,
   getPassportSummary,
+  getOfficerArtifacts,
+  getAssessmentHistory,
 } from '../api/client';
 
 const { Title, Text, Paragraph } = Typography;
@@ -61,22 +63,28 @@ export default function Dashboard() {
   const [gapsData, setGapsData] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [passport, setPassport] = useState(null);
+  const [artifacts, setArtifacts] = useState([]);
+  const [assessments, setAssessments] = useState([]);
 
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      const [profRes, gapsRes, recsRes, passRes] = await Promise.all([
+      const [profRes, gapsRes, recsRes, passRes, artifactsRes, assessmentsRes] = await Promise.all([
         getOfficerProfile(officerId),
         getGapAnalysis(officerId),
         getRecommendations(officerId),
         getPassportSummary(officerId),
+        getOfficerArtifacts(officerId),
+        getAssessmentHistory(officerId),
       ]);
 
       setProfile(profRes.data);
       setGapsData(gapsRes.data?.gaps || []);
       setRecommendations(recsRes.data || []);
       setPassport(passRes.data);
-      setIsMockData(profRes.isMock || gapsRes.isMock || recsRes.isMock || passRes.isMock);
+      setArtifacts(artifactsRes.data || []);
+      setAssessments(assessmentsRes.data || []);
+      setIsMockData(profRes.isMock || gapsRes.isMock || recsRes.isMock || passRes.isMock || artifactsRes.isMock || assessmentsRes.isMock);
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
     } finally {
@@ -107,6 +115,11 @@ export default function Dashboard() {
       progress: Math.min(100, Math.round((avgCurrent / (avgRequired || 1)) * 100)),
     };
   }, [gapsData]);
+
+  const recentSubmittedQuiz = useMemo(
+    () => (assessments || []).find((item) => item.attempted_on && item.raw_score_percent !== null),
+    [assessments]
+  );
 
   // Derived radar data from real skill gaps
   const radarData = useMemo(() => {
@@ -248,11 +261,47 @@ export default function Dashboard() {
 
         <Col xs={12} sm={6}>
           <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderLeft: '4px solid #16A34A' }}>
-            <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>LEARNING PROGRESS</Text>
+            <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>MY WORK ARTIFACTS</Text>
             <Title level={2} style={{ margin: '4px 0 0', color: '#16A34A' }}>
-              {kpis.progress}%
+              {artifacts.length}
             </Title>
-            <Progress percent={kpis.progress} strokeColor="#16A34A" showInfo={false} size="small" style={{ marginTop: 8 }} />
+            <Text style={{ fontSize: 11, color: '#16A34A' }}>Assigned artifacts</Text>
+          </Card>
+        </Col>
+      </Row>
+
+      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
+        <Col xs={24} md={8}>
+          <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', height: '100%' }}>
+            <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>MY COMPETENCY GAPS</Text>
+            <Space direction="vertical" size={6} style={{ width: '100%', marginTop: 10 }}>
+              {gapsData.slice(0, 3).map((gap) => (
+                <div key={gap.skill} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <Text>{gap.skill}</Text>
+                  <Tag color={gap.gap_size * 20 > 40 ? 'red' : gap.gap_size * 20 > 25 ? 'volcano' : 'orange'}>
+                    {Math.round(gap.current_level * 20)}%
+                  </Tag>
+                </div>
+              ))}
+            </Space>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', height: '100%' }}>
+            <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>MY WORK ARTIFACTS</Text>
+            <Title level={3} style={{ color: '#0C447C', margin: '8px 0' }}>{artifacts.length} Assigned Artifacts</Title>
+            <Button type="primary" icon={<EyeOutlined />} onClick={() => navigate('/artifacts')} style={{ background: '#0C447C' }}>
+              View Artifacts
+            </Button>
+          </Card>
+        </Col>
+        <Col xs={24} md={8}>
+          <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', height: '100%' }}>
+            <Text type="secondary" style={{ fontSize: 12, fontWeight: 600 }}>RECENT QUIZ</Text>
+            <Title level={4} style={{ color: '#0C447C', margin: '8px 0' }}>
+              {recentSubmittedQuiz?.quiz_source_material || 'No submitted quiz yet'}
+            </Title>
+            <Text>{recentSubmittedQuiz?.raw_score_percent !== undefined && recentSubmittedQuiz?.raw_score_percent !== null ? `${recentSubmittedQuiz.raw_score_percent}%` : 'Generate a quiz from a gap or artifact'}</Text>
           </Card>
         </Col>
       </Row>

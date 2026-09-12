@@ -23,6 +23,7 @@ class Officer(Base):
     role = relationship("Role", back_populates="officers")
     enrollments = relationship("Enrollment", back_populates="officer")
     competency_scores = relationship("CompetencyScore", back_populates="officer")
+    assigned_artifacts = relationship("OfficerArtifact", back_populates="officer")
 
 
 class Role(Base):
@@ -76,6 +77,58 @@ class CompetencyDictionary(Base):
     level_descriptions = Column(JSON, nullable=False)  # {"1": "...", "2": "..."}
 
 
+class WorkArtifact(Base):
+    """Role-linked work output assigned to officers for artifact-aware learning."""
+    __tablename__ = "work_artifacts"
+
+    artifact_id = Column(String, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    artifact_type = Column(String, nullable=False)
+    role = Column(String, nullable=False)
+    department = Column(String, nullable=False)
+    domain = Column(String, nullable=False)
+    difficulty = Column(String, nullable=False)
+    status = Column(String, nullable=False)
+    required_competencies = Column(JSON, default=list)
+    source_type = Column(String, nullable=False)
+    rag_enabled = Column(Boolean, default=True)
+    quiz_enabled = Column(Boolean, default=True)
+    description = Column(String, nullable=False)
+    skills = Column(JSON, default=list)
+
+    competencies = relationship("ArtifactCompetency", back_populates="artifact", cascade="all, delete-orphan")
+    officer_assignments = relationship("OfficerArtifact", back_populates="artifact", cascade="all, delete-orphan")
+
+
+class ArtifactCompetency(Base):
+    """Normalized bridge from a work artifact to a FRAC competency."""
+    __tablename__ = "artifact_competencies"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    artifact_id = Column(String, ForeignKey("work_artifacts.artifact_id"), nullable=False, index=True)
+    competency_id = Column(String, ForeignKey("competency_dictionary.cid"), nullable=False)
+    competency_label = Column(String, nullable=False)
+    display_label = Column(String, nullable=False)
+    required_level = Column(Float, nullable=False)
+
+    artifact = relationship("WorkArtifact", back_populates="competencies")
+    competency = relationship("CompetencyDictionary")
+
+
+class OfficerArtifact(Base):
+    """Assignment of an artifact to an officer."""
+    __tablename__ = "officer_artifacts"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    officer_id = Column(String, ForeignKey("officers.officer_id"), nullable=False, index=True)
+    artifact_id = Column(String, ForeignKey("work_artifacts.artifact_id"), nullable=False, index=True)
+    assigned_at = Column(String, nullable=False)
+    status = Column(String, nullable=False)
+
+    officer = relationship("Officer", back_populates="assigned_artifacts")
+    artifact = relationship("WorkArtifact", back_populates="officer_assignments")
+
+
 class CompetencyScore(Base):
     """Evidence-based competency score record for an officer — maps to competency_history_seed.json."""
     __tablename__ = "competency_scores"
@@ -104,12 +157,15 @@ class QuizAttempt(Base):
     attempt_id = Column(String, primary_key=True, index=True)
     officer_id = Column(String, ForeignKey("officers.officer_id"), nullable=False)
     course_id = Column(String, ForeignKey("course_catalogue.course_id"), nullable=True)
+    artifact_id = Column(String, ForeignKey("work_artifacts.artifact_id"), nullable=True)
+    target_competency = Column(String, nullable=True)
     quiz_source_material = Column(String, nullable=False)
     attempted_on = Column(String, nullable=True)
     raw_score_percent = Column(Float, nullable=True)
 
     officer = relationship("Officer")
     course = relationship("CourseCatalogue")
+    artifact = relationship("WorkArtifact")
     questions = relationship("QuizAttemptQuestion", back_populates="attempt", cascade="all, delete-orphan")
     generated_questions = relationship("QuizAttemptGenerated", back_populates="attempt", cascade="all, delete-orphan")
 

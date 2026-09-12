@@ -30,7 +30,7 @@ import {
   RiseOutlined,
   FormOutlined,
 } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { generateQuizApi, submitQuizApi, getGapAnalysis } from '../api/client';
 import { useAuth } from '../context/AuthContext';
@@ -39,8 +39,11 @@ const { Title, Text, Paragraph } = Typography;
 
 export default function QuizPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const officerId = user?.officer_id || 'OFF001';
+  const requestedCompetency = searchParams.get('competency') || '';
+  const requestedArtifactId = searchParams.get('artifact_id') || '';
 
   // State workflow: 'generator' | 'generating' | 'quiz' | 'result'
   const [stage, setStage] = useState('generator');
@@ -73,8 +76,11 @@ export default function QuizPage() {
             value: g.skill,
             label: `${g.skill} (Gap: ${g.gap_size} pts)`,
           }));
+          if (requestedCompetency && !opts.some((item) => item.value === requestedCompetency)) {
+            opts.unshift({ value: requestedCompetency, label: `${requestedCompetency} (from work artifact)` });
+          }
           setCompetencyOptions(opts);
-          setSelectedCompetency(opts[0].value);
+          setSelectedCompetency(requestedCompetency || opts[0].value);
         } else {
           const fallbackOpts = [
             { value: 'Survey Design', label: 'Survey Design' },
@@ -82,8 +88,11 @@ export default function QuizPage() {
             { value: 'Data Quality Frameworks', label: 'Data Quality Frameworks' },
             { value: 'Industrial Statistics', label: 'Industrial Statistics' },
           ];
+          if (requestedCompetency && !fallbackOpts.some((item) => item.value === requestedCompetency)) {
+            fallbackOpts.unshift({ value: requestedCompetency, label: `${requestedCompetency} (from work artifact)` });
+          }
           setCompetencyOptions(fallbackOpts);
-          setSelectedCompetency(fallbackOpts[0].value);
+          setSelectedCompetency(requestedCompetency || fallbackOpts[0].value);
         }
       } catch (err) {
         console.error('[QuizPage] Failed to fetch officer gaps:', err);
@@ -92,7 +101,7 @@ export default function QuizPage() {
       }
     }
     fetchOfficerGaps();
-  }, [officerId]);
+  }, [officerId, requestedCompetency]);
 
   const handleGenerateQuiz = async () => {
     setStage('generating');
@@ -116,12 +125,14 @@ export default function QuizPage() {
       if (selectedCompetency) {
         formData.append('target_competency', selectedCompetency);
       }
+      if (requestedArtifactId) {
+        formData.append('artifact_id', requestedArtifactId);
+      }
 
       const res = await generateQuizApi(formData);
 
       if (res.error || !res.data?.attempt_id || !Array.isArray(res.data?.questions)) {
-        const errorMsg = res.message || 'Backend quiz generation is unavailable. No assessment was created.';
-        message.error(`Quiz generation failed: ${errorMsg}`, 6);
+        message.error('Quiz generation failed. Please try another learning material or reduce the number of questions.', 6);
         setStage('generator');
         return;
       }
@@ -184,7 +195,7 @@ export default function QuizPage() {
               AI QUIZ GENERATOR
             </Title>
             <Text type="secondary">
-              Generate validated MCQs from uploaded course materials or officer competency gaps.
+              Generate validated MCQs from uploaded course materials, officer competency gaps, or assigned work artifacts.
             </Text>
           </div>
 
@@ -205,9 +216,10 @@ export default function QuizPage() {
                 <Text strong style={{ color: '#0C447C', fontSize: 14 }}>2. Number of Questions:</Text>
                 <div style={{ marginTop: 8 }}>
                   <Radio.Group value={numQuestions} onChange={(e) => setNumQuestions(e.target.value)} buttonStyle="solid">
-                    <Radio.Button value={5}>5 Questions</Radio.Button>
-                    <Radio.Button value={10}>10 Questions</Radio.Button>
-                    <Radio.Button value={15}>15 Questions</Radio.Button>
+                    <Radio.Button value={5}>5</Radio.Button>
+                    <Radio.Button value={10}>10</Radio.Button>
+                    <Radio.Button value={15}>15</Radio.Button>
+                    <Radio.Button value={20}>20</Radio.Button>
                   </Radio.Group>
                 </div>
               </div>
@@ -216,7 +228,7 @@ export default function QuizPage() {
                 <Text strong style={{ color: '#0C447C', fontSize: 14 }}>3. Difficulty Level:</Text>
                 <div style={{ marginTop: 8 }}>
                   <Radio.Group value={difficulty} onChange={(e) => setDifficulty(e.target.value)} buttonStyle="solid">
-                    <Radio.Button value="Basic">Basic</Radio.Button>
+                    <Radio.Button value="Basic">Easy</Radio.Button>
                     <Radio.Button value="Intermediate">Intermediate</Radio.Button>
                     <Radio.Button value="Advanced">Advanced</Radio.Button>
                   </Radio.Group>
@@ -238,6 +250,11 @@ export default function QuizPage() {
                   </p>
                   <p className="ant-upload-text" style={{ fontSize: 13 }}>Click or drag learning document to generate MCQs</p>
                 </Upload.Dragger>
+                {requestedArtifactId && (
+                  <Tag color="blue" style={{ marginTop: 10 }}>
+                    Linked Artifact: {requestedArtifactId}
+                  </Tag>
+                )}
               </div>
 
               <Button
