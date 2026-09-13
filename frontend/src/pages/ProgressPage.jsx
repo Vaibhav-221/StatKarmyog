@@ -5,11 +5,13 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Card, Typography, Space, Skeleton, Empty } from 'antd';
 import { RiseOutlined, ArrowDownOutlined, TrophyOutlined } from '@ant-design/icons';
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../context/AuthContext';
 import { getGapAnalysis, getPassportSummary } from '../api/client';
 
 const { Text } = Typography;
+
+const PROGRESS_BAR_COLORS = ['#2966A3', '#E76F51', '#2A9D8F', '#E9C46A', '#7C5CFC', '#E85D9E'];
 
 export default function ProgressPage() {
   const { user } = useAuth();
@@ -157,7 +159,7 @@ export default function ProgressPage() {
               <Card
                 title={
                   <Space>
-                    <TrophyOutlined style={{ color: '#2966A3' }} />
+                    <TrophyOutlined style={{ color: '#E76F51' }} />
                     <span style={{ color: '#0B2641', fontWeight: 600 }}>Gap Reduction Trajectory</span>
                   </Space>
                 }
@@ -173,7 +175,14 @@ export default function ProgressPage() {
                       <Tooltip
                         contentStyle={{ background: '#fff', borderRadius: 8, border: '1px solid #DCE7F0', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
                       />
-                      <Bar dataKey="gap" fill="#0B2641" name="Remaining Gap (pts)" radius={[6, 6, 0, 0]} />
+                      <Bar dataKey="gap" name="Remaining Gap (pts)" radius={[6, 6, 0, 0]}>
+                        {data.overall_trend.map((entry, index) => (
+                          <Cell
+                            key={`progress-bar-${entry.label}-${index}`}
+                            fill={PROGRESS_BAR_COLORS[index % PROGRESS_BAR_COLORS.length]}
+                          />
+                        ))}
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
