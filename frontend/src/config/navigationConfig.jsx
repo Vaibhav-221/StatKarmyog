@@ -146,12 +146,16 @@ const ADMIN_NAV_KEYS = new Set(['/admin', '/profile', 'learning_group']);
  * Filter navigation items based on current user role/permissions.
  */
 export function getAuthorizedNavItems(user) {
+  if (!user) {
+    return NAVIGATION_CONFIG.filter((item) => Boolean(item.public));
+  }
+
   if (user?.role === 'admin') {
     return NAVIGATION_CONFIG.filter((item) => ADMIN_NAV_KEYS.has(item.key));
   }
 
   return NAVIGATION_CONFIG.filter((item) => {
-    return Boolean(item.public) || !item.adminOnly;
+    return !item.adminOnly;
   });
 }
 
