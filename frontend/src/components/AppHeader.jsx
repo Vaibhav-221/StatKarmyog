@@ -6,12 +6,11 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Layout, Button, Typography, Avatar, Dropdown } from 'antd';
+import { Layout, Button, Typography, Dropdown } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   MenuOutlined,
-  UserOutlined,
   LogoutOutlined,
   SafetyCertificateOutlined,
   DashboardOutlined,
@@ -23,6 +22,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { getOfficerProfile, MOCK_OFFICERS } from '../api/client';
 import MobileNavDrawer from './MobileNavDrawer';
+import OfficerAvatar from './OfficerAvatar';
 
 const { Header } = Layout;
 const { Text } = Typography;
@@ -122,14 +122,6 @@ export default function AppHeader({
     onClick: () => handleQuickLogin(o.officer_id),
   }));
 
-  const initials = user?.name
-    ? user.name
-        .split(' ')
-        .map((w) => w[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
-    : 'U';
 
   const isPublicView =
     isLanding || location.pathname === '/' || location.pathname === '/login';
@@ -141,6 +133,9 @@ export default function AppHeader({
     { id: 'demo-profiles', label: 'Demo Profiles' },
   ];
 
+  const workspaceTitle = user?.role === 'admin' ? 'Admin Workspace' : 'Officer Workspace';
+  const headerOfficer = user ? { ...profile, ...user } : null;
+
   const brand = (
     <button
       type="button"
@@ -148,12 +143,12 @@ export default function AppHeader({
       className="group flex min-w-0 items-center gap-2.5 rounded-lg text-left outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-[#2966A3] focus-visible:ring-offset-2"
       aria-label="Go to homepage"
     >
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#D1E0EE] bg-[#F1F6FA] text-[#0B2641] transition-colors group-hover:bg-[#D1E0EE]">
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#D1E0EE] bg-[#F1F6FA] text-[#0B2641] transition-colors group-hover:bg-[#D1E0EE]">
         <SafetyCertificateOutlined className="text-[22px]" />
       </span>
 
       <span className="min-w-0">
-        <span className="block truncate text-[18px] font-bold tracking-[-0.45px] text-[#0B2641] sm:text-[20px]">
+        <span className="block truncate text-[18px] font-bold tracking-normal text-[#0B2641] sm:text-[20px]">
           StatKarmyog
         </span>
         <span className="hidden text-[10px] font-semibold uppercase tracking-[0.16em] text-[#617487] sm:block">
@@ -186,7 +181,7 @@ export default function AppHeader({
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
       <Dropdown menu={{ items: quickLoginItems }} placement="bottomRight">
         <Button
-          className="!h-10 !rounded-xl !border-[#D1E0EE] !bg-white !px-4 !text-sm !font-semibold !text-[#0B2641] hover:!border-[#2966A3] hover:!text-[#2966A3]"
+          className="!h-10 !rounded-lg !border-[#D1E0EE] !bg-white !px-4 !text-sm !font-semibold !text-[#0B2641] hover:!border-[#2966A3] hover:!text-[#2966A3]"
         >
           <SwapOutlined className="text-[#2966A3]" /> Demo Quick Select <DownOutlined className="text-[10px]" />
         </Button>
@@ -199,7 +194,7 @@ export default function AppHeader({
           setMobileMenuOpen(false);
           navigate('/login');
         }}
-        className="!h-10 !rounded-xl !border-[#2966A3] !bg-[#2966A3] !px-5 !font-semibold shadow-sm hover:!border-[#0B2641] hover:!bg-[#0B2641]"
+        className="!h-10 !rounded-lg !border-[#2966A3] !bg-[#2966A3] !px-5 !font-semibold shadow-sm hover:!border-[#0B2641] hover:!bg-[#0B2641]"
       >
         Officer Login
       </Button>
@@ -207,7 +202,7 @@ export default function AppHeader({
   );
 
   const authenticatedActions = (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
       {isPublicView && (
         <Button
           type="primary"
@@ -216,7 +211,7 @@ export default function AppHeader({
             setMobileMenuOpen(false);
             navigate(user.role === 'admin' ? '/admin' : '/dashboard');
           }}
-          className="!h-10 !rounded-xl !border-[#2966A3] !bg-[#2966A3] !font-semibold hover:!border-[#0B2641] hover:!bg-[#0B2641]"
+          className="!h-10 !rounded-lg !border-[#2966A3] !bg-[#2966A3] !font-semibold hover:!border-[#0B2641] hover:!bg-[#0B2641]"
         >
           Go to Dashboard
         </Button>
@@ -226,20 +221,14 @@ export default function AppHeader({
       <Dropdown menu={{ items: quickLoginItems }} placement="bottomRight">
         <Button
           size="middle"
-          className="!hidden lg:!inline-flex !h-9 !rounded-lg !border-[#D1E0EE] !bg-white !px-3 !text-xs !font-medium !text-[#0B2641] hover:!border-[#2966A3]"
+          className="!hidden lg:!inline-flex !h-10 !items-center !rounded-lg !border-[#D1E0EE] !bg-white !px-3 !text-xs !font-semibold !text-[#0B2641] hover:!border-[#2966A3] hover:!text-[#2966A3]"
         >
           <SwapOutlined className="text-[#2966A3]" /> Switch Demo <DownOutlined className="text-[9px]" />
         </Button>
       </Dropdown>
 
-      <div className="flex items-center gap-2.5 rounded-xl border border-[#DCE7F0] bg-white px-3 py-1.5 shadow-sm">
-        <Avatar
-          size={34}
-          icon={<UserOutlined />}
-          className="!bg-[#0B2641] !text-white !font-bold"
-        >
-          {initials}
-        </Avatar>
+      <div className="flex h-10 items-center gap-2 rounded-lg border border-[#DCE7F0] bg-white px-2.5 shadow-sm">
+        <OfficerAvatar officer={headerOfficer} size={32} />
 
         <div className="min-w-0 leading-tight">
           <Text strong className="block max-w-[150px] truncate text-xs !text-[#172B3D]">
@@ -256,7 +245,7 @@ export default function AppHeader({
           onClick={handleLogout}
           title="Logout"
           aria-label="Logout"
-          className="!text-[#617487] hover:!bg-[#F1F6FA] hover:!text-[#DC2626]"
+          className="!h-8 !w-8 !rounded-lg !text-[#617487] hover:!bg-[#F1F6FA] hover:!text-[#DC2626]"
         />
       </div>
     </div>
@@ -265,7 +254,7 @@ export default function AppHeader({
   return (
     <>
       <Header
-        className="sticky top-0 z-[99] !flex !h-[72px] !w-full !items-center !justify-between !border-b !border-[#DCE7F0] !bg-[#F8FBFD]/95 !px-4 shadow-[0_2px_14px_rgba(11,38,65,0.04)] backdrop-blur-md sm:!px-6 lg:!px-8"
+        className="sticky top-0 z-[99] !flex !h-[72px] !w-full !items-center !justify-between !border-b !border-[#DCE7F0] !bg-white/95 !px-4 shadow-[0_2px_14px_rgba(11,38,65,0.04)] backdrop-blur-md sm:!px-6 lg:!px-8"
       >
         <div className="flex min-w-0 items-center gap-3">
           {setCollapsed && (
@@ -274,11 +263,25 @@ export default function AppHeader({
               icon={collapsed ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
               onClick={() => setCollapsed((c) => !c)}
               aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              className="!hidden md:!flex !h-10 !w-10 !shrink-0 !items-center !justify-center !rounded-xl !text-[#0B2641] hover:!bg-[#D1E0EE]"
+              className="!hidden md:!flex !h-10 !w-10 !shrink-0 !items-center !justify-center !rounded-lg !text-[#0B2641] hover:!bg-[#D1E0EE]"
             />
           )}
 
-          {brand}
+          {setCollapsed ? (
+            <>
+              <div className="md:hidden">{brand}</div>
+              <div className="hidden min-w-0 flex-col md:flex">
+                <Text strong className="block truncate text-[15px] !text-[#0B2641]">
+                  {workspaceTitle}
+                </Text>
+                <Text className="block truncate text-[11px] font-medium !text-[#617487]">
+                  StatKarmyog Skill Intelligence Platform
+                </Text>
+              </div>
+            </>
+          ) : (
+            brand
+          )}
 
           {isPublicView && (
             <div className="ml-3 hidden lg:block">{publicLandingLinks}</div>
@@ -296,7 +299,7 @@ export default function AppHeader({
           onClick={() => setMobileMenuOpen(true)}
           aria-label="Open mobile navigation menu"
           aria-expanded={mobileMenuOpen}
-          className="!flex !h-10 !w-10 !items-center !justify-center !rounded-xl !border !border-[#D1E0EE] !bg-white !text-[#0B2641] shadow-sm hover:!bg-[#D1E0EE] md:!hidden"
+          className="!flex !h-10 !w-10 !items-center !justify-center !rounded-lg !border !border-[#D1E0EE] !bg-white !text-[#0B2641] shadow-sm hover:!bg-[#D1E0EE] md:!hidden"
         />
       </Header>
 

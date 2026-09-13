@@ -91,7 +91,7 @@ export default function AppShell() {
       </div>
       {!collapsed && (
         <div style={{ marginLeft: 12, lineHeight: 1.2 }}>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, letterSpacing: '-0.3px' }}>
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, letterSpacing: '0' }}>
             STATKARMAYOG
           </div>
           <div style={{ color: '#D1E0EE', fontSize: 10, fontWeight: 500, letterSpacing: '0.05em' }}>

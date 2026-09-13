@@ -27,6 +27,7 @@ export const NAVIGATION_CONFIG = [
     label: 'Portal Overview',
     icon: <HomeOutlined />,
     exact: true,
+    public: true,
   },
   {
     key: '/dashboard',
@@ -144,6 +145,9 @@ export const NAVIGATION_CONFIG = [
  */
 export function getAuthorizedNavItems(user) {
   return NAVIGATION_CONFIG.filter((item) => {
+    if (!user) {
+      return Boolean(item.public);
+    }
     if (item.adminOnly && user?.role !== 'admin') {
       return false;
     }

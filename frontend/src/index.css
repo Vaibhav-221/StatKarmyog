@@ -37,3 +37,30 @@
   color: #ffffff !important;
   font-weight: 600 !important;
 }
+
+/* Desktop sidebar navigation rhythm */
+.ant-menu-dark.ant-menu-inline .ant-menu-item,
+.ant-menu-dark.ant-menu-inline .ant-menu-submenu-title {
+  height: 40px !important;
+  line-height: 40px !important;
+  margin: 4px 0 !important;
+  width: 100% !important;
+  border-radius: 8px !important;
+  color: #D1E0EE !important;
+  font-weight: 600 !important;
+}
+
+.ant-menu-dark.ant-menu-inline .ant-menu-item:hover,
+.ant-menu-dark.ant-menu-inline .ant-menu-submenu-title:hover {
+  background-color: rgba(209, 224, 238, 0.12) !important;
+  color: #ffffff !important;
+}
+
+.ant-menu-dark.ant-menu-inline .ant-menu-item-selected {
+  background-color: #2966A3 !important;
+  color: #ffffff !important;
+}
+
+.ant-menu-dark .ant-menu-submenu-selected > .ant-menu-submenu-title {
+  color: #ffffff !important;
+}

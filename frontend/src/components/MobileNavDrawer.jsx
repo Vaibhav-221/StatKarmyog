@@ -9,12 +9,12 @@
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { Drawer, Avatar, Typography, Button, Dropdown } from 'antd';
+import { Drawer, Typography, Button, Dropdown } from 'antd';
 import {
   SafetyCertificateOutlined,
-  UserOutlined,
   SwapOutlined,
   LogoutOutlined,
+  LoginOutlined,
   RightOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -23,6 +23,7 @@ import {
   isNavItemActive,
   getActiveParentKeys,
 } from '../config/navigationConfig';
+import OfficerAvatar from './OfficerAvatar';
 
 const { Text } = Typography;
 
@@ -83,14 +84,6 @@ export default function MobileNavDrawer({
     }
   };
 
-  const initials = user?.name
-    ? user.name
-        .split(' ')
-        .map((w) => w[0])
-        .join('')
-        .slice(0, 2)
-        .toUpperCase()
-    : 'U';
 
   return (
     <Drawer
@@ -100,7 +93,7 @@ export default function MobileNavDrawer({
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0B2641] text-white">
               <SafetyCertificateOutlined className="text-base" />
             </div>
-            <span className="font-bold text-base tracking-tight">StatKarmyog</span>
+            <span className="font-bold text-base tracking-normal">StatKarmyog</span>
           </div>
           <span className="text-[10px] uppercase font-bold tracking-widest text-[#2966A3] bg-[#D1E0EE]/60 px-2.5 py-0.5 rounded-full">
             MoSPI
@@ -129,11 +122,9 @@ export default function MobileNavDrawer({
       <div className="flex flex-col gap-4 overflow-y-auto pr-0.5">
         {/* Officer Profile Summary if authenticated */}
         {user && (
-          <div className="rounded-2xl border border-[#DCE7F0] bg-white p-3.5 shadow-sm">
+          <div className="rounded-lg border border-[#DCE7F0] bg-white p-3.5 shadow-sm">
             <div className="flex items-center gap-3">
-              <Avatar size={40} icon={<UserOutlined />} className="!bg-[#0B2641] !text-white !font-bold">
-                {initials}
-              </Avatar>
+              <OfficerAvatar officer={user} size={40} />
               <div className="min-w-0 flex-1">
                 <Text strong className="block truncate text-xs !text-[#0B2641]">
                   {user?.name || 'Officer'}
@@ -168,6 +159,36 @@ export default function MobileNavDrawer({
           </div>
         )}
 
+        {!user && (
+          <div className="rounded-lg border border-[#DCE7F0] bg-white p-3 shadow-sm">
+            <Text strong className="block text-sm !text-[#0B2641]">
+              Guest Access
+            </Text>
+            <Text type="secondary" className="mt-0.5 block text-[11px] !text-[#617487]">
+              Sign in to open your dashboard tools.
+            </Text>
+
+            <div className="mt-3 flex flex-col gap-2">
+              {quickLoginItems && (
+                <Dropdown menu={{ items: quickLoginItems }} placement="bottomLeft">
+                  <Button className="!h-10 !w-full !justify-start !rounded-lg !border-[#D1E0EE] !text-[#0B2641]">
+                    <SwapOutlined className="text-[#2966A3]" /> Demo Quick Select
+                  </Button>
+                </Dropdown>
+              )}
+
+              <Button
+                type="primary"
+                icon={<LoginOutlined />}
+                onClick={() => handleNavigate('/login')}
+                className="!h-10 !w-full !rounded-lg !border-[#2966A3] !bg-[#2966A3] !font-semibold hover:!border-[#0B2641] hover:!bg-[#0B2641]"
+              >
+                Officer Login
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Hierarchical Navigation Tree */}
         <nav aria-label="Mobile platform navigation" className="space-y-1">
           <div className="text-[11px] font-bold uppercase tracking-wider text-[#617487] px-2 mb-2">
@@ -192,7 +213,7 @@ export default function MobileNavDrawer({
                     onClick={() => toggleParent(item.key)}
                     aria-expanded={isExpanded}
                     aria-controls={panelId}
-                    className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-semibold transition-all ${
+                    className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-xs font-semibold transition-all ${
                       isItemActive
                         ? 'bg-[#D1E0EE]/70 text-[#0B2641]'
                         : 'text-[#172B3D] hover:bg-[#D1E0EE]/40 hover:text-[#0B2641]'
@@ -250,7 +271,7 @@ export default function MobileNavDrawer({
                 key={item.key}
                 type="button"
                 onClick={() => handleNavigate(item.path)}
-                className={`flex w-full items-center justify-between gap-3 rounded-xl px-3 py-2.5 text-left text-xs font-semibold transition-all ${
+                className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2.5 text-left text-xs font-semibold transition-all ${
                   isDirectActive
                     ? 'bg-[#2966A3] text-white shadow-xs'
                     : 'text-[#172B3D] hover:bg-[#D1E0EE]/40 hover:text-[#0B2641]'
@@ -271,7 +292,7 @@ export default function MobileNavDrawer({
 
       <div className="pt-4 border-t border-[#DCE7F0] mt-4 text-center">
         <p className="text-[11px] font-semibold text-[#0B2641] m-0">
-          StatKarmyog • MoSPI
+          StatKarmyog / MoSPI
         </p>
         <p className="text-[10px] text-[#617487] mt-0.5 mb-0">
           Skill Intelligence &amp; FRAC Framework
