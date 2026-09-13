@@ -66,24 +66,27 @@ export default function AdminDashboard() {
   ];
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+    <div className="mx-auto flex w-full max-w-7xl flex-col gap-5 px-4 py-5 sm:gap-6 sm:px-6 sm:py-6 lg:px-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <Title level={3} style={{ margin: 0, color: '#0B2641' }}>
-            Training Intelligence & Institutional Dashboard
+      <div className="flex flex-col gap-4 rounded-2xl border border-[#DCE7F0] bg-white p-4 shadow-sm sm:p-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="min-w-0">
+          <Text className="text-[11px] font-bold uppercase tracking-[0.14em] !text-[#2966A3]">
+            Director workspace
+          </Text>
+          <Title level={3} className="!mb-1 !mt-1 !text-xl !leading-tight sm:!text-2xl" style={{ color: '#0B2641' }}>
+            Training Intelligence
           </Title>
-          <Text style={{ color: '#617487' }}>
-            Org-wide competency gap distributions, pre/post training improvement, and cohort demands for MoSPI / NSSTA.
+          <Text className="block max-w-2xl !text-xs !leading-5 sm:!text-sm" style={{ color: '#617487' }}>
+            Org-wide competency gaps, training outcomes, and cohort demand for MoSPI / NSSTA.
           </Text>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Text style={{ fontSize: 13, color: '#617487', whiteSpace: 'nowrap' }}>Department Cohort:</Text>
+        <div className="flex w-full flex-col gap-1.5 sm:flex-row sm:items-center lg:w-auto">
+          <Text className="!text-xs !text-[#617487] sm:whitespace-nowrap">Department cohort</Text>
           <Select
             value={selectedDepartment}
             onChange={setSelectedDepartment}
-            style={{ width: 220 }}
+            className="w-full sm:w-[220px]"
             options={[
               { value: 'All', label: 'All Statistical Divisions' },
               { value: 'Industrial', label: 'Industrial Statistics Division' },
@@ -103,8 +106,8 @@ export default function AdminDashboard() {
       />
 
       {/* 4 Top KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4 xl:grid-cols-4">
+        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#617487] mb-1">
             <TeamOutlined className="text-[#2966A3]" /> Total Tracked
           </div>
@@ -114,7 +117,7 @@ export default function AdminDashboard() {
           <div className="text-xs text-[#617487] mt-1">Officers in registry</div>
         </div>
 
-        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#617487] mb-1">
             <BankOutlined className="text-[#3D7D70]" /> Active Learners
           </div>
@@ -124,7 +127,7 @@ export default function AdminDashboard() {
           <div className="text-xs text-[#617487] mt-1">Engaged this quarter</div>
         </div>
 
-        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#617487] mb-1">
             <RiseOutlined className="text-[#2966A3]" /> Avg Competency
           </div>
@@ -134,7 +137,7 @@ export default function AdminDashboard() {
           <div className="text-xs text-[#617487] mt-1">Benchmark baseline</div>
         </div>
 
-        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm transition-all hover:shadow-md border-l-4 border-l-[#3D7D70]">
+        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-4 shadow-sm transition-all hover:shadow-md sm:p-5 border-l-4 border-l-[#3D7D70]">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#617487] mb-1">
             <SafetyCertificateOutlined className="text-[#3D7D70]" /> Avg Improvement
           </div>
