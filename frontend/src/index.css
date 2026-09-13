@@ -6,3 +6,34 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* ── Ant Design Dark Sidebar Palette Enhancements ───────────────────────── */
+.ant-layout-sider-dark,
+.ant-menu-dark,
+.ant-menu-dark .ant-menu-sub {
+  background-color: #0B2641 !important;
+}
+
+/* Submenu container background */
+.ant-menu-dark .ant-menu-inline.ant-menu-sub {
+  background: #081D33 !important;
+  border-radius: 8px;
+}
+
+/* Submenu items typography and hover/active states */
+.ant-menu-dark .ant-menu-inline.ant-menu-sub .ant-menu-item {
+  color: #D1E0EE !important;
+  font-size: 13px !important;
+  margin-top: 2px !important;
+  margin-bottom: 2px !important;
+}
+
+.ant-menu-dark .ant-menu-inline.ant-menu-sub .ant-menu-item:hover {
+  background-color: rgba(209, 224, 238, 0.12) !important;
+  color: #ffffff !important;
+}
+
+.ant-menu-dark .ant-menu-inline.ant-menu-sub .ant-menu-item-selected {
+  background-color: #2966A3 !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+}
