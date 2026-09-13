@@ -155,7 +155,7 @@ export function getAuthorizedNavItems(user) {
   }
 
   return NAVIGATION_CONFIG.filter((item) => {
-    return !item.adminOnly;
+    return !item.adminOnly && !item.public;
   });
 }
 

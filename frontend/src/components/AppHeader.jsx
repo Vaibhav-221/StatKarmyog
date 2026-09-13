@@ -6,7 +6,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Layout, Button, Typography, Dropdown } from 'antd';
+import { Layout, Button, Typography, Dropdown, Modal } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -72,9 +72,20 @@ export default function AppHeader({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = () => {
-    logout();
-    setMobileMenuOpen(false);
-    navigate('/login');
+    Modal.confirm({
+      title: 'Are you sure you want to sign out?',
+      content: 'You will need to sign in again to access your workspace.',
+      okText: 'Yes, sign out',
+      cancelText: 'No',
+      okButtonProps: {
+        danger: true,
+      },
+      onOk: () => {
+        logout();
+        setMobileMenuOpen(false);
+        navigate('/login');
+      },
+    });
   };
 
   const scrollToSection = (id) => {
@@ -246,9 +257,9 @@ export default function AppHeader({
           type="text"
           icon={<LogoutOutlined />}
           onClick={handleLogout}
-          title="Logout"
-          aria-label="Logout"
-          className="!h-8 !w-8 !rounded-lg !text-[#617487] hover:!bg-[#F1F6FA] hover:!text-[#DC2626]"
+          title="Sign out"
+          aria-label="Sign out"
+          className="!h-8 !w-8 !rounded-lg !border !border-[#E8C7C7] !bg-[#FFF7F7] !text-[#A64A4A] hover:!border-[#A64A4A] hover:!bg-[#FCECEC] hover:!text-[#8F3737]"
         />
       </div>
     </div>

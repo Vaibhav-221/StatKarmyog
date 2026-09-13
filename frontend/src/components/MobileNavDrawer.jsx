@@ -152,9 +152,9 @@ export default function MobileNavDrawer({
                   danger
                   icon={<LogoutOutlined />}
                   onClick={handleLogout}
-                  className="!rounded-lg !text-[11px]"
+                  className="!rounded-lg !border-[#E8C7C7] !bg-[#FFF7F7] !text-[11px] !text-[#A64A4A] hover:!border-[#A64A4A] hover:!bg-[#FCECEC] hover:!text-[#8F3737]"
                 >
-                  Logout
+                  Sign out
                 </Button>
               )}
             </div>
