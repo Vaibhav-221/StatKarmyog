@@ -12,7 +12,7 @@
  * have been updated.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Layout, Button, Typography, Space, Avatar, Dropdown, Drawer } from 'antd';
 import {
   MenuFoldOutlined,
