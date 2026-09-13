@@ -227,7 +227,7 @@ export default function AppHeader({
         </Button>
       </Dropdown>
 
-      <div className="flex h-10 items-center gap-2 rounded-lg border border-[#DCE7F0] bg-white px-2.5 shadow-sm">
+      <div className="flex h-12 items-center gap-3 rounded-lg border border-[#DCE7F0] bg-white px-3 shadow-sm">
         <OfficerAvatar officer={headerOfficer} size={32} />
 
         <div className="min-w-0 leading-tight">
