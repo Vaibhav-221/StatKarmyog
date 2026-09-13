@@ -273,19 +273,19 @@ export default function LandingPage() {
         id="value-loop"
         style={{
           marginTop: -40,
-          padding: "0 24px",
+          padding: "0 16px",
           position: "relative",
           zIndex: 10,
         }}
       >
-        <div style={{ maxWidth: 1140, margin: "0 auto" }}>
+        <div style={{ maxWidth: 1240, margin: "0 auto" }}>
           <Card
             bordered={false}
             style={{
               borderRadius: 14,
               boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
               background: "#ffffff",
-              padding: "12px 10px",
+              padding: 0,
             }}
           >
             <div style={{ textAlign: "center", marginBottom: 24 }}>
@@ -310,7 +310,7 @@ export default function LandingPage() {
               </Text>
             </div>
 
-            <Row gutter={[16, 16]} align="stretch" justify="center">
+            <Row gutter={[20, 20]} align="stretch" justify="center">
               {[
                 {
                   title: "1. ROLE MAPPING",
@@ -369,7 +369,7 @@ export default function LandingPage() {
                   route: "/passport",
                 },
               ].map((step, idx) => (
-                <Col xs={24} sm={12} md={8} lg={4} key={idx}>
+                <Col xs={24} sm={12} md={12} lg={8} key={idx}>
                   <div
                     onClick={() => handleStepClick(step.route)}
                     style={{
@@ -403,7 +403,7 @@ export default function LandingPage() {
                       <Text
                         strong
                         style={{
-                          fontSize: 13,
+                          fontSize: 14,
                           color: "#0B2641",
                           display: "block",
                           marginBottom: 4,
@@ -414,8 +414,8 @@ export default function LandingPage() {
                       <Text
                         type="secondary"
                         style={{
-                          fontSize: 11,
-                          lineHeight: 1.3,
+                          fontSize: 12,
+                          lineHeight: 1.4,
                           display: "block",
                         }}
                       >
@@ -424,7 +424,7 @@ export default function LandingPage() {
                     </div>
                     <Text
                       style={{
-                        fontSize: 10,
+                        fontSize: 11,
                         color: "#2966A3",
                         marginTop: 10,
                         fontWeight: 600,
@@ -781,44 +781,56 @@ export default function LandingPage() {
         style={{
           background: "#172B3D",
           color: "#9AAEBD",
-          padding: "28px clamp(16px, 4vw, 24px)",
+          padding: "32px clamp(16px, 4vw, 24px)",
           textAlign: "center",
           fontSize: 12,
+          lineHeight: 1.6,
         }}
       >
-        <Space size={24} style={{ marginBottom: 12 }}>
-          <a onClick={() => navigate("/")} style={{ color: "#9AAEBD" }}>
-            Home
-          </a>
-          <a onClick={() => navigate("/login")} style={{ color: "#9AAEBD" }}>
-            Officer Login
-          </a>
-          <a
-            onClick={() => handleStepClick("/gaps")}
-            style={{ color: "#9AAEBD" }}
+        <div style={{ maxWidth: 960, margin: "0 auto" }}>
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              justifyContent: "center",
+              columnGap: 24,
+              rowGap: 8,
+              marginBottom: 16,
+            }}
           >
-            Gap Diagnostic
-          </a>
-          <a
-            onClick={() => handleStepClick("/passport")}
-            style={{ color: "#9AAEBD" }}
-          >
-            Competency Passport
-          </a>
-          <a
-            onClick={() => handleStepClick("/quiz")}
-            style={{ color: "#9AAEBD" }}
-          >
-            AI Quiz Generator
-          </a>
-        </Space>
-        <div>
-          StatKarmyog — Skill Intelligence & Competency Development Platform •
-          Prototype for Smart India Hackathon 2026 (PS SIH26101)
-        </div>
-        <div style={{ marginTop: 4, color: "#72879A" }}>
-          Ministry of Statistics and Programme Implementation (MoSPI) / National
-          Statistical Systems Training Academy (NSSTA)
+            <a onClick={() => navigate("/")} style={{ color: "#D1E0EE", cursor: "pointer" }}>
+              Home
+            </a>
+            <a onClick={() => navigate("/login")} style={{ color: "#D1E0EE", cursor: "pointer" }}>
+              Officer Login
+            </a>
+            <a
+              onClick={() => handleStepClick("/gaps")}
+              style={{ color: "#D1E0EE", cursor: "pointer" }}
+            >
+              Gap Diagnostic
+            </a>
+            <a
+              onClick={() => handleStepClick("/passport")}
+              style={{ color: "#D1E0EE", cursor: "pointer" }}
+            >
+              Competency Passport
+            </a>
+            <a
+              onClick={() => handleStepClick("/quiz")}
+              style={{ color: "#D1E0EE", cursor: "pointer" }}
+            >
+              AI Quiz Generator
+            </a>
+          </div>
+          <div>
+            StatKarmyog — Skill Intelligence &amp; Competency Development Platform •
+            Prototype for Smart India Hackathon 2026 (PS SIH26101)
+          </div>
+          <div style={{ marginTop: 6, color: "#8AA0B2" }}>
+            Ministry of Statistics and Programme Implementation (MoSPI) / National
+            Statistical Systems Training Academy (NSSTA)
+          </div>
         </div>
       </div>
     </div>
