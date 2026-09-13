@@ -3,18 +3,17 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Card, Typography, Tabs, Tag, Button, Progress, Alert, Table, Empty, Skeleton } from 'antd';
+import { Typography, Tabs, Tag, Button, Progress, Alert, Table, Empty, Skeleton } from 'antd';
 import {
   BankOutlined,
   PlayCircleOutlined,
-  CheckCircleOutlined,
   GlobalOutlined,
   ApiOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { getCourses, getEnrollments, getRecommendations } from '../api/client';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 export default function IgotPage() {
   const { user } = useAuth();
@@ -70,8 +69,8 @@ export default function IgotPage() {
       key: 'title',
       render: (text, record) => (
         <div>
-          <Text strong style={{ color: '#0C447C' }}>{text}</Text>
-          <div style={{ fontSize: 11, color: '#64748B' }}>ID: {record.id} • {record.competency}</div>
+          <Text strong style={{ color: '#0B2641' }}>{text}</Text>
+          <div style={{ fontSize: 11, color: '#617487' }}>ID: {record.id} • {record.competency}</div>
         </div>
       ),
     },
@@ -81,7 +80,10 @@ export default function IgotPage() {
       key: 'status',
       align: 'center',
       render: (st) => (
-        <Tag color={st === 'Completed' ? 'success' : st === 'In-Progress' ? 'processing' : 'default'}>
+        <Tag
+          color={st === 'Completed' ? 'success' : st === 'In-Progress' ? 'processing' : 'default'}
+          className="!font-semibold"
+        >
           {st}
         </Tag>
       ),
@@ -92,7 +94,7 @@ export default function IgotPage() {
       key: 'progress',
       render: (p) => (
         <div style={{ minWidth: 120 }}>
-          <Progress percent={p} strokeColor="#0C447C" size="small" />
+          <Progress percent={p} strokeColor="#2966A3" size="small" />
         </div>
       ),
     },
@@ -105,70 +107,83 @@ export default function IgotPage() {
           type="primary"
           icon={<PlayCircleOutlined />}
           size="small"
-          style={{ background: '#0C447C' }}
+          className="!bg-[#2966A3] !rounded-lg !text-xs !font-semibold hover:!bg-[#0B2641]"
         >
-          {record.progress > 0 ? 'Continue' : 'Launch'}
+          {record.progress > 0 ? 'Continue' : 'Launch Module'}
         </Button>
       ),
     },
   ];
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
-      {/* Header with Prototype Integration Badge */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+    <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Title level={3} style={{ margin: 0, color: '#0C447C' }}>
-            LEARNING ECOSYSTEM
-          </Title>
-          <Text type="secondary">
-            Integration portal with iGOT Karmayogi & NSSTA Training Academies.
-          </Text>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#0B2641] m-0">
+            Learning Ecosystem
+          </h2>
+          <p className="mt-1 text-xs sm:text-sm text-[#617487]">
+            Integration portal with iGOT Karmayogi &amp; NSSTA Training Academies.
+          </p>
         </div>
-
-        <Tag icon={<ApiOutlined />} color="cyan" style={{ fontSize: 12, padding: '4px 12px', borderRadius: 12 }}>
-          Prototype Integration / iGOT-Compatible Mock API
-        </Tag>
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#D1E0EE] text-[#0B2641]">
+          <ApiOutlined className="text-[#2966A3]" /> iGOT-Compatible Mock API
+        </span>
       </div>
 
+      {/* Info Alert */}
       <Alert
         message="API Abstraction Layer Active"
         description="The frontend consumes an API service layer designed for the official iGOT Karmayogi OAuth2 & REST endpoints. In this prototype, mock services push enrollment progress events via webhooks."
         type="info"
         showIcon
-        style={{ marginBottom: 24 }}
+        className="!rounded-xl"
       />
 
-      <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      {/* Tabs Card */}
+      <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm">
         {loading ? (
           <Skeleton active paragraph={{ rows: 6 }} />
         ) : (
           <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={[
-            {
-              key: 'igot',
-              label: (
-                <span>
-                  <GlobalOutlined /> iGOT Karmayogi Courses
-                </span>
-              ),
-              children: igotCourses.length > 0 ? <Table dataSource={igotCourses} columns={columns} pagination={false} /> : <Empty description="No iGOT resources recommended for this officer" />,
-            },
-            {
-              key: 'nssta',
-              label: (
-                <span>
-                  <BankOutlined /> NSSTA Academy Courses
-                </span>
-              ),
-              children: nsstaCourses.length > 0 ? <Table dataSource={nsstaCourses} columns={columns} pagination={false} /> : <Empty description="No NSSTA resources recommended for this officer" />,
-            },
-          ]}
+            activeKey={activeTab}
+            onChange={setActiveTab}
+            items={[
+              {
+                key: 'igot',
+                label: (
+                  <span className="font-semibold text-xs sm:text-sm">
+                    <GlobalOutlined /> iGOT Karmayogi Courses
+                  </span>
+                ),
+                children: igotCourses.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table dataSource={igotCourses} columns={columns} pagination={false} />
+                  </div>
+                ) : (
+                  <Empty description="No iGOT resources recommended for this officer" />
+                ),
+              },
+              {
+                key: 'nssta',
+                label: (
+                  <span className="font-semibold text-xs sm:text-sm">
+                    <BankOutlined /> NSSTA Academy Courses
+                  </span>
+                ),
+                children: nsstaCourses.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <Table dataSource={nsstaCourses} columns={columns} pagination={false} />
+                  </div>
+                ) : (
+                  <Empty description="No NSSTA resources recommended for this officer" />
+                ),
+              },
+            ]}
           />
         )}
-      </Card>
+      </div>
     </div>
   );
 }

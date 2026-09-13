@@ -19,7 +19,6 @@ import {
   BarChartOutlined,
   CheckCircleOutlined,
   HomeOutlined,
-  GlobalOutlined,
 } from '@ant-design/icons';
 import AppHeader from './AppHeader';
 import { useAuth } from '../context/AuthContext';
@@ -134,42 +133,46 @@ export default function AppShell() {
   const renderBrandHeader = (isDrawer = false) => (
     <div
       style={{
-        height: 64,
+        height: 72,
         display: 'flex',
         alignItems: 'center',
         justifyContent: (collapsed && !isDrawer) ? 'center' : 'flex-start',
         padding: (collapsed && !isDrawer) ? '0' : '0 20px',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        borderBottom: '1px solid rgba(209, 224, 238, 0.12)',
         cursor: 'pointer',
-        background: '#0A1929',
+        background: '#0B2641',
       }}
       onClick={() => {
         navigate('/dashboard');
         if (isDrawer) setMobileDrawerOpen(false);
       }}
     >
-      <SafetyCertificateOutlined style={{ color: '#60A5FA', fontSize: 22 }} />
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20 text-[#D1E0EE]">
+        <SafetyCertificateOutlined className="text-xl" />
+      </div>
       {(!collapsed || isDrawer) && (
         <div style={{ marginLeft: 12, lineHeight: 1.2 }}>
-          <div style={{ color: '#fff', fontWeight: 700, fontSize: 15, letterSpacing: '-0.3px' }}>
+          <div style={{ color: '#fff', fontWeight: 700, fontSize: 16, letterSpacing: '-0.3px' }}>
             STATKARMAYOG
           </div>
-          <div style={{ color: '#94A3B8', fontSize: 10 }}>AI Competency Platform</div>
+          <div style={{ color: '#D1E0EE', fontSize: 10, fontWeight: 500, letterSpacing: '0.05em' }}>
+            Skill Intelligence
+          </div>
         </div>
       )}
     </div>
   );
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
+    <Layout style={{ minHeight: '100vh', background: '#F8FBFD' }}>
       {/* Desktop Sider */}
       {!isMobile && (
         <Sider
           trigger={null}
           collapsible
           collapsed={collapsed}
-          width={240}
-          collapsedWidth={72}
+          width={250}
+          collapsedWidth={76}
           style={{
             overflow: 'auto',
             height: '100vh',
@@ -178,18 +181,21 @@ export default function AppShell() {
             top: 0,
             bottom: 0,
             zIndex: 100,
-            boxShadow: '2px 0 10px rgba(0,0,0,0.05)',
+            background: '#0B2641',
+            boxShadow: '4px 0 20px rgba(11, 38, 65, 0.08)',
           }}
         >
           {renderBrandHeader(false)}
-          <Menu
-            theme="dark"
-            mode="inline"
-            selectedKeys={[location.pathname]}
-            items={menuItems}
-            onClick={handleMenuClick}
-            style={{ marginTop: 8, border: 'none' }}
-          />
+          <div style={{ padding: '8px 10px' }}>
+            <Menu
+              theme="dark"
+              mode="inline"
+              selectedKeys={[location.pathname]}
+              items={menuItems}
+              onClick={handleMenuClick}
+              style={{ background: 'transparent', border: 'none' }}
+            />
+          </div>
         </Sider>
       )}
 
@@ -201,7 +207,7 @@ export default function AppShell() {
           closable={false}
           onClose={() => setMobileDrawerOpen(false)}
           open={mobileDrawerOpen}
-          bodyStyle={{ padding: 0, background: '#0A1929' }}
+          bodyStyle={{ padding: 0, background: '#0B2641' }}
           width={260}
         >
           {renderBrandHeader(true)}
@@ -211,7 +217,7 @@ export default function AppShell() {
             selectedKeys={[location.pathname]}
             items={menuItems}
             onClick={handleMenuClick}
-            style={{ marginTop: 8, border: 'none', background: '#0A1929' }}
+            style={{ marginTop: 8, border: 'none', background: '#0B2641' }}
           />
         </Drawer>
       )}
@@ -219,9 +225,10 @@ export default function AppShell() {
       {/* Main Content Layout */}
       <Layout
         style={{
-          marginLeft: isMobile ? 0 : collapsed ? 72 : 240,
+          marginLeft: isMobile ? 0 : collapsed ? 76 : 250,
           transition: 'margin-left 0.2s ease',
           minHeight: '100vh',
+          background: '#F8FBFD',
         }}
       >
         <AppHeader
@@ -233,7 +240,7 @@ export default function AppShell() {
           showUser={true}
         />
 
-        <Content style={{ overflow: 'auto', minHeight: 'calc(100vh - 64px)', background: '#F8FAFC' }}>
+        <Content style={{ overflow: 'auto', minHeight: 'calc(100vh - 72px)', background: '#F8FBFD' }}>
           <Outlet />
         </Content>
       </Layout>

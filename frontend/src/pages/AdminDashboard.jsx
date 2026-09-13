@@ -4,12 +4,9 @@
 
 import React, { useState } from 'react';
 import {
-  Row,
-  Col,
   Card,
   Table,
   Tag,
-  Statistic,
   Space,
   Typography,
   Alert,
@@ -35,7 +32,7 @@ import {
 } from 'recharts';
 import { MOCK_ADMIN_INTELLIGENCE } from '../data/mockData';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 export default function AdminDashboard() {
   const intel = MOCK_ADMIN_INTELLIGENCE;
@@ -46,39 +43,43 @@ export default function AdminDashboard() {
       title: 'Competency Area',
       dataIndex: 'competency',
       key: 'competency',
-      render: (t) => <Text strong style={{ color: '#0C447C' }}>{t}</Text>,
+      render: (t) => <Text strong style={{ color: '#0B2641' }}>{t}</Text>,
     },
     {
       title: 'Avg Gap (pts)',
       dataIndex: 'gap',
       key: 'gap',
       align: 'center',
-      render: (g) => <Text style={{ color: '#D97706', fontWeight: 700 }}>{g}</Text>,
+      render: (g) => <Text style={{ color: '#BA7517', fontWeight: 700 }}>{g}</Text>,
     },
     {
       title: 'Officers Affected',
       dataIndex: 'officers',
       key: 'officers',
       align: 'center',
-      render: (o) => <Text style={{ fontWeight: 600 }}>{o} officers</Text>,
+      render: (o) => (
+        <Tag style={{ backgroundColor: '#D1E0EE', color: '#0B2641', borderColor: '#B3CDE0', borderRadius: 999 }}>
+          {o} officers
+        </Tag>
+      ),
     },
   ];
 
   return (
-    <div style={{ padding: 24, maxWidth: 1280, margin: '0 auto' }}>
+    <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Title level={3} style={{ margin: 0, color: '#0C447C' }}>
-            TRAINING INTELLIGENCE
+          <Title level={3} style={{ margin: 0, color: '#0B2641' }}>
+            Training Intelligence & Institutional Dashboard
           </Title>
-          <Text type="secondary">
-            Org-wide competency gap distributions, pre/post training improvement, and cohort demands for MoSPI/NSSTA.
+          <Text style={{ color: '#617487' }}>
+            Org-wide competency gap distributions, pre/post training improvement, and cohort demands for MoSPI / NSSTA.
           </Text>
         </div>
 
-        <Space>
-          <Text style={{ fontSize: 12, color: '#64748B' }}>Department Cohort:</Text>
+        <div className="flex items-center gap-2">
+          <Text style={{ fontSize: 13, color: '#617487', whiteSpace: 'nowrap' }}>Department Cohort:</Text>
           <Select
             value={selectedDepartment}
             onChange={setSelectedDepartment}
@@ -90,101 +91,118 @@ export default function AdminDashboard() {
               { value: 'Labour', label: 'Labour Statistics Division' },
             ]}
           />
-        </Space>
+        </div>
       </div>
 
       <Alert
         message="MoSPI Aggregate Outcome Analytics"
-        description="Aggregated view of organizational capability trends. Individual PII is anonymized in leadership reporting views."
+        description="Aggregated view of organizational capability trends across divisions. Individual PII is anonymized in leadership reporting views."
         type="info"
         showIcon
-        style={{ marginBottom: 24 }}
+        className="rounded-xl border-[#B3CDE0] bg-[#F0F7FF] text-[#0B2641]"
       />
 
       {/* 4 Top KPI Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={12} sm={6}>
-          <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <Statistic
-              title="Total Officers Tracked"
-              value={intel.kpis.total_officers}
-              prefix={<TeamOutlined style={{ color: '#0C447C' }} />}
-              valueStyle={{ color: '#0C447C', fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#617487] mb-1">
+            <TeamOutlined className="text-[#2966A3]" /> Total Tracked
+          </div>
+          <div className="text-2xl sm:text-3xl font-bold text-[#0B2641] mt-2">
+            {intel.kpis.total_officers}
+          </div>
+          <div className="text-xs text-[#617487] mt-1">Officers in registry</div>
+        </div>
 
-        <Col xs={12} sm={6}>
-          <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <Statistic
-              title="Active Learners"
-              value={intel.kpis.active_learners}
-              prefix={<BankOutlined style={{ color: '#16A34A' }} />}
-              valueStyle={{ color: '#16A34A', fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
+        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#617487] mb-1">
+            <BankOutlined className="text-[#3D7D70]" /> Active Learners
+          </div>
+          <div className="text-2xl sm:text-3xl font-bold text-[#3D7D70] mt-2">
+            {intel.kpis.active_learners}
+          </div>
+          <div className="text-xs text-[#617487] mt-1">Engaged this quarter</div>
+        </div>
 
-        <Col xs={12} sm={6}>
-          <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <Statistic
-              title="Average Competency"
-              value={intel.kpis.avg_competency}
-              suffix="%"
-              valueStyle={{ color: '#334155', fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
+        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm transition-all hover:shadow-md">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#617487] mb-1">
+            <RiseOutlined className="text-[#2966A3]" /> Avg Competency
+          </div>
+          <div className="text-2xl sm:text-3xl font-bold text-[#0B2641] mt-2">
+            {intel.kpis.avg_competency}%
+          </div>
+          <div className="text-xs text-[#617487] mt-1">Benchmark baseline</div>
+        </div>
 
-        <Col xs={12} sm={6}>
-          <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderLeft: '4px solid #16A34A' }}>
-            <Statistic
-              title="Average Improvement"
-              value={intel.kpis.avg_improvement}
-              prefix="+"
-              suffix="pts"
-              valueStyle={{ color: '#16A34A', fontWeight: 700 }}
-            />
-          </Card>
-        </Col>
-      </Row>
+        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm transition-all hover:shadow-md border-l-4 border-l-[#3D7D70]">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#617487] mb-1">
+            <SafetyCertificateOutlined className="text-[#3D7D70]" /> Avg Improvement
+          </div>
+          <div className="text-2xl sm:text-3xl font-bold text-[#3D7D70] mt-2">
+            +{intel.kpis.avg_improvement} pts
+          </div>
+          <div className="text-xs text-[#3D7D70] font-medium mt-1">Positive learning outcome</div>
+        </div>
+      </div>
 
       {/* Demand Insights Alert */}
       <Alert
-        message="Training Demand Insight"
-        description={intel.demand_insights}
+        message={<span className="font-semibold text-[#0B2641]">Training Demand & Curricular Recommendation</span>}
+        description={<span className="text-[#465C70]">{intel.demand_insights}</span>}
         type="warning"
-        icon={<BulbOutlined />}
+        icon={<BulbOutlined className="text-[#BA7517]" />}
         showIcon
-        style={{ marginBottom: 24, borderRadius: 8 }}
+        className="rounded-2xl border border-[#F5D485] bg-[#FEF9EE] p-4"
       />
 
       {/* Charts */}
-      <Row gutter={[24, 24]} style={{ marginBottom: 24 }}>
-        <Col xs={24} lg={12}>
-          <Card title="Pre vs Post Competency Improvement" bordered={false} style={{ borderRadius: 10 }}>
-            <div style={{ height: 280 }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={intel.pre_post_improvement}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                  <XAxis dataKey="competency" tick={{ fontSize: 10 }} />
-                  <YAxis domain={[0, 100]} />
-                  <Tooltip />
-                  <Legend />
-                  <Bar dataKey="pre" fill="#94A3B8" name="Pre-Training Score" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="post" fill="#0C447C" name="Post-Training Score" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          </Card>
-        </Col>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Card
+          title={
+            <Space>
+              <BarChartOutlined style={{ color: '#2966A3' }} />
+              <span style={{ color: '#0B2641', fontWeight: 600 }}>Pre vs Post Competency Improvement</span>
+            </Space>
+          }
+          bordered={false}
+          className="rounded-2xl border border-[#DCE7F0] bg-white shadow-sm"
+        >
+          <div style={{ height: 280 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={intel.pre_post_improvement}>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis dataKey="competency" tick={{ fontSize: 10, fill: '#617487' }} />
+                <YAxis domain={[0, 100]} tick={{ fontSize: 11, fill: '#617487' }} />
+                <Tooltip
+                  contentStyle={{ background: '#fff', borderRadius: 8, border: '1px solid #DCE7F0', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
+                />
+                <Legend />
+                <Bar dataKey="pre" fill="#94A3B8" name="Pre-Training Score" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="post" fill="#2966A3" name="Post-Training Score" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </Card>
 
-        <Col xs={24} lg={12}>
-          <Card title="Top Competency Gaps (Org-Wide)" bordered={false} style={{ borderRadius: 10 }}>
-            <Table dataSource={intel.top_gaps} columns={gapColumns} pagination={false} rowKey="competency" />
-          </Card>
-        </Col>
-      </Row>
+        <Card
+          title={
+            <Space>
+              <RiseOutlined style={{ color: '#2966A3' }} />
+              <span style={{ color: '#0B2641', fontWeight: 600 }}>Top Competency Gaps (Org-Wide)</span>
+            </Space>
+          }
+          bordered={false}
+          className="rounded-2xl border border-[#DCE7F0] bg-white shadow-sm"
+        >
+          <Table
+            dataSource={intel.top_gaps}
+            columns={gapColumns}
+            pagination={false}
+            rowKey="competency"
+            scroll={{ x: 450 }}
+          />
+        </Card>
+      </div>
     </div>
   );
 }

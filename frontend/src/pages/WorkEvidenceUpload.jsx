@@ -66,46 +66,42 @@ export default function WorkEvidenceUpload() {
   };
 
   return (
-    <div style={{ padding: 24, maxWidth: 1100, margin: '0 auto' }}>
+    <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0, color: '#0C447C' }}>
-          WORK EVIDENCE
-        </Title>
-        <Text type="secondary">
-          Upload work artifacts (sampling plans, survey designs, statistical reports) to provide evidence of applied competency.
-        </Text>
+      <div>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#0B2641] m-0">
+          Upload Work Evidence
+        </h2>
+        <p className="mt-1 text-xs sm:text-sm text-[#617487]">
+          Upload work artifacts (sampling plans, survey designs, statistical reports) to extract verified competency evidence.
+        </p>
       </div>
 
-      <Row gutter={[24, 24]}>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left Column: Upload Area & Stepper */}
-        <Col xs={24} lg={12}>
-          <Card
-            title={
-              <Space>
-                <InboxOutlined style={{ color: '#0C447C' }} />
-                <span>Upload Document</span>
-              </Space>
-            }
-            bordered={false}
-            style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', marginBottom: 24 }}
-          >
+        <div className="lg:col-span-6 space-y-6">
+          <div className="rounded-2xl border border-[#DCE7F0] bg-white p-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#F1F6FA]">
+              <InboxOutlined className="text-lg text-[#2966A3]" />
+              <h3 className="text-sm font-bold text-[#0B2641] m-0">Select & Upload Document</h3>
+            </div>
+
             <Dragger
               accept=".pdf,.docx,.doc"
               fileList={fileList}
               onChange={handleUploadChange}
-              beforeUpload={() => false} // Prevent auto-POST
+              beforeUpload={() => false}
               maxCount={1}
-              style={{ padding: 20, background: '#F8FAFC', borderRadius: 8 }}
+              style={{ padding: 20, background: '#F8FBFD', borderRadius: 12, borderColor: '#D1E0EE' }}
             >
               <p className="ant-upload-drag-icon">
-                <FilePdfOutlined style={{ fontSize: 42, color: '#0C447C' }} />
+                <FilePdfOutlined style={{ fontSize: 44, color: '#2966A3' }} />
               </p>
-              <p className="ant-upload-text" style={{ fontWeight: 600, color: '#0C447C' }}>
-                Click or drag file to this area to upload
+              <p className="ant-upload-text" style={{ fontWeight: 700, color: '#0B2641', fontSize: 14 }}>
+                Click or drag official artifact to upload
               </p>
-              <p className="ant-upload-hint" style={{ fontSize: 12, color: '#64748B' }}>
-                Supported formats: PDF, DOCX (e.g. Sampling Plan, Survey Design, Data Quality Report)
+              <p className="ant-upload-hint" style={{ fontSize: 12, color: '#617487' }}>
+                Supported formats: PDF, DOCX (e.g. Sampling Plan, Survey Quality Audit)
               </p>
             </Dragger>
 
@@ -115,116 +111,101 @@ export default function WorkEvidenceUpload() {
               icon={analyzing ? <LoadingOutlined /> : <ThunderboltOutlined />}
               onClick={handleAnalyze}
               disabled={analyzing || fileList.length === 0}
-              style={{ marginTop: 20, width: '100%', background: '#0C447C' }}
+              className="!mt-5 !h-11 !w-full !rounded-xl !bg-[#2966A3] !text-sm !font-semibold hover:!bg-[#0B2641]"
             >
-              {analyzing ? 'Analyzing Artifact...' : 'Analyze Evidence'}
+              {analyzing ? 'Analyzing Statistical Artifact...' : 'Analyze Evidence'}
             </Button>
-          </Card>
+          </div>
 
           {/* Stepper Process */}
           {(analyzing || currentStep > 0) && (
-            <Card title="Analysis Stepper Progress" bordered={false} style={{ borderRadius: 10 }}>
+            <div className="rounded-2xl border border-[#DCE7F0] bg-white p-6 shadow-sm">
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#617487] mb-4">
+                Analysis Stepper Progress
+              </h4>
               <Steps
                 direction="vertical"
                 size="small"
                 current={currentStep}
                 items={[
-                  { title: 'Document Uploaded', description: 'File received and formatted' },
-                  { title: 'Content Extraction', description: 'Extracting text and metadata' },
+                  { title: 'Document Uploaded', description: 'File received and parsed' },
+                  { title: 'Content Extraction', description: 'Extracting text and statistical methodology' },
                   { title: 'Competency Identification', description: 'Matching concepts against FRAC framework' },
-                  { title: 'Evidence Score Generation', description: 'Calculating confidence and score' },
+                  { title: 'Evidence Score Generation', description: 'Calculating confidence and score delta' },
                 ]}
               />
-            </Card>
+            </div>
           )}
-        </Col>
+        </div>
 
         {/* Right Column: AI Analysis Result */}
-        <Col xs={24} lg={12}>
+        <div className="lg:col-span-6">
           {analysisResult ? (
-            <Card
-              title={
-                <Space>
-                  <SafetyCertificateOutlined style={{ color: '#52C41A' }} />
-                  <span style={{ color: '#0C447C' }}>AI WORK EVIDENCE ANALYSIS</span>
-                </Space>
-              }
-              bordered={false}
-              style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', borderTop: '4px solid #0C447C' }}
-            >
+            <div className="rounded-2xl border border-[#DCE7F0] bg-white p-6 shadow-sm border-t-4 border-t-[#2966A3]">
+              <div className="flex items-center gap-2 mb-4 pb-3 border-b border-[#F1F6FA]">
+                <SafetyCertificateOutlined className="text-lg text-[#3D7D70]" />
+                <h3 className="text-sm font-bold text-[#0B2641] m-0">AI Work Evidence Analysis</h3>
+              </div>
+
               <Alert
-                message={analysisResult.error ? 'No Backend Artifact Analysis Available' : 'AI-Assisted Competency Evidence'}
-                description={analysisResult.error ? analysisResult.summary : 'Evidence scores are derived using the backend evidence pipeline and contribute to this officer only.'}
+                message={analysisResult.error ? 'No Backend Artifact Analysis Available' : 'AI-Assisted Competency Evidence Extracted'}
+                description={analysisResult.error ? analysisResult.summary : 'Evidence scores are derived using the backend NLP pipeline and recorded in your historical checkpoint.'}
                 type={analysisResult.error ? 'warning' : 'success'}
                 showIcon
-                style={{ marginBottom: 20 }}
+                className="!mb-5 !rounded-xl"
               />
 
-              <div style={{ marginBottom: 16 }}>
-                <Text type="secondary" style={{ fontSize: 11 }}>ANALYZED DOCUMENT</Text>
-                <div style={{ fontSize: 16, fontWeight: 700, color: '#0C447C' }}>
-                  {analysisResult.document_name}
-                </div>
-              </div>
-
-              <div style={{ marginBottom: 20 }}>
-                <Text type="secondary" style={{ fontSize: 11 }}>EVIDENCE CONFIDENCE</Text>
+              <div className="grid grid-cols-2 gap-3 mb-5 bg-[#F8FBFD] p-3.5 rounded-xl border border-[#DCE7F0]">
                 <div>
-                  <Tag color="blue" style={{ fontSize: 13, padding: '2px 10px', marginTop: 4 }}>
-                    {analysisResult.confidence} Confidence
-                  </Tag>
+                  <span className="block text-[10px] font-bold text-[#617487] uppercase">ANALYZED DOCUMENT</span>
+                  <span className="font-bold text-xs text-[#0B2641] truncate block">{analysisResult.document_name}</span>
+                </div>
+                <div>
+                  <span className="block text-[10px] font-bold text-[#617487] uppercase">CONFIDENCE</span>
+                  <Tag color="blue" className="!m-0 !font-semibold !text-[11px]">{analysisResult.confidence} Confidence</Tag>
                 </div>
               </div>
 
-              <Title level={5} style={{ color: '#0C447C', marginBottom: 12 }}>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#0B2641] mb-3">
                 Detected Competencies & Applied Scores:
-              </Title>
+              </h4>
 
-              <Space direction="vertical" style={{ width: '100%' }} size={12}>
+              <div className="space-y-3">
                 {(analysisResult.detected_competencies || []).map((comp, idx) => {
                   const compName = typeof comp === 'string' ? comp : comp.name;
                   const compScore = typeof comp === 'string' ? 75 : comp.score;
                   return (
-                    <div key={idx} style={{ background: '#F8FAFC', padding: 12, borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <Text strong style={{ fontSize: 13 }}>{compName}</Text>
-                        <Text strong style={{ color: '#0C447C' }}>{compScore}%</Text>
+                    <div key={idx} className="bg-[#F8FBFD] p-3 rounded-xl border border-[#DCE7F0]">
+                      <div className="flex justify-between items-center mb-1.5 text-xs">
+                        <span className="font-bold text-[#0B2641]">{compName}</span>
+                        <span className="font-bold text-[#2966A3]">{compScore}%</span>
                       </div>
-                      <Progress percent={compScore} strokeColor="#0C447C" showInfo={false} />
+                      <Progress percent={compScore} strokeColor="#2966A3" showInfo={false} />
                     </div>
                   );
                 })}
-              </Space>
-
-              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #E2E8F0' }}>
-                <Text type="secondary" style={{ fontSize: 11 }}>EVIDENCE SUMMARY</Text>
-                <Paragraph style={{ fontSize: 13, color: '#334155', marginTop: 4 }}>
-                  "{analysisResult.summary}"
-                </Paragraph>
               </div>
-            </Card>
+
+              <div className="mt-5 pt-4 border-t border-[#DCE7F0]">
+                <span className="block text-[10px] font-bold text-[#617487] uppercase mb-1">EVIDENCE SUMMARY</span>
+                <p className="text-xs text-[#172B3D] leading-relaxed bg-[#F8FBFD] p-3 rounded-xl border border-[#DCE7F0] m-0">
+                  &ldquo;{analysisResult.summary}&rdquo;
+                </p>
+              </div>
+            </div>
           ) : (
-            <Card
-              bordered={false}
-              style={{
-                borderRadius: 10,
-                textAlign: 'center',
-                padding: '60px 20px',
-                background: '#FAFBFD',
-                border: '1px dashed #CBD5E1',
-              }}
-            >
-              <InboxOutlined style={{ fontSize: 54, color: '#94A3B8', marginBottom: 16 }} />
-              <Title level={4} style={{ color: '#475569' }}>
+            <div className="rounded-2xl border border-dashed border-[#D1E0EE] bg-[#F8FBFD] p-10 sm:p-14 text-center">
+              <InboxOutlined className="text-5xl text-[#8AA0B2] mb-3" />
+              <h3 className="text-base font-bold text-[#0B2641] m-0 mb-1">
                 No Work Evidence Analyzed Yet
-              </Title>
-              <Paragraph style={{ color: '#64748B', maxWidth: 360, margin: '0 auto' }}>
-                Upload a relevant work artifact (e.g. sampling plan, statistical report) to extract AI-assisted evidence and strengthen your overall score.
-              </Paragraph>
-            </Card>
+              </h3>
+              <p className="text-xs text-[#617487] max-w-sm mx-auto leading-relaxed">
+                Upload a relevant work artifact (e.g. sampling plan, statistical report) to extract AI-assisted evidence and strengthen your competency passport.
+              </p>
+            </div>
           )}
-        </Col>
-      </Row>
+        </div>
+      </div>
     </div>
   );
 }

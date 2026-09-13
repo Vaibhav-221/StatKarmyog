@@ -3,17 +3,16 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Row, Col, Card, Typography, Progress, Tag, Button, Modal, Table, Space, Alert, Empty, Skeleton } from 'antd';
+import { Typography, Progress, Tag, Button, Modal, Table, Space, Alert, Empty, Skeleton } from 'antd';
 import {
   InfoCircleOutlined,
   CheckCircleOutlined,
-  ExclamationCircleOutlined,
   CalculatorOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { getGapAnalysis, getCompetencyScores } from '../api/client';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 
 export default function MyCompetencies() {
   const { user } = useAuth();
@@ -73,10 +72,8 @@ export default function MyCompetencies() {
       key: 'competency',
       render: (text, record) => (
         <div>
-          <Text strong style={{ color: '#0C447C', fontSize: 14 }}>
-            {text}
-          </Text>
-          <div style={{ fontSize: 11, color: '#64748B' }}>{record.cid}</div>
+          <Text strong style={{ color: '#0B2641', fontSize: 14 }}>{text}</Text>
+          <div style={{ fontSize: 11, color: '#617487' }}>{record.cid}</div>
         </div>
       ),
     },
@@ -85,7 +82,7 @@ export default function MyCompetencies() {
       dataIndex: 'required',
       key: 'required',
       align: 'center',
-      render: (val) => <Text style={{ fontWeight: 600 }}>{val}%</Text>,
+      render: (val) => <Text style={{ fontWeight: 600, color: '#172B3D' }}>{val}%</Text>,
     },
     {
       title: 'Current Score',
@@ -94,12 +91,12 @@ export default function MyCompetencies() {
       render: (val, record) => (
         <div style={{ minWidth: 140 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-          <span>{val}%</span>
-            <span style={{ color: '#64748B' }}>Target: {record.required}%</span>
+            <span style={{ fontWeight: 600, color: '#0B2641' }}>{val}%</span>
+            <span style={{ color: '#617487' }}>Target: {record.required}%</span>
           </div>
           <Progress
             percent={val}
-            strokeColor={val >= record.required ? '#52C41A' : val < 60 ? '#FF4D4F' : '#FAAD14'}
+            strokeColor={val >= record.required ? '#3D7D70' : val < 60 ? '#DC2626' : '#D97706'}
             showInfo={false}
           />
         </div>
@@ -111,7 +108,7 @@ export default function MyCompetencies() {
       key: 'gap',
       align: 'center',
       render: (gap) => (
-        <Text style={{ fontWeight: 700, color: gap > 15 ? '#CF1322' : gap > 5 ? '#D46B08' : '#389E0D' }}>
+        <Text style={{ fontWeight: 700, color: gap > 15 ? '#DC2626' : gap > 5 ? '#D97706' : '#3D7D70' }}>
           {gap > 0 ? `-${gap}%` : 'Closed'}
         </Text>
       ),
@@ -133,7 +130,10 @@ export default function MyCompetencies() {
       key: 'confidence',
       align: 'center',
       render: (conf) => (
-        <Tag icon={conf === 'High' ? <CheckCircleOutlined /> : <InfoCircleOutlined />} color={conf === 'High' ? 'blue' : 'default'}>
+        <Tag
+          icon={conf === 'High' ? <CheckCircleOutlined /> : <InfoCircleOutlined />}
+          color={conf === 'High' ? 'blue' : 'default'}
+        >
           {conf}
         </Tag>
       ),
@@ -141,46 +141,52 @@ export default function MyCompetencies() {
   ];
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+    <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <Title level={3} style={{ margin: 0, color: '#0C447C' }}>
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#0B2641] m-0">
             My Competencies
-          </Title>
-          <Text type="secondary">
-            Verified skills tracked across assessments, work evidence, and learning.
-          </Text>
+          </h2>
+          <p className="mt-1 text-xs sm:text-sm text-[#617487]">
+            Verified skills tracked across assessments, work evidence, and learning modules.
+          </p>
         </div>
-
-        <Button type="primary" icon={<CalculatorOutlined />} onClick={() => setModalVisible(true)} style={{ background: '#0C447C' }}>
+        <Button
+          type="primary"
+          icon={<CalculatorOutlined />}
+          onClick={() => setModalVisible(true)}
+          className="!h-10 !rounded-xl !bg-[#2966A3] !text-sm !font-semibold hover:!bg-[#0B2641]"
+        >
           How is this score calculated?
         </Button>
       </div>
 
       {/* Competencies Table */}
-      <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm">
         {loading ? (
           <Skeleton active paragraph={{ rows: 6 }} />
         ) : rows.length > 0 ? (
-          <Table dataSource={rows} columns={columns} pagination={false} rowKey="key" />
+          <div className="overflow-x-auto">
+            <Table dataSource={rows} columns={columns} pagination={false} rowKey="key" />
+          </div>
         ) : (
           <Empty description="No competency gaps found for this officer" />
         )}
-      </Card>
+      </div>
 
       {/* Score Calculation Modal */}
       <Modal
         title={
           <Space>
-            <CalculatorOutlined style={{ color: '#0C447C' }} />
-            <span style={{ color: '#0C447C' }}>Competency Score Calculation Engine</span>
+            <CalculatorOutlined style={{ color: '#0B2641' }} />
+            <span style={{ color: '#0B2641', fontWeight: 700 }}>Competency Score Calculation Engine</span>
           </Space>
         }
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={[
-          <Button key="close" type="primary" onClick={() => setModalVisible(false)} style={{ background: '#0C447C' }}>
+          <Button key="close" type="primary" onClick={() => setModalVisible(false)} className="!bg-[#2966A3] !rounded-xl">
             Got It
           </Button>,
         ]}
@@ -199,15 +205,15 @@ export default function MyCompetencies() {
 
         <div
           style={{
-            background: '#F8FAFC',
-            border: '1px solid #E2E8F0',
-            borderRadius: 8,
+            background: '#F8FBFD',
+            border: '1px solid #D1E0EE',
+            borderRadius: 10,
             padding: 16,
             marginBottom: 16,
             textAlign: 'center',
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: 700,
-            color: '#0C447C',
+            color: '#0B2641',
           }}
         >
           Combined Score = (0.6 × Quiz Score) + (0.4 × Work Artifact Score)
@@ -215,16 +221,16 @@ export default function MyCompetencies() {
 
         <Space direction="vertical" style={{ width: '100%' }} size={10}>
           <div>
-            <Text strong>1. Knowledge Assessment / AI Quiz (60% Weight):</Text>
-            <div style={{ fontSize: 12, color: '#64748B' }}>Evaluates theoretical mastery of statistical principles and concepts.</div>
+            <Text strong style={{ color: '#0B2641' }}>1. Knowledge Assessment / AI Quiz (60% Weight):</Text>
+            <div style={{ fontSize: 12, color: '#617487' }}>Evaluates theoretical mastery of statistical principles and concepts.</div>
           </div>
           <div>
-            <Text strong>2. Work Artifact Evidence (40% Weight):</Text>
-            <div style={{ fontSize: 12, color: '#64748B' }}>Extracts and scores applied competency from uploaded sampling plans, reports, and survey designs.</div>
+            <Text strong style={{ color: '#0B2641' }}>2. Work Artifact Evidence (40% Weight):</Text>
+            <div style={{ fontSize: 12, color: '#617487' }}>Extracts and scores applied competency from uploaded sampling plans, reports, and survey designs.</div>
           </div>
           <div>
-            <Text strong>3. Confidence Levels:</Text>
-            <div style={{ fontSize: 12, color: '#64748B' }}>Single-source scores start as 'Low/Medium' confidence. Multi-source evidence upgrades confidence to 'High'.</div>
+            <Text strong style={{ color: '#0B2641' }}>3. Confidence Levels:</Text>
+            <div style={{ fontSize: 12, color: '#617487' }}>Single-source scores start as 'Low/Medium' confidence. Multi-source evidence upgrades confidence to 'High'.</div>
           </div>
         </Space>
       </Modal>

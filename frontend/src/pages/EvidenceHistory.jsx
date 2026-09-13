@@ -3,12 +3,12 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Card, Table, Typography, Tag, Button, Modal, Descriptions, Space, Empty, Skeleton } from 'antd';
+import { Table, Typography, Tag, Button, Modal, Descriptions, Space, Empty, Skeleton } from 'antd';
 import { FileTextOutlined, EyeOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { getWorkEvidence } from '../api/client';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 export default function EvidenceHistory() {
   const { user } = useAuth();
@@ -34,10 +34,8 @@ export default function EvidenceHistory() {
       key: 'document_name',
       render: (text) => (
         <Space>
-          <FileTextOutlined style={{ color: '#0C447C' }} />
-          <Text strong style={{ color: '#0C447C' }}>
-            {text}
-          </Text>
+          <FileTextOutlined style={{ color: '#2966A3' }} />
+          <Text strong style={{ color: '#0B2641' }}>{text}</Text>
         </Space>
       ),
     },
@@ -54,9 +52,7 @@ export default function EvidenceHistory() {
       render: (comps) => (
         <Space wrap>
           {comps.map((c, i) => (
-            <Tag key={i} color="blue">
-              {c}
-            </Tag>
+            <Tag key={i} color="blue">{c}</Tag>
           ))}
         </Space>
       ),
@@ -66,7 +62,9 @@ export default function EvidenceHistory() {
       dataIndex: 'confidence_level',
       key: 'confidence_level',
       align: 'center',
-      render: (conf) => <Tag color={(conf || '').toLowerCase().includes('medium') ? 'orange' : 'green'}>{conf}</Tag>,
+      render: (conf) => (
+        <Tag color={(conf || '').toLowerCase().includes('medium') ? 'orange' : 'green'}>{conf}</Tag>
+      ),
     },
     {
       title: 'Status',
@@ -74,9 +72,7 @@ export default function EvidenceHistory() {
       key: 'status',
       align: 'center',
       render: () => (
-        <Tag icon={<CheckCircleOutlined />} color="success">
-          Analyzed
-        </Tag>
+        <Tag icon={<CheckCircleOutlined />} color="success">Analyzed</Tag>
       ),
     },
     {
@@ -88,7 +84,7 @@ export default function EvidenceHistory() {
           type="link"
           icon={<EyeOutlined />}
           onClick={() => setSelectedArtifact(record)}
-          style={{ color: '#0C447C' }}
+          className="!p-0 !text-xs !font-semibold !text-[#2966A3]"
         >
           View Evidence
         </Button>
@@ -97,61 +93,83 @@ export default function EvidenceHistory() {
   ];
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+    <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0, color: '#0C447C' }}>
+      <div>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#0B2641] m-0">
           Work Evidence History
-        </Title>
-        <Text type="secondary">
+        </h2>
+        <p className="mt-1 text-xs sm:text-sm text-[#617487]">
           Audit history of all uploaded work artifacts and extracted competency evidence.
-        </Text>
+        </p>
       </div>
 
-      <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
+      {/* Table Card */}
+      <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm">
         {loading ? (
           <Skeleton active paragraph={{ rows: 6 }} />
         ) : evidence.length > 0 ? (
-          <Table dataSource={evidence} columns={columns} pagination={false} rowKey="id" />
+          <div className="overflow-x-auto">
+            <Table dataSource={evidence} columns={columns} pagination={false} rowKey="id" />
+          </div>
         ) : (
           <Empty description="No work evidence found for this officer" />
         )}
-      </Card>
+      </div>
 
       {/* Artifact Details Modal */}
       <Modal
-        title={selectedArtifact?.document_name || 'Artifact Details'}
+        title={
+          <span className="font-bold text-[#0B2641]">
+            {selectedArtifact?.document_name || 'Artifact Details'}
+          </span>
+        }
         open={!!selectedArtifact}
         onCancel={() => setSelectedArtifact(null)}
         footer={[
-          <Button key="close" type="primary" onClick={() => setSelectedArtifact(null)} style={{ background: '#0C447C' }}>
+          <Button key="close" type="primary" onClick={() => setSelectedArtifact(null)} className="!bg-[#2966A3] !rounded-xl">
             Close
           </Button>,
         ]}
       >
         {selectedArtifact && (
-          <div>
-            <Descriptions column={1} bordered size="small" style={{ marginBottom: 16 }}>
+          <div className="space-y-4 pt-2">
+            <Descriptions column={1} bordered size="small">
               <Descriptions.Item label="Recorded On">{selectedArtifact.recorded_on}</Descriptions.Item>
-              <Descriptions.Item label="Analysis Status">Analyzed</Descriptions.Item>
-              <Descriptions.Item label="Evidence Confidence">{selectedArtifact.confidence_level}</Descriptions.Item>
+              <Descriptions.Item label="Analysis Status">
+                <Tag color="success">Analyzed</Tag>
+              </Descriptions.Item>
+              <Descriptions.Item label="Evidence Confidence">
+                <Tag color="blue">{selectedArtifact.confidence_level}</Tag>
+              </Descriptions.Item>
               <Descriptions.Item label="Artifact Reference">{selectedArtifact.artifact_reference}</Descriptions.Item>
             </Descriptions>
 
-            <Title level={5} style={{ color: '#0C447C' }}>Extracted Competency Scores:</Title>
-            <div style={{ marginBottom: 16 }}>
-              {Object.entries(selectedArtifact.scores || {}).map(([comp, score], idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid #F1F5F9' }}>
-                  <Text strong>{comp}</Text>
-                  <Text style={{ color: '#0C447C', fontWeight: 600 }}>{score}%</Text>
-                </div>
-              ))}
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#0B2641] mb-2">
+                Extracted Competency Scores:
+              </h4>
+              <div className="space-y-1.5">
+                {Object.entries(selectedArtifact.scores || {}).map(([comp, score], idx) => (
+                  <div
+                    key={idx}
+                    className="flex justify-between items-center py-1.5 px-3 bg-[#F8FBFD] rounded-lg border border-[#DCE7F0] text-xs"
+                  >
+                    <span className="font-semibold text-[#172B3D]">{comp}</span>
+                    <span className="font-bold text-[#2966A3]">{score}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <Title level={5} style={{ color: '#0C447C' }}>Evidence Summary:</Title>
-            <Paragraph style={{ background: '#F8FAFC', padding: 12, borderRadius: 6, fontSize: 13 }}>
-              "{selectedArtifact.summary}"
-            </Paragraph>
+            <div>
+              <h4 className="text-xs font-bold uppercase tracking-wider text-[#0B2641] mb-1.5">
+                Evidence Summary:
+              </h4>
+              <p className="bg-[#F8FBFD] p-3 rounded-xl border border-[#DCE7F0] text-xs text-[#172B3D] leading-relaxed m-0">
+                &quot;{selectedArtifact.summary}&quot;
+              </p>
+            </div>
           </div>
         )}
       </Modal>

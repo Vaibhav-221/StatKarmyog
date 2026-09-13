@@ -3,11 +3,9 @@
  */
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Row, Col, Card, Typography, Tag, Progress, Button, Space, Empty, Skeleton } from 'antd';
+import { Typography, Tag, Progress, Button, Empty, Skeleton } from 'antd';
 import {
   WarningOutlined,
-  ArrowRightOutlined,
-  CheckCircleOutlined,
   BulbOutlined,
   RocketOutlined,
 } from '@ant-design/icons';
@@ -15,7 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getGapAnalysis, getCompetencyScores } from '../api/client';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 export default function GapAnalysis() {
   const navigate = useNavigate();
@@ -70,151 +68,165 @@ export default function GapAnalysis() {
   const nearTargetCount = rows.filter((item) => item.gap <= 10).length;
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+    <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
       {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0, color: '#0C447C' }}>
+      <div>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#0B2641] m-0">
           AI Competency Gap Analysis
-        </Title>
-        <Text type="secondary">
+        </h2>
+        <p className="mt-1 text-xs sm:text-sm text-[#617487]">
           Granular diagnostic comparing required role expectations against multi-source evidence scores.
-        </Text>
+        </p>
       </div>
 
-      {/* Top Banner Overview */}
-      <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
-        <Col xs={24} md={8}>
-          <Card bordered={false} style={{ background: '#F0F7FF', border: '1px solid #BAE6FD', borderRadius: 10 }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>TOTAL TRACKED COMPETENCIES</Text>
-            <Title level={2} style={{ margin: '4px 0 0', color: '#0C447C' }}>
-              {rows.length} Areas
-            </Title>
-          </Card>
-        </Col>
+      {/* KPI Banner */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-2xl border border-[#BAE6FD] bg-[#F0F7FF] p-5 shadow-sm">
+          <span className="block text-[10px] font-bold uppercase tracking-wider text-[#2966A3]">
+            TOTAL TRACKED COMPETENCIES
+          </span>
+          <div className="mt-2 text-2xl sm:text-3xl font-bold text-[#0B2641]">
+            {rows.length} Areas
+          </div>
+        </div>
 
-        <Col xs={24} md={8}>
-          <Card bordered={false} style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 10 }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>HIGHEST GAP IDENTIFIED</Text>
-            <Title level={2} style={{ margin: '4px 0 0', color: '#D97706' }}>
-              {highestGap ? `${highestGap.gap} Points` : 'No gap'}
-            </Title>
-            <Text style={{ fontSize: 12, color: '#92400E' }}>{highestGap?.competency || 'All tracked competencies are at target'}</Text>
-          </Card>
-        </Col>
+        <div className="rounded-2xl border border-[#FDE68A] bg-[#FFFBEB] p-5 shadow-sm">
+          <span className="block text-[10px] font-bold uppercase tracking-wider text-[#92400E]">
+            HIGHEST GAP IDENTIFIED
+          </span>
+          <div className="mt-2 text-2xl sm:text-3xl font-bold text-[#D97706]">
+            {highestGap ? `${highestGap.gap} Points` : 'No gap'}
+          </div>
+          <p className="mt-1 text-xs text-[#92400E] truncate">
+            {highestGap?.competency || 'All tracked competencies are at target'}
+          </p>
+        </div>
 
-        <Col xs={24} md={8}>
-          <Card bordered={false} style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10 }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>COMPETENCIES NEAR TARGET</Text>
-            <Title level={2} style={{ margin: '4px 0 0', color: '#16A34A' }}>
-              {nearTargetCount} Areas
-            </Title>
-          </Card>
-        </Col>
-      </Row>
+        <div className="rounded-2xl border border-[#BBF7D0] bg-[#F0FDF4] p-5 shadow-sm">
+          <span className="block text-[10px] font-bold uppercase tracking-wider text-[#166534]">
+            COMPETENCIES NEAR TARGET
+          </span>
+          <div className="mt-2 text-2xl sm:text-3xl font-bold text-[#3D7D70]">
+            {nearTargetCount} Areas
+          </div>
+          <p className="mt-1 text-xs text-[#166534]">Within 10 points of expected level</p>
+        </div>
+      </div>
 
-      {/* Detailed Diagnostic Cards per Competency */}
-      <Title level={4} style={{ color: '#0C447C', marginBottom: 16 }}>
-        Competency Diagnostics & Evidence Breakdown
-      </Title>
+      {/* Diagnostics Header */}
+      <div className="flex items-center gap-2">
+        <h3 className="text-base font-bold text-[#0B2641] m-0">
+          Competency Diagnostics &amp; Evidence Breakdown
+        </h3>
+      </div>
 
-      <Space direction="vertical" style={{ width: '100%' }} size={16}>
+      {/* Diagnostic Cards */}
+      <div className="space-y-4">
         {loading ? (
-          <Card bordered={false} style={{ borderRadius: 10 }}>
+          <div className="rounded-2xl border border-[#DCE7F0] bg-white p-6 shadow-sm">
             <Skeleton active paragraph={{ rows: 8 }} />
-          </Card>
+          </div>
         ) : rows.length === 0 ? (
-          <Card bordered={false} style={{ borderRadius: 10 }}>
+          <div className="rounded-2xl border border-[#DCE7F0] bg-white p-6 shadow-sm">
             <Empty description="No competency gaps found for this officer" />
-          </Card>
+          </div>
         ) : rows.map((item) => (
-          <Card
-            key={item.cid}
-            bordered={false}
-            style={{
-              borderRadius: 10,
-              boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-              borderLeft: `4px solid ${item.gap > 20 ? '#DC2626' : item.gap > 10 ? '#D97706' : '#16A34A'}`,
-            }}
+          <div
+            key={item.key}
+            className={`rounded-2xl border bg-white p-5 sm:p-6 shadow-sm transition-all hover:shadow-md border-l-4 ${
+              item.gap > 20
+                ? 'border-l-[#DC2626] border-[#DCE7F0]'
+                : item.gap > 10
+                ? 'border-l-[#D97706] border-[#DCE7F0]'
+                : 'border-l-[#3D7D70] border-[#DCE7F0]'
+            }`}
           >
-            <Row gutter={[24, 16]} align="middle">
-              {/* Left: Competency Name & Scores */}
-              <Col xs={24} md={8}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                  <Text strong style={{ fontSize: 16, color: '#0C447C' }}>
-                    {item.competency}
-                  </Text>
-                  <Tag color={item.status === 'High Gap' ? 'error' : item.status === 'Moderate Gap' ? 'warning' : 'success'}>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              {/* Left: Name + scores + progress */}
+              <div className="lg:col-span-4">
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <h4 className="text-base font-bold text-[#0B2641] m-0 truncate">{item.competency}</h4>
+                  <Tag
+                    color={item.status === 'High Gap' ? 'error' : item.status === 'Moderate Gap' ? 'warning' : 'success'}
+                    className="!m-0 !font-semibold"
+                  >
                     {item.status}
                   </Tag>
                 </div>
 
-                <div style={{ display: 'flex', gap: 16, marginBottom: 8 }}>
+                <div className="flex gap-4 mb-3">
                   <div>
-                    <Text type="secondary" style={{ fontSize: 11 }}>REQUIRED</Text>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: '#334155' }}>{item.required}%</div>
+                    <span className="block text-[10px] font-bold text-[#617487] uppercase">REQUIRED</span>
+                    <span className="text-base font-bold text-[#172B3D]">{item.required}%</span>
                   </div>
                   <div>
-                    <Text type="secondary" style={{ fontSize: 11 }}>CURRENT</Text>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: '#0C447C' }}>{item.current}%</div>
+                    <span className="block text-[10px] font-bold text-[#617487] uppercase">CURRENT</span>
+                    <span className="text-base font-bold text-[#2966A3]">{item.current}%</span>
                   </div>
                   <div>
-                    <Text type="secondary" style={{ fontSize: 11 }}>GAP</Text>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: item.gap > 15 ? '#DC2626' : '#D97706' }}>
+                    <span className="block text-[10px] font-bold text-[#617487] uppercase">GAP</span>
+                    <span className={`text-base font-bold ${item.gap > 15 ? 'text-[#DC2626]' : 'text-[#D97706]'}`}>
                       -{item.gap}%
-                    </div>
+                    </span>
                   </div>
                 </div>
 
                 <Progress
                   percent={item.current}
-                  strokeColor={item.gap > 20 ? '#DC2626' : item.gap > 10 ? '#D97706' : '#16A34A'}
+                  strokeColor={item.gap > 20 ? '#DC2626' : item.gap > 10 ? '#D97706' : '#3D7D70'}
                   showInfo={false}
                 />
-              </Col>
+              </div>
 
-              {/* Middle: WHY THIS GAP? Evidence diagnostic */}
-              <Col xs={24} md={10} style={{ borderLeft: '1px solid #F1F5F9', borderRight: '1px solid #F1F5F9', padding: '0 20px' }}>
-                <Text strong style={{ fontSize: 12, color: '#475569', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-                  <BulbOutlined style={{ color: '#D97706' }} /> WHY THIS GAP?
-                </Text>
+              {/* Middle: Why this gap */}
+              <div className="lg:col-span-5 border-t lg:border-t-0 lg:border-l lg:border-r border-[#DCE7F0] pt-4 lg:pt-0 lg:px-6">
+                <div className="flex items-center gap-2 mb-2 text-xs font-bold uppercase text-[#0B2641]">
+                  <BulbOutlined className="text-[#D97706]" /> Why This Gap?
+                </div>
 
-                <Row gutter={[12, 8]}>
-                  <Col span={12}>
-                    <Text type="secondary" style={{ fontSize: 11 }}>Knowledge Assessment:</Text>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{item.knowledge === null ? 'Not assessed' : `${item.knowledge}%`}</div>
-                  </Col>
-                  <Col span={12}>
-                    <Text type="secondary" style={{ fontSize: 11 }}>Work Artifact Evidence:</Text>
-                    <div style={{ fontWeight: 600, fontSize: 13 }}>{item.artifact === null ? 'No evidence' : `${item.artifact}%`}</div>
-                  </Col>
-                  <Col span={24}>
-                    <Text type="secondary" style={{ fontSize: 11 }}>Evidence Confidence: </Text>
-                    <Tag color="blue" style={{ marginLeft: 4 }}>{item.confidence}</Tag>
-                  </Col>
-                </Row>
-              </Col>
+                <div className="grid grid-cols-2 gap-3 text-xs mb-2">
+                  <div className="bg-[#F8FBFD] p-2.5 rounded-lg border border-[#DCE7F0]">
+                    <span className="block text-[#617487] text-[11px]">Knowledge Test:</span>
+                    <span className="font-bold text-[#172B3D]">
+                      {item.knowledge === null ? 'Not assessed' : `${item.knowledge}%`}
+                    </span>
+                  </div>
+                  <div className="bg-[#F8FBFD] p-2.5 rounded-lg border border-[#DCE7F0]">
+                    <span className="block text-[#617487] text-[11px]">Work Artifact:</span>
+                    <span className="font-bold text-[#172B3D]">
+                      {item.artifact === null ? 'No evidence' : `${item.artifact}%`}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-[11px] text-[#617487] flex items-center gap-1.5">
+                  <span>Confidence Level:</span>
+                  <Tag color="blue" className="!m-0 !text-[10px] !font-semibold">{item.confidence}</Tag>
+                </div>
+              </div>
 
-              {/* Right: Recommended Action & Button */}
-              <Col xs={24} md={6} style={{ textAlign: 'center' }}>
-                <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 8 }}>
-                  RECOMMENDED ACTION
-                </Text>
-                <div style={{ fontSize: 12, fontWeight: 600, color: '#0C447C', marginBottom: 12 }}>
-                  Targeted learning in {item.competency}
+              {/* Right: Recommended action */}
+              <div className="lg:col-span-3 text-center flex flex-col justify-between">
+                <div>
+                  <span className="block text-[10px] font-bold uppercase tracking-wider text-[#617487] mb-1">
+                    RECOMMENDED ACTION
+                  </span>
+                  <p className="text-xs font-bold text-[#0B2641] m-0 mb-3 line-clamp-2">
+                    Targeted learning in {item.competency}
+                  </p>
                 </div>
                 <Button
                   type="primary"
                   icon={<RocketOutlined />}
                   onClick={() => navigate('/learning')}
-                  style={{ background: '#0C447C', width: '100%' }}
+                  className="!h-10 !w-full !rounded-xl !bg-[#2966A3] !text-xs !font-semibold hover:!bg-[#0B2641]"
                 >
                   View Recommended Learning
                 </Button>
-              </Col>
-            </Row>
-          </Card>
+              </div>
+            </div>
+          </div>
         ))}
-      </Space>
+      </div>
     </div>
   );
 }

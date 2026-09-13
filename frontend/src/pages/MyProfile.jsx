@@ -3,7 +3,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Typography, Tag, Space, Descriptions, Skeleton, Upload, Button, message, Alert, Empty } from 'antd';
+import { Typography, Tag, Descriptions, Skeleton, Upload, Button, message, Alert, Empty } from 'antd';
 import {
   SafetyCertificateOutlined,
   ArrowRightOutlined,
@@ -15,7 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import { getOfficerProfile, uploadProfilePhoto } from '../api/client';
 import OfficerAvatar from '../components/OfficerAvatar';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text } = Typography;
 
 const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 const PHOTO_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
@@ -90,25 +90,25 @@ export default function MyProfile() {
 
   if (loading) {
     return (
-      <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
-        <Skeleton active paragraph={{ rows: 6 }} />
+      <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
+        <Skeleton active paragraph={{ rows: 8 }} />
       </div>
     );
   }
 
   if (loadError || !profile) {
     return (
-      <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
+      <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-4">
         <Alert
           type="error"
           showIcon
           message="Officer profile could not be loaded"
           description="Please check that the backend is running and try again."
-          style={{ marginBottom: 16 }}
+          className="!rounded-xl"
         />
-        <Card bordered={false} className="app-card">
+        <div className="rounded-2xl border border-[#DCE7F0] bg-white p-6 shadow-sm">
           <Empty description="No officer profile data available" />
-        </Card>
+        </div>
       </div>
     );
   }
@@ -119,23 +119,24 @@ export default function MyProfile() {
   const avatarOfficer = previewUrl ? { ...profile, profile_photo_url: previewUrl } : profile;
 
   return (
-    <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
-      {/* Header */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={3} style={{ margin: 0, color: '#0C447C' }}>
+    <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
+      {/* Page Header */}
+      <div>
+        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#0B2641] m-0">
           Officer Profile
-        </Title>
-        <Text type="secondary">
-          Official Statistical System — Dynamic Profile & Role Competency Alignment
-        </Text>
+        </h2>
+        <p className="mt-1 text-xs sm:text-sm text-[#617487]">
+          Official Statistical System — Dynamic Profile &amp; FRAC Competency Alignment
+        </p>
       </div>
 
       {/* Officer Bio Card */}
-      <Card bordered={false} className="app-card" style={{ marginBottom: 24 }}>
-        <Row gutter={[24, 24]} align="middle">
-          <Col xs={24} md={6} style={{ textAlign: 'center' }}>
-            <div className="profile-photo-frame">
-              <OfficerAvatar officer={avatarOfficer} size={112} alt={`${name} profile photo`} />
+      <div className="rounded-2xl border border-[#DCE7F0] bg-white p-6 shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-start">
+          {/* Avatar + Photo Upload */}
+          <div className="md:col-span-4 lg:col-span-3 flex flex-col items-center text-center">
+            <div className="relative mb-3 inline-block">
+              <OfficerAvatar officer={avatarOfficer} size={110} alt={`${name} profile photo`} />
               <Upload
                 accept=".jpg,.jpeg,.png,.webp"
                 showUploadList={false}
@@ -146,106 +147,121 @@ export default function MyProfile() {
                   shape="circle"
                   icon={<CameraOutlined />}
                   aria-label="Change profile photo"
-                  className="profile-photo-edit"
+                  className="!absolute !bottom-0 !right-0 !bg-[#2966A3] !text-white !border-2 !border-white shadow-md hover:!bg-[#0B2641]"
                 />
               </Upload>
             </div>
+
             {selectedPhoto && (
-              <Space size={8} style={{ marginBottom: 12 }}>
-                <Button size="small" icon={<SaveOutlined />} type="primary" loading={uploading} onClick={savePhoto}>
-                  Save
+              <div className="flex gap-2 mb-3">
+                <Button
+                  size="small"
+                  icon={<SaveOutlined />}
+                  type="primary"
+                  loading={uploading}
+                  onClick={savePhoto}
+                  className="!bg-[#2966A3]"
+                >
+                  Save Photo
                 </Button>
                 <Button size="small" icon={<CloseOutlined />} disabled={uploading} onClick={cancelPhotoChange}>
                   Cancel
                 </Button>
-              </Space>
+              </div>
             )}
-            <Title level={4} style={{ margin: 0 }}>
-              {name}
-            </Title>
-            <Tag color="blue" style={{ marginTop: 6, fontWeight: 600 }}>
-              {profile.designation}
-            </Tag>
-          </Col>
 
-          <Col xs={24} md={18}>
-            <Descriptions title="Officer Summary (Dynamic Backend Entity)" column={{ xs: 1, sm: 2, md: 3 }} bordered size="small">
-              <Descriptions.Item label="Officer ID">{profile.officer_id || officerId}</Descriptions.Item>
+            <h3 className="text-lg font-bold text-[#0B2641] m-0">{name}</h3>
+            <span className="mt-1 inline-block rounded-full bg-[#D1E0EE]/70 px-3 py-0.5 text-xs font-semibold text-[#2966A3]">
+              {profile.designation}
+            </span>
+          </div>
+
+          {/* Officer Details */}
+          <div className="md:col-span-8 lg:col-span-9">
+            <Descriptions
+              title={<span className="text-sm font-bold text-[#0B2641]">Officer System Credentials</span>}
+              column={{ xs: 1, sm: 2, md: 3 }}
+              bordered
+              size="small"
+            >
+              <Descriptions.Item label="Officer ID">
+                <span className="font-semibold text-[#0B2641]">{profile.officer_id || officerId}</span>
+              </Descriptions.Item>
               <Descriptions.Item label="Department">{profile.department}</Descriptions.Item>
               <Descriptions.Item label="Experience">{profile.experience_years} Years</Descriptions.Item>
               <Descriptions.Item label="Qualification">{profile.qualification}</Descriptions.Item>
               <Descriptions.Item label="Role ID">{profile.role_id}</Descriptions.Item>
               <Descriptions.Item label="Past Trainings">
-                {(profile.past_trainings || []).length ? profile.past_trainings.join(', ') : 'No past trainings recorded'}
+                {(profile.past_trainings || []).length
+                  ? profile.past_trainings.join(', ')
+                  : 'No past trainings recorded'}
               </Descriptions.Item>
             </Descriptions>
-          </Col>
-        </Row>
-      </Card>
+          </div>
+        </div>
+      </div>
 
-      {/* FRAC Workflow: ROLE -> ACTIVITIES -> COMPETENCIES */}
-      <Card
-        title={
-          <Space>
-            <SafetyCertificateOutlined style={{ color: '#0C447C' }} />
-            <span style={{ color: '#0C447C', fontWeight: 600 }}>FRAC Framework Alignment</span>
-          </Space>
-        }
-        bordered={false}
-        className="app-card"
-      >
-        <Row gutter={[24, 24]} align="stretch">
-          <Col xs={24} md={8}>
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: 20, height: '100%' }}>
-              <Tag color="navy" style={{ marginBottom: 12, background: '#0C447C', color: '#fff' }}>
-                1. ASSIGNED ROLE
-              </Tag>
-              <Title level={4} style={{ color: '#0C447C', marginTop: 4 }}>
-                {profile.designation}
-              </Title>
-              <Paragraph style={{ fontSize: 13, color: '#64748B' }}>
-                Responsible for sampling design, statistical data collection, data quality validation, and reporting.
-              </Paragraph>
-              <div style={{ textAlign: 'center', marginTop: 20 }}>
-                <ArrowRightOutlined style={{ fontSize: 24, color: '#0C447C' }} />
-              </div>
-            </div>
-          </Col>
+      {/* FRAC Framework Section */}
+      <div className="rounded-2xl border border-[#DCE7F0] bg-white p-6 shadow-sm">
+        <div className="flex items-center gap-2 mb-5 pb-3 border-b border-[#DCE7F0]">
+          <SafetyCertificateOutlined className="text-lg text-[#2966A3]" />
+          <h3 className="text-base font-bold text-[#0B2641] m-0">FRAC Framework Alignment</h3>
+        </div>
 
-          <Col xs={24} md={8}>
-            <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: 20, height: '100%' }}>
-              <Tag color="blue" style={{ marginBottom: 12 }}>
-                2. KEY ACTIVITIES
-              </Tag>
-              <ul style={{ paddingLeft: 18, margin: 0, fontSize: 13, color: '#334155' }}>
-                <li style={{ marginBottom: 8 }}>Survey planning & questionnaire design</li>
-                <li style={{ marginBottom: 8 }}>Field data collection & sampling selection</li>
-                <li style={{ marginBottom: 8 }}>Statistical data quality audit & validation</li>
-                <li style={{ marginBottom: 8 }}>Data reporting & metadata preparation</li>
-              </ul>
-              <div style={{ textAlign: 'center', marginTop: 16 }}>
-                <ArrowRightOutlined style={{ fontSize: 24, color: '#0C447C' }} />
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Column 1: Role */}
+          <div className="rounded-xl border border-[#DCE7F0] bg-[#F8FBFD] p-5">
+            <span className="inline-block text-[11px] font-bold uppercase tracking-wider bg-[#0B2641] text-white px-2.5 py-0.5 rounded-md mb-3">
+              1. ASSIGNED ROLE
+            </span>
+            <h4 className="text-base font-bold text-[#0B2641] m-0">{profile.designation}</h4>
+            <p className="mt-2 text-xs text-[#617487] leading-relaxed">
+              Responsible for sampling design, statistical data collection, data quality validation, and reporting.
+            </p>
+            <div className="text-center mt-4">
+              <ArrowRightOutlined className="text-lg text-[#2966A3]" />
             </div>
-          </Col>
+          </div>
 
-          <Col xs={24} md={8}>
-            <div style={{ background: '#F0F7FF', border: '1px solid #BAE6FD', borderRadius: 8, padding: 20, height: '100%' }}>
-              <Tag color="green" style={{ marginBottom: 12 }}>
-                3. CURRENT COMPETENCY LEVELS
-              </Tag>
-              <Space direction="vertical" style={{ width: '100%' }} size={8}>
-                {skillEntries.length ? skillEntries.map(([skill, lvl]) => (
-                  <div key={skill} style={{ background: '#fff', padding: '6px 12px', borderRadius: 6, border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between' }}>
-                    <Text strong style={{ fontSize: 13, color: '#0C447C' }}>{skill}</Text>
-                    <Tag color="blue">Level {lvl} / 5</Tag>
-                  </div>
-                )) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No current skills recorded" />}
-              </Space>
+          {/* Column 2: Activities */}
+          <div className="rounded-xl border border-[#DCE7F0] bg-[#F8FBFD] p-5">
+            <span className="inline-block text-[11px] font-bold uppercase tracking-wider bg-[#2966A3] text-white px-2.5 py-0.5 rounded-md mb-3">
+              2. KEY ACTIVITIES
+            </span>
+            <ul className="pl-4 m-0 text-xs text-[#172B3D] space-y-1.5 list-disc">
+              <li>Survey planning &amp; questionnaire design</li>
+              <li>Field data collection &amp; sampling selection</li>
+              <li>Statistical data quality audit &amp; validation</li>
+              <li>Data reporting &amp; metadata preparation</li>
+            </ul>
+            <div className="text-center mt-4">
+              <ArrowRightOutlined className="text-lg text-[#2966A3]" />
             </div>
-          </Col>
-        </Row>
-      </Card>
+          </div>
+
+          {/* Column 3: Competency Levels */}
+          <div className="rounded-xl border border-[#BAE6FD] bg-[#F0F7FF] p-5">
+            <span className="inline-block text-[11px] font-bold uppercase tracking-wider bg-[#3D7D70] text-white px-2.5 py-0.5 rounded-md mb-3">
+              3. CURRENT COMPETENCY LEVELS
+            </span>
+            <div className="space-y-2 mt-1">
+              {skillEntries.length ? skillEntries.map(([skill, lvl]) => (
+                <div
+                  key={skill}
+                  className="bg-white rounded-lg border border-[#DCE7F0] p-2 flex items-center justify-between text-xs"
+                >
+                  <span className="font-semibold text-[#0B2641] truncate max-w-[150px]">{skill}</span>
+                  <span className="text-[11px] font-bold text-[#2966A3] bg-[#D1E0EE]/60 px-2 py-0.5 rounded">
+                    Level {lvl} / 5
+                  </span>
+                </div>
+              )) : (
+                <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No current skills recorded" />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

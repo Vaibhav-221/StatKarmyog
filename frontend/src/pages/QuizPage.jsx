@@ -227,8 +227,8 @@ export default function QuizPage() {
       key: 'title',
       render: (title, record) => (
         <div>
-          <Text strong style={{ color: '#0C447C' }}>{title}</Text>
-          <div style={{ fontSize: 11, color: '#64748B' }}>{record.attempt_id}</div>
+          <Text strong style={{ color: '#0B2641' }}>{title}</Text>
+          <div style={{ fontSize: 11, color: '#617487' }}>{record.attempt_id}</div>
         </div>
       ),
     },
@@ -236,14 +236,18 @@ export default function QuizPage() {
       title: 'Target Competency',
       dataIndex: 'target',
       key: 'target',
-      render: (target) => <Text>{target}</Text>,
+      render: (target) => <Text style={{ color: '#172B3D' }}>{target}</Text>,
     },
     {
       title: 'Questions',
       dataIndex: 'question_count',
       key: 'question_count',
       align: 'center',
-      render: (count) => <Tag color="blue">{count || 0}</Tag>,
+      render: (count) => (
+        <Tag style={{ backgroundColor: '#D1E0EE', color: '#0B2641', borderColor: '#B3CDE0', borderRadius: 999 }}>
+          {count || 0}
+        </Tag>
+      ),
     },
     {
       title: 'Status',
@@ -262,7 +266,7 @@ export default function QuizPage() {
       key: 'score',
       align: 'center',
       render: (score) => (
-        <Text strong style={{ color: score === null || score === undefined ? '#64748B' : '#0C447C' }}>
+        <Text strong style={{ color: score === null || score === undefined ? '#617487' : '#2966A3' }}>
           {score === null || score === undefined ? 'Pending' : `${score}%`}
         </Text>
       ),
@@ -272,7 +276,7 @@ export default function QuizPage() {
       dataIndex: 'submitted_on',
       key: 'submitted_on',
       align: 'center',
-      render: (date) => <Text>{date || 'Not submitted'}</Text>,
+      render: (date) => <Text style={{ color: '#465C70' }}>{date || 'Not submitted'}</Text>,
     },
     {
       title: 'Linked To',
@@ -281,7 +285,9 @@ export default function QuizPage() {
         <Space wrap size={4}>
           {record.course_id && <Tag>{record.course_id}</Tag>}
           {record.artifact_id && <Tag color="purple">{record.artifact_id}</Tag>}
-          {!record.course_id && !record.artifact_id && <Text type="secondary">Competency assessment</Text>}
+          {!record.course_id && !record.artifact_id && (
+            <Text type="secondary" style={{ fontSize: 12 }}>Competency assessment</Text>
+          )}
         </Space>
       ),
     },
@@ -291,14 +297,13 @@ export default function QuizPage() {
     <Card
       title={
         <Space>
-          <HistoryOutlined style={{ color: '#0C447C' }} />
-          <span style={{ color: '#0C447C', fontWeight: 600 }}>My Quizzes</span>
+          <HistoryOutlined style={{ color: '#2966A3' }} />
+          <span style={{ color: '#0B2641', fontWeight: 600 }}>My Quiz Attempts</span>
         </Space>
       }
-      extra={<Button icon={<ReloadOutlined />} onClick={fetchQuizHistory}>Refresh</Button>}
+      extra={<Button icon={<ReloadOutlined />} onClick={fetchQuizHistory} className="border-[#DCE7F0]">Refresh</Button>}
       bordered={false}
-      className="app-card"
-      style={{ marginTop: 24 }}
+      className="rounded-2xl border border-[#DCE7F0] bg-white shadow-sm mt-6"
     >
       {historyError && (
         <Alert
@@ -318,56 +323,60 @@ export default function QuizPage() {
           dataSource={historyRows}
           columns={historyColumns}
           pagination={{ pageSize: 5 }}
-          scroll={{ x: 900 }}
+          scroll={{ x: 750 }}
         />
       )}
     </Card>
   );
 
   return (
-    <div style={{ padding: 24, maxWidth: 1000, margin: '0 auto' }}>
+    <div className="w-full max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
       {/* Stage 1: AI QUIZ GENERATOR CONTROLS */}
       {stage === 'generator' && (
-        <div>
-          <div style={{ marginBottom: 24 }}>
-            <Title level={3} style={{ margin: 0, color: '#0C447C' }}>
-              AI QUIZ GENERATOR
+        <div className="space-y-6">
+          <div className="rounded-2xl border border-[#DCE7F0] bg-gradient-to-r from-[#0B2641] to-[#2966A3] p-6 sm:p-8 text-white shadow-sm">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/90 text-xs font-semibold uppercase tracking-wider mb-3">
+              <ThunderboltOutlined /> MoSPI AI Learning Engine
+            </div>
+            <Title level={3} style={{ margin: 0, color: '#ffffff' }}>
+              AI Competency Quiz Generator
             </Title>
-            <Text type="secondary">
-              Generate validated MCQs from uploaded course materials, officer competency gaps, or assigned work artifacts.
-            </Text>
+            <Paragraph style={{ color: '#D1E0EE', marginTop: 8, marginBottom: 0, fontSize: 14 }}>
+              Generate validated MCQs from uploaded training materials, identified officer competency gaps, or assigned statistical work artifacts.
+            </Paragraph>
           </div>
 
-          <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)' }}>
-            <Space direction="vertical" style={{ width: '100%' }} size={20}>
+          <Card bordered={false} className="rounded-2xl border border-[#DCE7F0] bg-white p-2 sm:p-4 shadow-sm">
+            <Space direction="vertical" style={{ width: '100%' }} size={24}>
               <div>
-                <Text strong style={{ color: '#0C447C', fontSize: 14 }}>1. Target Competency ({user?.name || officerId}):</Text>
+                <Text strong style={{ color: '#0B2641', fontSize: 14 }}>1. Target Competency ({user?.name || officerId}):</Text>
                 <Select
                   value={selectedCompetency}
                   onChange={setSelectedCompetency}
                   loading={loadingGaps}
                   style={{ width: '100%', marginTop: 8 }}
                   options={competencyOptions}
+                  size="large"
                 />
               </div>
 
               <div>
-                <Text strong style={{ color: '#0C447C', fontSize: 14 }}>2. Number of Questions:</Text>
+                <Text strong style={{ color: '#0B2641', fontSize: 14 }}>2. Number of Questions:</Text>
                 <div style={{ marginTop: 8 }}>
-                  <Radio.Group value={numQuestions} onChange={(e) => setNumQuestions(e.target.value)} buttonStyle="solid">
-                    <Radio.Button value={5}>5</Radio.Button>
-                    <Radio.Button value={10}>10</Radio.Button>
-                    <Radio.Button value={15}>15</Radio.Button>
-                    <Radio.Button value={20}>20</Radio.Button>
+                  <Radio.Group value={numQuestions} onChange={(e) => setNumQuestions(e.target.value)} buttonStyle="solid" size="middle">
+                    <Radio.Button value={5}>5 Questions</Radio.Button>
+                    <Radio.Button value={10}>10 Questions</Radio.Button>
+                    <Radio.Button value={15}>15 Questions</Radio.Button>
+                    <Radio.Button value={20}>20 Questions</Radio.Button>
                   </Radio.Group>
                 </div>
               </div>
 
               <div>
-                <Text strong style={{ color: '#0C447C', fontSize: 14 }}>3. Difficulty Level:</Text>
+                <Text strong style={{ color: '#0B2641', fontSize: 14 }}>3. Difficulty Level:</Text>
                 <div style={{ marginTop: 8 }}>
-                  <Radio.Group value={difficulty} onChange={(e) => setDifficulty(e.target.value)} buttonStyle="solid">
-                    <Radio.Button value="Basic">Easy</Radio.Button>
+                  <Radio.Group value={difficulty} onChange={(e) => setDifficulty(e.target.value)} buttonStyle="solid" size="middle">
+                    <Radio.Button value="Basic">Easy / Foundation</Radio.Button>
                     <Radio.Button value="Intermediate">Intermediate</Radio.Button>
                     <Radio.Button value="Advanced">Advanced</Radio.Button>
                   </Radio.Group>
@@ -375,19 +384,20 @@ export default function QuizPage() {
               </div>
 
               <div>
-                <Text strong style={{ color: '#0C447C', fontSize: 14 }}>4. Learning Material Source (Optional):</Text>
+                <Text strong style={{ color: '#0B2641', fontSize: 14 }}>4. Learning Material Source (Optional):</Text>
                 <Upload.Dragger
                   accept=".pdf,.docx,.txt,.md"
                   maxCount={1}
                   beforeUpload={() => false}
                   fileList={fileList}
                   onChange={({ fileList: nextFileList }) => setFileList(nextFileList.slice(-1))}
-                  style={{ marginTop: 8, padding: 16 }}
+                  style={{ marginTop: 8, padding: 20, borderRadius: 12, backgroundColor: '#F8FBFD', borderColor: '#DCE7F0' }}
                 >
                   <p className="ant-upload-drag-icon">
-                    <FilePdfOutlined style={{ fontSize: 32, color: '#0C447C' }} />
+                    <FilePdfOutlined style={{ fontSize: 36, color: '#2966A3' }} />
                   </p>
-                  <p className="ant-upload-text" style={{ fontSize: 13 }}>Click or drag learning document to generate MCQs</p>
+                  <p className="ant-upload-text font-medium text-[#0B2641]" style={{ fontSize: 14 }}>Click or drag learning document to generate MCQs</p>
+                  <p className="text-xs text-[#617487] mt-1">Supports PDF, DOCX, TXT, MD up to 10MB</p>
                 </Upload.Dragger>
                 {requestedArtifactId && (
                   <Tag color="blue" style={{ marginTop: 10 }}>
@@ -401,9 +411,9 @@ export default function QuizPage() {
                 size="large"
                 icon={<ThunderboltOutlined />}
                 onClick={handleGenerateQuiz}
-                style={{ background: '#0C447C', marginTop: 12, width: '100%' }}
+                style={{ background: '#2966A3', marginTop: 12, width: '100%', height: 48, borderRadius: 10, fontWeight: 600, fontSize: 15 }}
               >
-                Generate Quiz
+                Generate Assessment Quiz
               </Button>
             </Space>
           </Card>
@@ -413,83 +423,95 @@ export default function QuizPage() {
 
       {/* Stage 2: GENERATION PROCESS STEPPER */}
       {stage === 'generating' && (
-        <Card bordered={false} style={{ borderRadius: 10, textAlign: 'center', padding: 40 }}>
-          <Title level={4} style={{ color: '#0C447C', marginBottom: 24 }}>
-            Generating AI MCQs for {selectedCompetency}...
+        <Card bordered={false} className="rounded-2xl border border-[#DCE7F0] bg-white shadow-sm text-center py-12 px-6">
+          <Title level={4} style={{ color: '#0B2641', marginBottom: 24 }}>
+            Generating AI MCQs for &quot;{selectedCompetency}&quot;...
           </Title>
 
-          <Steps
-            current={generationStep}
-            items={[
-              { title: 'Learning Material' },
-              { title: 'Text Extraction' },
-              { title: 'Concept ID' },
-              { title: 'LLM MCQ Generation' },
-              { title: 'Competency Tagging' },
-            ]}
-            style={{ maxWidth: 700, margin: '0 auto 30px' }}
-          />
+          <div className="overflow-x-auto pb-4 mb-6">
+            <Steps
+              current={generationStep}
+              items={[
+                { title: 'Source Material' },
+                { title: 'Text Extraction' },
+                { title: 'Concept ID' },
+                { title: 'LLM Synthesis' },
+                { title: 'Tagging' },
+              ]}
+              style={{ minWidth: 500, maxWidth: 700, margin: '0 auto' }}
+            />
+          </div>
 
-          <LoadingOutlined style={{ fontSize: 36, color: '#0C447C' }} />
+          <LoadingOutlined style={{ fontSize: 40, color: '#2966A3' }} />
+          <div className="text-sm text-[#465C70] mt-4 font-medium">Extracting key concepts & synthesizing question pool...</div>
         </Card>
       )}
 
       {/* Stage 3: MCQ QUIZ INTERFACE */}
       {stage === 'quiz' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-            <Title level={4} style={{ margin: 0, color: '#0C447C' }}>
-              Competency Assessment: {selectedCompetency}
-            </Title>
-            <Tag color="blue">Question {currentQIndex + 1} of {questions.length}</Tag>
+        <div className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
+            <div>
+              <span className="text-xs font-semibold text-[#2966A3] uppercase tracking-wider">Assessment in Progress</span>
+              <Title level={4} style={{ margin: 0, color: '#0B2641' }}>
+                {selectedCompetency}
+              </Title>
+            </div>
+            <Tag style={{ backgroundColor: '#D1E0EE', color: '#0B2641', borderColor: '#B3CDE0', borderRadius: 999, padding: '4px 12px', fontWeight: 600 }}>
+              Question {currentQIndex + 1} of {questions.length}
+            </Tag>
           </div>
 
-          <Progress percent={((currentQIndex + 1) / questions.length) * 100} strokeColor="#0C447C" showInfo={false} style={{ marginBottom: 20 }} />
+          <Progress percent={((currentQIndex + 1) / questions.length) * 100} strokeColor="#2966A3" showInfo={false} />
 
-          <Card bordered={false} style={{ borderRadius: 10, boxShadow: '0 2px 8px rgba(0,0,0,0.04)', marginBottom: 20 }}>
-            <Title level={5} style={{ color: '#334155', marginBottom: 20 }}>
-              Q{currentQIndex + 1}. {questions[currentQIndex].question}
-            </Title>
+          <Card bordered={false} className="rounded-2xl border border-[#DCE7F0] bg-white p-2 sm:p-4 shadow-sm">
+            <div className="text-base sm:text-lg font-semibold text-[#172B3D] mb-6">
+              <span className="text-[#2966A3] mr-2">Q{currentQIndex + 1}.</span> {questions[currentQIndex]?.question}
+            </div>
 
             <Space direction="vertical" style={{ width: '100%' }} size={12}>
-              {questions[currentQIndex].options.map((opt, optionIndex) => {
+              {questions[currentQIndex]?.options?.map((opt, optionIndex) => {
                 const isSelected = userAnswers[currentQIndex] === optionIndex;
                 return (
                   <div
                     key={optionIndex}
                     onClick={() => handleOptionSelect(currentQIndex, optionIndex)}
-                    style={{
-                      padding: '12px 16px',
-                      borderRadius: 8,
-                      border: isSelected ? '2px solid #0C447C' : '1px solid #E2E8F0',
-                      background: isSelected ? '#F0F7FF' : '#fff',
-                      cursor: 'pointer',
-                      fontSize: 14,
-                      color: isSelected ? '#0C447C' : '#334155',
-                      fontWeight: isSelected ? 600 : 400,
-                    }}
+                    className={`p-4 rounded-xl cursor-pointer transition-all duration-150 flex items-start gap-3 border ${
+                      isSelected
+                        ? 'border-[#2966A3] bg-[#F0F7FF] text-[#0B2641] shadow-xs'
+                        : 'border-[#E2E8F0] bg-white hover:border-[#CBD5E1] hover:bg-[#F8FAFC] text-[#334155]'
+                    }`}
                   >
-                    <strong>{String.fromCharCode(65 + optionIndex)}.</strong> {opt}
+                    <span className={`flex items-center justify-center w-7 h-7 rounded-full text-xs font-bold shrink-0 mt-0.5 ${
+                      isSelected ? 'bg-[#2966A3] text-white' : 'bg-[#E2E8F0] text-[#475569]'
+                    }`}>
+                      {String.fromCharCode(65 + optionIndex)}
+                    </span>
+                    <span className={`text-sm sm:text-base leading-relaxed ${isSelected ? 'font-semibold text-[#0B2641]' : 'text-[#172B3D]'}`}>
+                      {opt}
+                    </span>
                   </div>
                 );
               })}
             </Space>
           </Card>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+          <div className="flex items-center justify-between pt-2">
             <Button
               disabled={currentQIndex === 0}
               onClick={() => setCurrentQIndex((i) => i - 1)}
+              size="large"
+              className="border-[#DCE7F0]"
             >
               Previous
             </Button>
 
             {currentQIndex < questions.length - 1 ? (
-              <Button type="primary" onClick={() => setCurrentQIndex((i) => i + 1)} style={{ background: '#0C447C' }}>
-                Next
+              <Button type="primary" onClick={() => setCurrentQIndex((i) => i + 1)} size="large" style={{ background: '#2966A3' }}>
+                Next Question
               </Button>
             ) : (
-              <Button type="primary" onClick={handleSubmitQuiz} style={{ background: '#52C41A', borderColor: '#52C41A' }}>
+              <Button type="primary" onClick={handleSubmitQuiz} size="large" style={{ background: '#3D7D70', borderColor: '#3D7D70' }}>
                 Submit Assessment
               </Button>
             )}
@@ -499,33 +521,33 @@ export default function QuizPage() {
 
       {/* Stage 4: QUIZ RESULT & BEFORE / AFTER RE-ASSESSMENT */}
       {stage === 'result' && (
-        <Card bordered={false} style={{ borderRadius: 10, textAlign: 'center', padding: 30 }}>
+        <Card bordered={false} className="rounded-2xl border border-[#DCE7F0] bg-white shadow-sm text-center p-6 sm:p-8">
           <Result
             status="success"
-            title="QUIZ COMPLETED & RE-ASSESSMENT RECORDED!"
-            subTitle={`Competency: ${selectedCompetency}`}
+            title={<span style={{ color: '#0B2641', fontWeight: 700, fontSize: 22 }}>Quiz Completed & Score Recorded!</span>}
+            subTitle={<span style={{ color: '#465C70' }}>Competency evaluated: <strong>{selectedCompetency}</strong></span>}
           />
 
-          <Row gutter={[24, 24]} justify="center" style={{ marginTop: 20, marginBottom: 30 }}>
-            <Col xs={24} md={16}>
-              <div style={{ background: '#F8FAFC', padding: 24, borderRadius: 10, border: '1px solid #E2E8F0' }}>
+          <Row gutter={[16, 16]} justify="center" style={{ marginTop: 12, marginBottom: 28 }}>
+            <Col xs={24} md={18}>
+              <div className="bg-[#F8FBFD] p-6 rounded-2xl border border-[#DCE7F0]">
                 <Row gutter={16} align="middle">
-                  <Col span={8}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>QUIZ SCORE</Text>
-                    <div style={{ fontSize: 24, fontWeight: 700, color: '#64748B' }}>
+                  <Col xs={8}>
+                    <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Quiz Score</Text>
+                    <div style={{ fontSize: 24, fontWeight: 700, color: '#2966A3', marginTop: 4 }}>
                       {submitResult?.score_summary?.[0]?.quiz_score ? `${Math.round(submitResult.score_summary[0].quiz_score * 20)}%` : 'Recorded'}
                     </div>
                   </Col>
-                  <Col span={8}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>COMBINED SCORE</Text>
-                    <div style={{ fontSize: 24, fontWeight: 700, color: '#0C447C' }}>
+                  <Col xs={8}>
+                    <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Combined Score</Text>
+                    <div style={{ fontSize: 24, fontWeight: 700, color: '#0B2641', marginTop: 4 }}>
                       {submitResult?.score_summary?.[0]?.combined_score ? `${Math.round(submitResult.score_summary[0].combined_score * 20)}%` : 'Recorded'}
                     </div>
                   </Col>
-                  <Col span={8}>
-                    <Text type="secondary" style={{ fontSize: 12 }}>RECORDED</Text>
-                    <div style={{ fontSize: 24, fontWeight: 700, color: '#389E0D' }}>
-                      {submitResult?.score_summary?.length || 0} competency score(s)
+                  <Col xs={8}>
+                    <Text type="secondary" style={{ fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600 }}>Passport Status</Text>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: '#3D7D70', marginTop: 4 }}>
+                      Updated
                     </div>
                   </Col>
                 </Row>
@@ -533,27 +555,30 @@ export default function QuizPage() {
             </Col>
           </Row>
 
-          <Button
-            type="primary"
-            size="large"
-            icon={<SafetyCertificateOutlined />}
-            onClick={() => navigate('/passport')}
-            style={{ background: '#0C447C' }}
-          >
-            View Competency Passport
-          </Button>
-          <Button
-            size="large"
-            icon={<HistoryOutlined />}
-            onClick={() => {
-              setStage('generator');
-              fetchQuizHistory();
-              navigate('/my-quizzes');
-            }}
-            style={{ marginLeft: 12 }}
-          >
-            View My Quizzes
-          </Button>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button
+              type="primary"
+              size="large"
+              icon={<SafetyCertificateOutlined />}
+              onClick={() => navigate('/passport')}
+              style={{ background: '#2966A3', height: 44, borderRadius: 8 }}
+            >
+              View Competency Passport
+            </Button>
+            <Button
+              size="large"
+              icon={<HistoryOutlined />}
+              onClick={() => {
+                setStage('generator');
+                fetchQuizHistory();
+                navigate('/my-quizzes');
+              }}
+              style={{ height: 44, borderRadius: 8 }}
+              className="border-[#DCE7F0]"
+            >
+              View My Quizzes
+            </Button>
+          </div>
         </Card>
       )}
       {isMyQuizzesRoute && stage !== 'generator' && renderMyQuizzes()}

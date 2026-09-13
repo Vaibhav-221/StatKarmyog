@@ -26,6 +26,7 @@ export default function OfficerAvatar({ officer, size = 40, alt, style }) {
       alt={alt || `${name} profile photo`}
       style={{
         backgroundColor: '#0C447C',
+        backgroundColor: '#0B2641',
         color: '#fff',
         fontWeight: 700,
         flex: '0 0 auto',
