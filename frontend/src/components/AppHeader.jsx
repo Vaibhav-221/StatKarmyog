@@ -17,6 +17,7 @@ import {
   LoginOutlined,
   DownOutlined,
   SwapOutlined,
+  GithubOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -36,6 +37,8 @@ const COLORS = {
   muted: '#617487',
   border: '#DCE7F0',
 };
+
+const GITHUB_REPO_URL = 'https://github.com/buddhu22/StatKarmyog';
 
 export default function AppHeader({
   collapsed,
@@ -289,6 +292,15 @@ export default function AppHeader({
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
+          <Button
+            href={GITHUB_REPO_URL}
+            target="_blank"
+            rel="noreferrer"
+            icon={<GithubOutlined />}
+            className="!inline-flex !h-10 !items-center !rounded-lg !border-[#DCE7F0] !bg-[#F8FBFD] !px-3 !text-xs !font-semibold !text-[#0B2641] hover:!border-[#2966A3] hover:!bg-[#EFF7FC] hover:!text-[#2966A3]"
+          >
+            GitHub
+          </Button>
           {showUser && (user ? authenticatedActions : guestActions)}
         </div>
 

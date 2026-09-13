@@ -16,6 +16,7 @@ import {
   LogoutOutlined,
   LoginOutlined,
   RightOutlined,
+  GithubOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -26,6 +27,7 @@ import {
 import OfficerAvatar from './OfficerAvatar';
 
 const { Text } = Typography;
+const GITHUB_REPO_URL = 'https://github.com/buddhu22/StatKarmyog';
 
 export default function MobileNavDrawer({
   open,
@@ -288,6 +290,16 @@ export default function MobileNavDrawer({
             );
           })}
         </nav>
+
+        <a
+          href={GITHUB_REPO_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-[#BFD7E8] bg-white px-3 py-2.5 text-xs font-semibold text-[#0B2641] shadow-sm transition-colors hover:border-[#2966A3] hover:bg-[#EFF7FC] hover:text-[#2966A3]"
+        >
+          <GithubOutlined className="text-base" />
+          View project on GitHub
+        </a>
       </div>
 
       <div className="pt-4 border-t border-[#DCE7F0] mt-4 text-center">
