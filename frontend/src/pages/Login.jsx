@@ -75,7 +75,10 @@ export default function LoginPage() {
         department: officer.department,
         role: userRole,
       });
-      message.success(`Logged in as ${officer.name} (${officer.designation})`);
+      message.success({
+        content: `Welcome, ${officer.name}!`,
+        duration: 3,
+      });
       navigate(userRole === 'admin' ? '/admin' : '/dashboard');
     }, 400);
   };
