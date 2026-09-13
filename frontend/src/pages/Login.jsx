@@ -238,7 +238,7 @@ export default function LoginPage() {
                 PROTOTYPE DEMO ACCESS
               </Divider>
 
-              <div className="rounded-2xl border border-[#DCE7F0] bg-[#F8FBFD] p-4 sm:p-5">
+              <div className="rounded-2xl border border-[#BFD7E8] bg-[#EFF7FC] p-4 shadow-[0_8px_24px_rgba(41,102,163,0.06)] sm:p-5">
                 <div className="mb-4 flex items-start gap-3">
                   <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[#D1E0EE] text-[#0B2641]">
                     <ThunderboltOutlined />
@@ -253,28 +253,30 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <Select
-                  value={selectedProfileId}
-                  onChange={(val) => {
-                    setSelectedProfileId(val);
-                    setOfficerId(val);
-                  }}
-                  className="mb-3 w-full"
-                  size="large"
-                  options={MOCK_OFFICERS.map((o) => ({
-                    value: o.officer_id,
-                    label: `${o.name} (${o.designation})`,
-                  }))}
-                />
+                <div className="flex flex-col gap-3">
+                  <Select
+                    value={selectedProfileId}
+                    onChange={(val) => {
+                      setSelectedProfileId(val);
+                      setOfficerId(val);
+                    }}
+                    className="!w-full"
+                    size="large"
+                    options={MOCK_OFFICERS.map((o) => ({
+                      value: o.officer_id,
+                      label: `${o.name} (${o.designation})`,
+                    }))}
+                  />
 
-                <Button
-                  block
-                  icon={<ThunderboltOutlined />}
-                  onClick={() => performLogin(selectedProfileId)}
-                  className="!h-11 !rounded-xl !border-[#2966A3] !font-semibold !text-[#2966A3] hover:!border-[#0B2641] hover:!bg-[#F1F6FA] hover:!text-[#0B2641]"
-                >
-                  Prototype Quick Login
-                </Button>
+                  <Button
+                    block
+                    icon={<ThunderboltOutlined />}
+                    onClick={() => performLogin(selectedProfileId)}
+                    className="!h-11 !rounded-xl !border-[#2966A3] !bg-white !font-semibold !text-[#2966A3] hover:!border-[#0B2641] hover:!bg-[#F1F6FA] hover:!text-[#0B2641]"
+                  >
+                    Prototype Quick Login
+                  </Button>
+                </div>
               </div>
 
               <div className="mt-7 text-center">
