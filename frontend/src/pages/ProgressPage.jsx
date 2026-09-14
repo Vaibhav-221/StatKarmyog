@@ -36,25 +36,28 @@ export default function ProgressPage() {
 
   const data = useMemo(() => {
     const competencies = passport?.competencies || [];
-    const currentGap = Math.round(gaps.reduce((sum, gap) => sum + (gap.gap_size || 0), 0) * 20);
-    const initialGap = Math.round(
-      competencies.reduce((sum, comp) => {
-        const firstPoint = comp.history?.[0];
-        const expected = firstPoint?.expected_level;
-        return sum + (expected ? Math.max(0, expected - (comp.first_score || 0)) : 0);
-      }, 0) * 20
-    );
-    const trend = competencies.flatMap((comp) =>
-      (comp.history || []).map((point) => ({
-        label: `${comp.skill_label} ${point.recorded_on}`,
-        score: Math.round(point.combined_score * 20),
-        gap: point.expected_level
-          ? Math.round(Math.max(0, point.expected_level - point.combined_score) * 20)
-          : currentGap,
-      }))
-    );
+    const trendCompetency = [...competencies]
+      .sort((left, right) => (right.history?.length || 0) - (left.history?.length || 0))[0];
+    const trendHistory = trendCompetency?.history || [];
+    const fallbackGap = Math.round(gaps.reduce((sum, gap) => sum + (gap.gap_size || 0), 0) * 20);
+    const initialPoint = trendHistory[0];
+    const latestPoint = trendHistory[trendHistory.length - 1];
+    const initialGap = initialPoint?.expected_level !== undefined
+      ? Math.round(Math.max(0, initialPoint.expected_level - initialPoint.combined_score) * 20)
+      : fallbackGap;
+    const currentGap = latestPoint?.expected_level !== undefined
+      ? Math.round(Math.max(0, latestPoint.expected_level - latestPoint.combined_score) * 20)
+      : fallbackGap;
+    const trend = trendHistory.map((point) => ({
+      label: `${trendCompetency.skill_label} ${point.recorded_on}`,
+      score: Math.round(point.combined_score * 20),
+      gap: point.expected_level !== undefined
+        ? Math.round(Math.max(0, point.expected_level - point.combined_score) * 20)
+        : fallbackGap,
+    }));
 
     return {
+      competency: trendCompetency?.skill_label || 'Competency',
       initial_gap: initialGap || currentGap,
       current_gap: currentGap,
       gap_reduction: Math.max(0, (initialGap || currentGap) - currentGap),
@@ -150,7 +153,7 @@ export default function ProgressPage() {
                         contentStyle={{ background: '#fff', borderRadius: 8, border: '1px solid #DCE7F0', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
                       />
                       <Line
-                        type="monotone"
+                        type="linear"
                         dataKey="score"
                         stroke="#2966A3"
                         strokeWidth={3}
@@ -181,7 +184,7 @@ export default function ProgressPage() {
                       <Tooltip
                         contentStyle={{ background: '#fff', borderRadius: 8, border: '1px solid #DCE7F0', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
                       />
-                      <Bar dataKey="gap" name="Remaining Gap (pts)" radius={[6, 6, 0, 0]}>
+                      <Bar dataKey="gap" name={`${data.competency} Gap (pts)`} radius={[6, 6, 0, 0]}>
                         {data.overall_trend.map((entry, index) => (
                           <Cell
                             key={`progress-bar-${entry.label}-${index}`}
