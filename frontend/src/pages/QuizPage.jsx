@@ -71,6 +71,14 @@ export default function QuizPage() {
 
   const isMyQuizzesRoute = location.pathname === '/my-quizzes';
 
+  useEffect(() => {
+    if (isMyQuizzesRoute) {
+      setStage('history');
+    } else if (stage === 'history') {
+      setStage('generator');
+    }
+  }, [isMyQuizzesRoute]);
+
   const fetchQuizHistory = async () => {
     setHistoryLoading(true);
     const res = await getAssessmentHistory(officerId);
@@ -303,7 +311,7 @@ export default function QuizPage() {
       }
       extra={<Button icon={<ReloadOutlined />} onClick={fetchQuizHistory} className="border-[#DCE7F0]">Refresh</Button>}
       bordered={false}
-      className="rounded-2xl border border-[#DCE7F0] bg-white shadow-sm mt-6"
+      className="!mt-0 !overflow-hidden rounded-2xl border border-[#DCE7F0] bg-white shadow-sm"
     >
       {historyError && (
         <Alert
@@ -319,26 +327,29 @@ export default function QuizPage() {
       ) : historyRows.length === 0 ? (
         <Empty description="No quizzes attempted yet." />
       ) : (
-        <Table
-          dataSource={historyRows}
-          columns={historyColumns}
-          pagination={{ pageSize: 5 }}
-          scroll={{ x: 750 }}
-        />
+        <div className="-mx-2 overflow-x-auto sm:mx-0">
+          <Table
+            dataSource={historyRows}
+            columns={historyColumns}
+            pagination={{ pageSize: 5, responsive: true }}
+            scroll={{ x: 850 }}
+            size="middle"
+          />
+        </div>
       )}
     </Card>
   );
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
-      {/* Stage 1: AI QUIZ GENERATOR CONTROLS */}
-      {stage === 'generator' && (
+    <div className="w-full max-w-6xl mx-auto px-3 py-4 sm:px-6 sm:py-6 lg:px-8 space-y-5 sm:space-y-6">
+      {/* Generate Quiz route only */}
+      {!isMyQuizzesRoute && stage === 'generator' && (
         <div className="space-y-6">
-          <div className="rounded-2xl border border-[#DCE7F0] bg-gradient-to-r from-[#0B2641] to-[#2966A3] p-6 sm:p-8 text-white shadow-sm">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/90 text-xs font-semibold uppercase tracking-wider mb-3">
+          <div className="rounded-2xl border border-[#DCE7F0] bg-gradient-to-r from-[#0B2641] to-[#2966A3] p-5 sm:p-8 text-white shadow-sm">
+            <div className="inline-flex max-w-full items-center gap-2 px-3 py-1 rounded-full bg-white/10 text-white/90 text-[10px] sm:text-xs font-semibold uppercase tracking-wider mb-3">
               <ThunderboltOutlined /> MoSPI AI Learning Engine
             </div>
-            <Title level={3} style={{ margin: 0, color: '#ffffff' }}>
+            <Title level={3} className="!text-xl sm:!text-2xl" style={{ margin: 0, color: '#ffffff' }}>
               AI Competency Quiz Generator
             </Title>
             <Paragraph style={{ color: '#D1E0EE', marginTop: 8, marginBottom: 0, fontSize: 14 }}>
@@ -346,8 +357,8 @@ export default function QuizPage() {
             </Paragraph>
           </div>
 
-          <Card bordered={false} className="rounded-2xl border border-[#DCE7F0] bg-white p-2 sm:p-4 shadow-sm">
-            <Space direction="vertical" style={{ width: '100%' }} size={24}>
+          <Card bordered={false} className="rounded-2xl border border-[#DCE7F0] bg-white !p-0 shadow-sm">
+            <Space direction="vertical" style={{ width: '100%' }} size={20} className="p-4 sm:p-6">
               <div>
                 <Text strong style={{ color: '#0B2641', fontSize: 14 }}>1. Target Competency ({user?.name || officerId}):</Text>
                 <Select
@@ -363,7 +374,7 @@ export default function QuizPage() {
               <div>
                 <Text strong style={{ color: '#0B2641', fontSize: 14 }}>2. Number of Questions:</Text>
                 <div style={{ marginTop: 8 }}>
-                  <Radio.Group value={numQuestions} onChange={(e) => setNumQuestions(e.target.value)} buttonStyle="solid" size="middle">
+                  <Radio.Group className="!flex !flex-wrap !gap-2" value={numQuestions} onChange={(e) => setNumQuestions(e.target.value)} buttonStyle="solid" size="middle">
                     <Radio.Button value={5}>5 Questions</Radio.Button>
                     <Radio.Button value={10}>10 Questions</Radio.Button>
                     <Radio.Button value={15}>15 Questions</Radio.Button>
@@ -375,7 +386,7 @@ export default function QuizPage() {
               <div>
                 <Text strong style={{ color: '#0B2641', fontSize: 14 }}>3. Difficulty Level:</Text>
                 <div style={{ marginTop: 8 }}>
-                  <Radio.Group value={difficulty} onChange={(e) => setDifficulty(e.target.value)} buttonStyle="solid" size="middle">
+                  <Radio.Group className="!flex !flex-wrap !gap-2" value={difficulty} onChange={(e) => setDifficulty(e.target.value)} buttonStyle="solid" size="middle">
                     <Radio.Button value="Basic">Easy / Foundation</Radio.Button>
                     <Radio.Button value="Intermediate">Intermediate</Radio.Button>
                     <Radio.Button value="Advanced">Advanced</Radio.Button>
@@ -391,7 +402,7 @@ export default function QuizPage() {
                   beforeUpload={() => false}
                   fileList={fileList}
                   onChange={({ fileList: nextFileList }) => setFileList(nextFileList.slice(-1))}
-                  style={{ marginTop: 8, padding: 20, borderRadius: 12, backgroundColor: '#F8FBFD', borderColor: '#DCE7F0' }}
+                  style={{ marginTop: 8, padding: 16, borderRadius: 12, backgroundColor: '#F8FBFD', borderColor: '#DCE7F0' }}
                 >
                   <p className="ant-upload-drag-icon">
                     <FilePdfOutlined style={{ fontSize: 36, color: '#2966A3' }} />
@@ -411,15 +422,17 @@ export default function QuizPage() {
                 size="large"
                 icon={<ThunderboltOutlined />}
                 onClick={handleGenerateQuiz}
-                style={{ background: '#2966A3', marginTop: 12, width: '100%', height: 48, borderRadius: 10, fontWeight: 600, fontSize: 15 }}
+                className="!mt-2 !h-12 !w-full !rounded-xl !bg-[#2966A3] !text-sm !font-semibold !text-white hover:!bg-[#0B2641]"
               >
                 Generate Assessment Quiz
               </Button>
             </Space>
           </Card>
-          {renderMyQuizzes()}
         </div>
       )}
+
+      {/* Quiz History route only */}
+      {isMyQuizzesRoute && renderMyQuizzes()}
 
       {/* Stage 2: GENERATION PROCESS STEPPER */}
       {stage === 'generating' && (
@@ -581,7 +594,6 @@ export default function QuizPage() {
           </div>
         </Card>
       )}
-      {isMyQuizzesRoute && stage !== 'generator' && renderMyQuizzes()}
     </div>
   );
 }

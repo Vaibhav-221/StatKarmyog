@@ -56,11 +56,6 @@ export const NAVIGATION_CONFIG = [
         path: '/gaps',
         label: 'Gap Analysis',
       },
-      {
-        key: '/quiz',
-        path: '/quiz',
-        label: 'Assessment',
-      },
     ],
   },
   {
