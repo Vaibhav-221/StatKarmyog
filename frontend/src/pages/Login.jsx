@@ -36,6 +36,7 @@ import {
   FileSearchOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
+import { waitForBackendReady } from '../api/client';
 import { MOCK_OFFICERS } from '../api/client';
 import AppHeader from '../components/AppHeader';
 
@@ -60,27 +61,34 @@ export default function LoginPage() {
   const [selectedProfileId, setSelectedProfileId] = useState('OFF001');
   const [loading, setLoading] = useState(false);
 
-  const performLogin = (targetId) => {
+  const performLogin = async (targetId) => {
     setLoading(true);
     const idToUse = targetId || officerId || 'OFF001';
     const officer =
       MOCK_OFFICERS.find((o) => o.officer_id === idToUse) || MOCK_OFFICERS[0];
     const userRole = officer.role || 'officer';
 
-    setTimeout(() => {
-      setUser({
-        officer_id: officer.officer_id,
-        name: officer.name,
-        designation: officer.designation,
-        department: officer.department,
-        role: userRole,
-      });
-      message.success({
-        content: `Welcome, ${officer.name}!`,
-        duration: 3,
-      });
-      navigate(userRole === 'admin' ? '/admin' : '/dashboard');
-    }, 400);
+    await new Promise((resolve) => setTimeout(resolve, 400));
+    const backendReady = await waitForBackendReady();
+    if (!backendReady) {
+      message.error('The platform is still starting. Please try again in a moment.');
+      setLoading(false);
+      return;
+    }
+
+    setUser({
+      officer_id: officer.officer_id,
+      name: officer.name,
+      designation: officer.designation,
+      department: officer.department,
+      role: userRole,
+    });
+    message.success({
+      content: `Welcome, ${officer.name}!`,
+      duration: 3,
+    });
+    navigate(userRole === 'admin' ? '/admin' : '/dashboard');
+    setLoading(false);
   };
 
   const benefits = [

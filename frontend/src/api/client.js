@@ -34,6 +34,23 @@ export function buildAssetUrl(url) {
   return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
 }
 
+/**
+ * Wait for FastAPI startup before entering authenticated routes.
+ * This prevents the first dashboard request from racing database/index setup.
+ */
+export async function waitForBackendReady({ attempts = 8, delayMs = 500 } = {}) {
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    try {
+      const res = await api.get('/api/health', { timeout: 3000 });
+      if (res.data?.status === 'ok') return true;
+    } catch {
+      if (attempt === attempts - 1) return false;
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+  return false;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // MOCK DATA — matches Pydantic schemas from app/schemas/schemas.py
 // Modeled after OFF001 (Rakesh Kumar) from officer_profiles.json
