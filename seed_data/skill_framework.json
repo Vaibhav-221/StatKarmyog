@@ -56,6 +56,15 @@
         "Cybersecurity": 3, "Data Privacy": 3, "Government Cloud": 3, "Digital Public Infrastructure": 3,
         "Leadership": 4, "Project Management": 4, "Change Management": 3, "Decision Making": 4
       }
+    },
+    {
+      "role_id": "R06",
+      "role_title": "Director - Training & Analytics",
+      "expected_skills": {
+        "Leadership": 5, "Decision Making": 5, "Project Management": 4,
+        "Change Management": 4, "Data Quality Frameworks": 4,
+        "Data Visualization": 4, "Communication": 5, "Data Privacy": 4
+      }
     }
   ]
 }

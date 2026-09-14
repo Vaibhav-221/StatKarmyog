@@ -96,6 +96,21 @@
         "Data Privacy": 1,
         "Communication": 2, "Ethics": 2
       }
+    },
+    {
+      "officer_id": "ADM001",
+      "name": "Dr. Meena Agarwal",
+      "designation": "Director - Training & Analytics",
+      "role_id": "R06",
+      "department": "MoSPI / NSSTA",
+      "experience_years": 22,
+      "qualification": "Ph.D. in Statistics & Public Policy",
+      "past_trainings": ["Leadership in Official Statistics 2024", "Public Sector Analytics Programme 2025"],
+      "current_skills": {
+        "Leadership": 4, "Decision Making": 4, "Project Management": 3,
+        "Change Management": 3, "Data Quality Frameworks": 3,
+        "Data Visualization": 4, "Communication": 5, "Data Privacy": 3
+      }
     }
   ]
 }
