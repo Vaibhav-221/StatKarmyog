@@ -3,7 +3,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Typography, Upload, Button, Steps, Tag, Progress, Alert, Space, message } from 'antd';
+import { Row, Col, Card, Typography, Upload, Button, Steps, Tag, Progress, Alert, Space, Skeleton, message } from 'antd';
 import {
   InboxOutlined,
   FilePdfOutlined,
@@ -28,10 +28,13 @@ export default function WorkEvidenceUpload() {
   const [currentStep, setCurrentStep] = useState(0);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [evidenceHistory, setEvidenceHistory] = useState([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
 
   const loadEvidenceHistory = async () => {
+    setHistoryLoading(true);
     const res = await getWorkEvidence(officerId);
     setEvidenceHistory(res.data || []);
+    setHistoryLoading(false);
   };
 
   useEffect(() => {
@@ -254,7 +257,9 @@ export default function WorkEvidenceUpload() {
           </div>
           <Tag color="blue">{evidenceHistory.length} uploads</Tag>
         </div>
-        {evidenceHistory.length > 0 ? (
+        {historyLoading ? (
+          <Skeleton active paragraph={{ rows: 3 }} />
+        ) : evidenceHistory.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {evidenceHistory.map((item) => (
               <div key={item.id} className="rounded-xl border border-[#DCE7F0] bg-[#F8FBFD] p-3">
