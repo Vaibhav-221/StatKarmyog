@@ -20,7 +20,7 @@ export default function LearningPage() {
   const [gaps, setGaps] = useState([]);
   const [enrollments, setEnrollments] = useState([]);
   const [courses, setCourses] = useState([]);
-
+ 
   useEffect(() => {
     async function load() {
       setLoading(true);
