@@ -28,6 +28,8 @@
       "cid": "CID-D-103",
       "records": [
         { "recorded_on": "2026-08-21", "source": "baseline_quiz", "quiz_score": 1.0, "artifact_score": null, "combined_score": 1.0, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-08-28", "source": "national_accounts_workshop", "quiz_score": 3.4, "artifact_score": null, "combined_score": 3.4, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-09-01", "source": "price_data_validation", "quiz_score": 2.6, "artifact_score": 2.9, "combined_score": 2.72, "confidence_level": "medium (2 sources)" },
         { "recorded_on": "2026-09-04", "source": "quiz_after_course_C082", "quiz_score": 5.0, "artifact_score": null, "combined_score": 5.0, "confidence_level": "low (1 source)" }
       ]
     },
@@ -37,6 +39,8 @@
       "cid": "CID-D-209",
       "records": [
         { "recorded_on": "2026-08-19", "source": "baseline_quiz", "quiz_score": 1.0, "artifact_score": null, "combined_score": 1.0, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-08-26", "source": "labour_modeling_workshop", "quiz_score": 2.4, "artifact_score": null, "combined_score": 2.4, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-09-01", "source": "pipeline_review_checkpoint", "quiz_score": 1.8, "artifact_score": 2.1, "combined_score": 1.92, "confidence_level": "medium (2 sources)" },
         { "recorded_on": "2026-09-06", "source": "quiz_plus_artifact", "quiz_score": 2.5, "artifact_score": 3.0, "combined_score": 2.7, "confidence_level": "medium (2 sources)",
           "artifact_reference": "work_artifacts/artifact_aiml_pipeline_note.md" }
       ]
@@ -47,6 +51,8 @@
       "cid": "CID-D-207",
       "records": [
         { "recorded_on": "2026-08-18", "source": "baseline_quiz", "quiz_score": 2.0, "artifact_score": null, "combined_score": 2.0, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-08-25", "source": "spatial_analysis_lab", "quiz_score": 3.4, "artifact_score": null, "combined_score": 3.4, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-08-30", "source": "gis_quality_review", "quiz_score": 2.6, "artifact_score": 3.0, "combined_score": 2.76, "confidence_level": "medium (2 sources)" },
         { "recorded_on": "2026-09-05", "source": "quiz_plus_artifact", "quiz_score": 2.5, "artifact_score": 4.0, "combined_score": 3.1, "confidence_level": "medium (2 sources)",
           "artifact_reference": "work_artifacts/artifact_gis_spatial_report.md" }
       ]
@@ -60,6 +66,17 @@
         { "recorded_on": "2026-08-29", "source": "learning_checkpoint_C091", "quiz_score": 2.2, "artifact_score": null, "combined_score": 2.2, "confidence_level": "low (1 source)" },
         { "recorded_on": "2026-09-05", "source": "guided_lab_cloud_security", "quiz_score": 3.1, "artifact_score": 2.7, "combined_score": 2.94, "confidence_level": "medium (2 sources)" },
         { "recorded_on": "2026-09-12", "source": "reassessment_after_practice", "quiz_score": 2.8, "artifact_score": null, "combined_score": 2.8, "confidence_level": "low (1 source)" }
+      ]
+    },
+    {
+      "officer_id": "OFF006",
+      "skill_label": "Survey Design",
+      "cid": "CID-D-101",
+      "records": [
+        { "recorded_on": "2026-08-20", "source": "baseline_quiz", "quiz_score": 1.0, "artifact_score": null, "combined_score": 1.0, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-08-27", "source": "survey_design_foundation", "quiz_score": 1.8, "artifact_score": null, "combined_score": 1.8, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-09-02", "source": "questionnaire_review", "quiz_score": 1.4, "artifact_score": 1.9, "combined_score": 1.6, "confidence_level": "medium (2 sources)" },
+        { "recorded_on": "2026-09-09", "source": "quiz_after_course_C078", "quiz_score": 2.3, "artifact_score": null, "combined_score": 2.3, "confidence_level": "low (1 source)" }
       ]
     }
   ],

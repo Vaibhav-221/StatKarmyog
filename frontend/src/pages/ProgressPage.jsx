@@ -43,16 +43,16 @@ export default function ProgressPage() {
     const initialPoint = trendHistory[0];
     const latestPoint = trendHistory[trendHistory.length - 1];
     const initialGap = initialPoint?.expected_level !== undefined
-      ? Math.round(Math.max(0, initialPoint.expected_level - initialPoint.combined_score) * 20)
+      ? Math.max(1, Math.round(Math.abs(initialPoint.expected_level - initialPoint.combined_score) * 20))
       : fallbackGap;
     const currentGap = latestPoint?.expected_level !== undefined
-      ? Math.round(Math.max(0, latestPoint.expected_level - latestPoint.combined_score) * 20)
+      ? Math.max(1, Math.round(Math.abs(latestPoint.expected_level - latestPoint.combined_score) * 20))
       : fallbackGap;
     const trend = trendHistory.map((point) => ({
       label: `${trendCompetency.skill_label} ${point.recorded_on}`,
       score: Math.round(point.combined_score * 20),
       gap: point.expected_level !== undefined
-        ? Math.round(Math.max(0, point.expected_level - point.combined_score) * 20)
+        ? Math.max(1, Math.round(Math.abs(point.expected_level - point.combined_score) * 20))
         : fallbackGap,
     }));
 
@@ -69,7 +69,7 @@ export default function ProgressPage() {
     <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6">
       {/* Header */}
       <div>
-        <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#0B2641] m-0">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-[#0B2641] m-0">
           Progress &amp; Gap Reduction Analytics
         </h2>
         <p className="mt-1 text-xs sm:text-sm text-[#617487]">
@@ -106,7 +106,7 @@ export default function ProgressPage() {
                 <span className="text-2xl sm:text-3xl font-bold text-[#2966A3]">{data.current_gap}</span>
                 <span className="text-xs text-[#617487] font-medium">pts</span>
               </div>
-              <div className="text-xs text-[#617487] mt-2">Active diagnostic gap remaining</div>
+              <div className="text-xs text-[#617487] mt-2">Current distance from target</div>
             </div>
 
             {/* KPI 3 */}
@@ -184,7 +184,7 @@ export default function ProgressPage() {
                       <Tooltip
                         contentStyle={{ background: '#fff', borderRadius: 8, border: '1px solid #DCE7F0', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}
                       />
-                      <Bar dataKey="gap" name={`${data.competency} Gap (pts)`} radius={[6, 6, 0, 0]}>
+                      <Bar dataKey="gap" name={`${data.competency} Target Distance (pts)`} radius={[6, 6, 0, 0]}>
                         {data.overall_trend.map((entry, index) => (
                           <Cell
                             key={`progress-bar-${entry.label}-${index}`}
