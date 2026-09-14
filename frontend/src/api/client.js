@@ -442,8 +442,8 @@ export async function uploadArtifact(formData) {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return { data: res.data, isMock: false };
-  } catch {
-    return { data: null, isMock: false, error: true };
+  } catch (err) {
+    return { data: null, isMock: false, error: true, message: extractErrorMessage(err) };
   }
 }
 

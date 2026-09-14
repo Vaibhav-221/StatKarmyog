@@ -2,7 +2,7 @@
  * Work Evidence Upload page — Upload work artifacts for AI competency extraction.
  */
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Row, Col, Card, Typography, Upload, Button, Steps, Tag, Progress, Alert, Space, message } from 'antd';
 import {
   InboxOutlined,
@@ -12,7 +12,7 @@ import {
   SafetyCertificateOutlined,
   ThunderboltOutlined,
 } from '@ant-design/icons';
-import { uploadArtifact } from '../api/client';
+import { getWorkEvidence, uploadArtifact } from '../api/client';
 import { useAuth } from '../context/AuthContext';
 
 const { Title, Text, Paragraph } = Typography;
@@ -23,11 +23,38 @@ export default function WorkEvidenceUpload() {
   const officerId = user?.officer_id || 'OFF001';
   const [fileList, setFileList] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploaded, setUploaded] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
   const [analysisResult, setAnalysisResult] = useState(null);
+  const [evidenceHistory, setEvidenceHistory] = useState([]);
+
+  const loadEvidenceHistory = async () => {
+    const res = await getWorkEvidence(officerId);
+    setEvidenceHistory(res.data || []);
+  };
+
+  useEffect(() => {
+    loadEvidenceHistory();
+  }, [officerId]);
 
   const handleUploadChange = ({ fileList: newFileList }) => {
     setFileList(newFileList.slice(-1)); // Only keep latest file
+    setUploaded(false);
+    setAnalysisResult(null);
+    setCurrentStep(0);
+  };
+
+  const handleUpload = () => {
+    if (fileList.length === 0) return;
+    setUploading(true);
+    setCurrentStep(1);
+    window.setTimeout(() => {
+      setUploading(false);
+      setUploaded(true);
+      setCurrentStep(2);
+      message.success('Document uploaded and ready for evidence analysis.');
+    }, 1000);
   };
 
   const handleAnalyze = async () => {
@@ -37,12 +64,11 @@ export default function WorkEvidenceUpload() {
     }
 
     setAnalyzing(true);
-    setCurrentStep(1);
+    setCurrentStep(3);
     setAnalysisResult(null);
 
     // Simulate 4-step analysis progress for realistic UX
-    setTimeout(() => setCurrentStep(2), 800);
-    setTimeout(() => setCurrentStep(3), 1600);
+    setTimeout(() => setCurrentStep(4), 800);
 
     setTimeout(async () => {
       const formData = new FormData();
@@ -55,9 +81,10 @@ export default function WorkEvidenceUpload() {
           document_name: fileList[0].name,
           summary: 'Work artifact analysis is not available from the backend for this officer yet.',
         });
-        message.warning('Backend work artifact analysis is not available yet.');
+        message.warning(res.message || 'Evidence analysis could not be completed.');
       } else {
         setAnalysisResult(res.data);
+        await loadEvidenceHistory();
         message.success('Work artifact analyzed successfully!');
       }
       setAnalyzing(false);
@@ -105,16 +132,28 @@ export default function WorkEvidenceUpload() {
               </p>
             </Dragger>
 
-            <Button
-              type="primary"
-              size="large"
-              icon={analyzing ? <LoadingOutlined /> : <ThunderboltOutlined />}
-              onClick={handleAnalyze}
-              disabled={analyzing || fileList.length === 0}
-              className="!mt-5 !h-11 !w-full !rounded-xl !bg-[#2966A3] !text-sm !font-semibold hover:!bg-[#0B2641]"
-            >
-              {analyzing ? 'Analyzing Statistical Artifact...' : 'Analyze Evidence'}
-            </Button>
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Button
+                type="default"
+                size="large"
+                loading={uploading}
+                onClick={handleUpload}
+                disabled={uploading || analyzing || fileList.length === 0 || uploaded}
+                className="!h-11 !rounded-xl !border-[#2966A3] !text-[#0B2641] !text-sm !font-semibold"
+              >
+                {uploaded ? 'Document Uploaded' : 'Upload Document'}
+              </Button>
+              <Button
+                type="primary"
+                size="large"
+                icon={analyzing ? <LoadingOutlined /> : <ThunderboltOutlined />}
+                onClick={handleAnalyze}
+                disabled={analyzing || uploading || !uploaded}
+                className="!h-11 !rounded-xl !bg-[#2966A3] !text-white !text-sm !font-semibold hover:!bg-[#0B2641]"
+              >
+                {analyzing ? 'Analyzing Evidence...' : 'Analyze Evidence'}
+              </Button>
+            </div>
           </div>
 
           {/* Stepper Process */}
@@ -128,10 +167,10 @@ export default function WorkEvidenceUpload() {
                 size="small"
                 current={currentStep}
                 items={[
+                  { title: 'Document Selected', description: 'File ready for upload' },
                   { title: 'Document Uploaded', description: 'File received and parsed' },
-                  { title: 'Content Extraction', description: 'Extracting text and statistical methodology' },
-                  { title: 'Competency Identification', description: 'Matching concepts against FRAC framework' },
-                  { title: 'Evidence Score Generation', description: 'Calculating confidence and score delta' },
+                  { title: 'Evidence Analysis', description: 'Matching concepts against FRAC framework' },
+                  { title: 'Competency Updated', description: 'Recording the evidence checkpoint' },
                 ]}
               />
             </div>
@@ -205,6 +244,36 @@ export default function WorkEvidenceUpload() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-[#DCE7F0] bg-white p-5 shadow-sm">
+        <div className="flex items-center justify-between gap-3 mb-4 pb-3 border-b border-[#F1F6FA]">
+          <div>
+            <h3 className="text-sm font-bold text-[#0B2641] m-0">Evidence Analyzed</h3>
+            <p className="text-xs text-[#617487] mt-1 mb-0">Persisted demo checkpoints from uploaded work evidence.</p>
+          </div>
+          <Tag color="blue">{evidenceHistory.length} uploads</Tag>
+        </div>
+        {evidenceHistory.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {evidenceHistory.map((item) => (
+              <div key={item.id} className="rounded-xl border border-[#DCE7F0] bg-[#F8FBFD] p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <span className="text-xs font-bold text-[#0B2641] truncate">{item.document_name}</span>
+                  <Tag color="success" className="!m-0 !text-[10px]">Analyzed</Tag>
+                </div>
+                <p className="text-[11px] text-[#617487] mt-2 mb-2">{item.recorded_on}</p>
+                <div className="flex flex-wrap gap-1">
+                  {(item.competencies_detected || []).map((skill) => (
+                    <Tag key={skill} color="blue" className="!m-0 !text-[10px]">{skill}</Tag>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-[#617487] m-0">Upload and analyze a work artifact to create the first evidence checkpoint.</p>
+        )}
       </div>
     </div>
   );

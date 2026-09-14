@@ -4,10 +4,11 @@ API routers for the Skill Intelligence platform.
 All endpoints are mounted under the /api prefix in main.py.
 """
 
+import datetime
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from sqlalchemy.orm import Session
 
 from app.db import DATA_DIR, get_db
@@ -304,6 +305,83 @@ def get_officer_work_evidence(officer_id: str, db: Session = Depends(get_db)):
             item["scores"][score.skill_label] = score.artifact_score
 
     return list(grouped.values())
+
+
+@router.post("/artifacts/analyze")
+async def analyze_uploaded_artifact(
+    file: UploadFile = File(...),
+    officer_id: str = Form(...),
+    db: Session = Depends(get_db),
+):
+    """Run the lightweight demo evidence pipeline and persist its score checkpoints."""
+    officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
+    if not officer:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+
+    filename = (file.filename or "work-evidence.pdf").strip()
+    extension = Path(filename).suffix.lower()
+    if extension not in {".pdf", ".doc", ".docx"}:
+        raise HTTPException(status_code=422, detail="Upload a PDF, DOC, or DOCX work artifact.")
+
+    content = await file.read()
+    if not content:
+        raise HTTPException(status_code=422, detail="The uploaded work artifact is empty.")
+    if len(content) > 5 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Work artifacts must be 5 MB or smaller.")
+
+    role = db.query(Role).filter(Role.role_id == officer.role_id).first()
+    role_skills = list((role.expected_skills if role else {}).keys())
+    if not role_skills:
+        role_skills = list((officer.current_skills or {}).keys())[:2]
+
+    competency_rows = {
+        row.label: row for row in db.query(CompetencyDictionary).all()
+    }
+    detected_skills = [skill for skill in role_skills if skill in competency_rows][:2]
+    if not detected_skills:
+        raise HTTPException(status_code=422, detail="No competency mapping is available for this officer.")
+
+    recorded_on = datetime.date.today().isoformat()
+    artifact_reference = f"uploaded/{officer_id}/{uuid.uuid4().hex}_{filename}"
+    scores = {}
+    for index, skill in enumerate(detected_skills):
+        latest = (
+            db.query(CompetencyScore)
+            .filter(CompetencyScore.officer_id == officer_id, CompetencyScore.skill_label == skill)
+            .order_by(CompetencyScore.recorded_on.desc(), CompetencyScore.id.desc())
+            .first()
+        )
+        current_level = latest.combined_score if latest else float((officer.current_skills or {}).get(skill, 0))
+        improved_level = round(min(5.0, current_level + (1.0 if index == 0 else 0.5)), 2)
+        db.add(CompetencyScore(
+            officer_id=officer_id,
+            cid=competency_rows[skill].cid,
+            skill_label=skill,
+            quiz_score=None,
+            artifact_score=improved_level,
+            combined_score=improved_level,
+            confidence_level="low (1 source)",
+            source="demo_artifact_analysis",
+            recorded_on=recorded_on,
+            artifact_reference=artifact_reference,
+        ))
+        scores[skill] = round(improved_level * 20, 1)
+
+    db.commit()
+    return {
+        "document_name": filename,
+        "confidence": "Medium",
+        "confidence_level": "medium (2 sources)",
+        "detected_competencies": [
+            {"name": skill, "score": scores[skill]} for skill in detected_skills
+        ],
+        "summary": (
+            "Demo evidence pipeline completed: document received, competency concepts matched, "
+            "and a new evidence checkpoint was recorded for the officer."
+        ),
+        "artifact_reference": artifact_reference,
+        "recorded_on": recorded_on,
+    }
 
 
 # ── Work Artifacts ───────────────────────────────────────────────────────────
