@@ -211,13 +211,15 @@ export async function getGapAnalysis(officerId) {
 }
 
 /**
- * Fetch hybrid semantic course recommendations.
+ * Fetch fast course recommendations for the dashboard.
+ * The dashboard should not block first paint on cold sentence-transformer loading;
+ * semantic recommendations remain available through the dedicated backend route.
  * @param {string} officerId
  * @returns {Promise<{data: object[], isMock: boolean}>}
  */
 export async function getRecommendations(officerId) {
   try {
-    const res = await api.get(`/api/officers/${officerId}/recommendations/semantic`, {
+    const res = await api.get(`/api/officers/${officerId}/recommendations`, {
       params: { top_n: 6 },
     });
     return { data: res.data, isMock: false };
