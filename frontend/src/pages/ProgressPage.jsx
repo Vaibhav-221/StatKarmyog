@@ -38,13 +38,19 @@ export default function ProgressPage() {
     const competencies = passport?.competencies || [];
     const currentGap = Math.round(gaps.reduce((sum, gap) => sum + (gap.gap_size || 0), 0) * 20);
     const initialGap = Math.round(
-      competencies.reduce((sum, comp) => sum + Math.max(0, (comp.first_score || 0) - (comp.latest_score || 0)), 0) * 20
+      competencies.reduce((sum, comp) => {
+        const firstPoint = comp.history?.[0];
+        const expected = firstPoint?.expected_level;
+        return sum + (expected ? Math.max(0, expected - (comp.first_score || 0)) : 0);
+      }, 0) * 20
     );
     const trend = competencies.flatMap((comp) =>
       (comp.history || []).map((point) => ({
         label: `${comp.skill_label} ${point.recorded_on}`,
         score: Math.round(point.combined_score * 20),
-        gap: currentGap,
+        gap: point.expected_level
+          ? Math.round(Math.max(0, point.expected_level - point.combined_score) * 20)
+          : currentGap,
       }))
     );
 

@@ -463,6 +463,9 @@ def get_passport_summary(officer_id: str, db: Session = Depends(get_db)):
     if not officer:
         raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
 
+    role = db.query(Role).filter(Role.role_id == officer.role_id).first()
+    expected_skills = role.expected_skills if role else {}
+
     scores = (
         db.query(CompetencyScore)
         .filter(CompetencyScore.officer_id == officer_id)
@@ -488,6 +491,7 @@ def get_passport_summary(officer_id: str, db: Session = Depends(get_db)):
         grouped[s.cid].append({
             "recorded_on": s.recorded_on,
             "combined_score": s.combined_score,
+            "expected_level": expected_skills.get(s.skill_label),
             "confidence_level": s.confidence_level,
             "source": s.source,
         })

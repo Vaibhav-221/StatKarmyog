@@ -54,7 +54,10 @@
       "skill_label": "Cloud Computing",
       "cid": "CID-F-210",
       "records": [
-        { "recorded_on": "2026-08-22", "source": "baseline_quiz", "quiz_score": 4.0, "artifact_score": null, "combined_score": 4.0, "confidence_level": "low (1 source)" }
+        { "recorded_on": "2026-08-22", "source": "baseline_quiz", "quiz_score": 4.0, "artifact_score": null, "combined_score": 4.0, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-08-29", "source": "learning_checkpoint_C091", "quiz_score": 2.2, "artifact_score": null, "combined_score": 2.2, "confidence_level": "low (1 source)" },
+        { "recorded_on": "2026-09-05", "source": "guided_lab_cloud_security", "quiz_score": 3.1, "artifact_score": 2.7, "combined_score": 2.94, "confidence_level": "medium (2 sources)" },
+        { "recorded_on": "2026-09-12", "source": "reassessment_after_practice", "quiz_score": 2.8, "artifact_score": null, "combined_score": 2.8, "confidence_level": "low (1 source)" }
       ]
     }
   ],

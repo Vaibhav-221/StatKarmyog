@@ -282,6 +282,7 @@ class QuizSubmitResponse(BaseModel):
 class CompetencyHistoryPoint(BaseModel):
     recorded_on: str
     combined_score: float
+    expected_level: float | None = None
     confidence_level: str
     source: str
 
