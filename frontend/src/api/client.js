@@ -310,6 +310,15 @@ export async function uploadProfilePhoto(officerId, file) {
   }
 }
 
+export async function removeProfilePhoto(officerId) {
+  try {
+    const res = await api.delete(`/api/officers/${officerId}/profile-photo`);
+    return { data: res.data, isMock: false };
+  } catch (err) {
+    return { data: null, isMock: false, error: true, message: extractErrorMessage(err) };
+  }
+}
+
 export async function getOfficerArtifactGaps(officerId, artifactId) {
   try {
     const params = artifactId ? { artifact_id: artifactId } : {};

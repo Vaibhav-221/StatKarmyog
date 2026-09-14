@@ -9,10 +9,11 @@ import {
   ArrowRightOutlined,
   CameraOutlined,
   CloseOutlined,
+  DeleteOutlined,
   SaveOutlined,
 } from '@ant-design/icons';
 import { useAuth } from '../context/AuthContext';
-import { getOfficerProfile, uploadProfilePhoto } from '../api/client';
+import { getOfficerProfile, removeProfilePhoto, uploadProfilePhoto } from '../api/client';
 import OfficerAvatar from '../components/OfficerAvatar';
 
 const { Text } = Typography;
@@ -88,6 +89,20 @@ export default function MyProfile() {
     message.success('Profile photo updated successfully.');
   };
 
+  const removePhoto = async () => {
+    setUploading(true);
+    const res = await removeProfilePhoto(officerId);
+    setUploading(false);
+    if (res.error) {
+      message.error(res.message || 'Profile photo removal failed.');
+      return;
+    }
+    const nextProfile = { ...profile, profile_photo_url: null };
+    setProfile(nextProfile);
+    setUser({ ...user, profile_photo_url: null });
+    message.success('Default profile avatar restored.');
+  };
+
   if (loading) {
     return (
       <div className="w-full max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8">
@@ -137,19 +152,33 @@ export default function MyProfile() {
           <div className="md:col-span-4 lg:col-span-3 flex flex-col items-center text-center">
             <div className="relative mb-3 inline-block">
               <OfficerAvatar officer={avatarOfficer} size={110} alt={`${name} profile photo`} />
-              <Upload
-                accept=".jpg,.jpeg,.png,.webp"
-                showUploadList={false}
-                beforeUpload={beforePhotoSelect}
-                maxCount={1}
-              >
+              {!selectedPhoto && profile.profile_photo_url ? (
                 <Button
                   shape="circle"
-                  icon={<CameraOutlined />}
-                  aria-label="Change profile photo"
-                  className="!absolute !bottom-0 !right-0 !bg-[#2966A3] !text-white !border-2 !border-white shadow-md hover:!bg-[#0B2641]"
+                  icon={<DeleteOutlined />}
+                  aria-label="Remove profile photo"
+                  title="Remove profile photo"
+                  danger
+                  loading={uploading}
+                  onClick={removePhoto}
+                  className="!absolute !bottom-0 !right-0 !z-10 !bg-white !text-[#D4380D] !border-2 !border-white shadow-md hover:!bg-[#FFF1F0]"
                 />
-              </Upload>
+              ) : (
+                <Upload
+                  accept=".jpg,.jpeg,.png,.webp"
+                  showUploadList={false}
+                  beforeUpload={beforePhotoSelect}
+                  maxCount={1}
+                >
+                  <Button
+                    shape="circle"
+                    icon={<CameraOutlined />}
+                    aria-label="Add profile photo"
+                    title="Add profile photo"
+                    className="!absolute !bottom-0 !right-0 !z-10 !bg-[#2966A3] !text-white !border-2 !border-white shadow-md hover:!bg-[#0B2641]"
+                  />
+                </Upload>
+              )}
             </div>
 
             {selectedPhoto && (

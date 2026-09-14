@@ -37,7 +37,7 @@ class OfficerDetail(BaseModel):
 
 class ProfilePhotoResponse(BaseModel):
     officer_id: str
-    profile_photo_url: str
+    profile_photo_url: str | None = None
 
     model_config = {"from_attributes": True}
 

@@ -127,6 +127,28 @@ async def upload_officer_profile_photo(
     }
 
 
+@router.delete("/officers/{officer_id}/profile-photo", response_model=ProfilePhotoResponse)
+def remove_officer_profile_photo(officer_id: str, db: Session = Depends(get_db)):
+    """Remove an officer's uploaded profile photo and restore the default avatar."""
+    officer = db.query(Officer).filter(Officer.officer_id == officer_id).first()
+    if not officer:
+        raise HTTPException(status_code=404, detail=f"Officer '{officer_id}' not found")
+
+    if officer.profile_photo_url:
+        photo_path = DATA_DIR / officer.profile_photo_url.removeprefix("/static/")
+        if photo_path.is_file():
+            photo_path.unlink()
+
+    officer.profile_photo_url = None
+    db.commit()
+    db.refresh(officer)
+
+    return {
+        "officer_id": officer.officer_id,
+        "profile_photo_url": None,
+    }
+
+
 # ── Competency Scores ────────────────────────────────────────────────────────
 
 @router.get("/competency-scores/{officer_id}", response_model=list[CompetencyScoreItem])
